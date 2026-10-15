@@ -1,0 +1,27 @@
+openapi: 3.0.3
+info:
+  title: Mini Udemy API
+  version: 0.1.0
+  description: >
+    API sözleşmesi. Hafta 1'deki sözleşme issue'larında auth, kurs, kayıt, sınav ve admin uçları eklenecek.
+    Kod bu sözleşmeye uyar; değişiklik önce burada PR ile yapılır.
+servers:
+  - url: http://localhost:8080
+paths:
+  /api/health:
+    get:
+      summary: Backend ayakta mı
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: UP
+                  service:
+                    type: string
+                    example: mini-udemy-backend

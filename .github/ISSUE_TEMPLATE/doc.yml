@@ -1,0 +1,25 @@
+name: Doküman
+description: Diyagram, rapor, API sözleşmesi vb.
+labels: ["docs"]
+body:
+  - type: textarea
+    id: kapsam
+    attributes:
+      label: Kapsam
+      description: Hangi doküman/diyagram, neyi kapsayacak?
+    validations:
+      required: true
+  - type: input
+    id: konum
+    attributes:
+      label: Dosya konumu
+      placeholder: "docs/diagrams/er.puml"
+  - type: textarea
+    id: kabul
+    attributes:
+      label: Kabul kriterleri
+      value: |
+        - [ ] Dosya docs/ altında, kaynak (puml/mmd/yaml) + render (png/svg) birlikte
+        - [ ] README veya ilgili doküman bağlantıyı içeriyor
+    validations:
+      required: true

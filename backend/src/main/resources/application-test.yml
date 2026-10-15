@@ -1,0 +1,4 @@
+# Unit / slice testleri. Veritabanı gerektiren entegrasyon testleri Testcontainers ile ayrı kurulacak.
+logging:
+  level:
+    com.miniudemy: DEBUG

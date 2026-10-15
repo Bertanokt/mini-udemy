@@ -1,0 +1,11 @@
+# Demo / prod: bağlantı bilgileri ortam değişkeninden gelir, varsayılan şifre kullanılmaz.
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+logging:
+  level:
+    root: INFO
+    com.miniudemy: INFO

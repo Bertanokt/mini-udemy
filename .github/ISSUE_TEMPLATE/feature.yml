@@ -1,0 +1,28 @@
+name: Feature
+description: Yeni bir özellik / iş parçası (0,5–1 günlük)
+labels: []
+body:
+  - type: textarea
+    id: aciklama
+    attributes:
+      label: Açıklama
+      description: Ne yapılacak, neden?
+    validations:
+      required: true
+  - type: textarea
+    id: kabul
+    attributes:
+      label: Kabul kriterleri
+      value: |
+        - [ ] 
+        - [ ] 
+    validations:
+      required: true
+  - type: input
+    id: bagimlilik
+    attributes:
+      label: Bağımlılık
+      placeholder: "Blocked by #12"
+  - type: markdown
+    attributes:
+      value: "Etiketleri (backend/frontend, P1/P2/P3, mod:*) ve milestone'u eklemeyi unutma. 1 günden büyükse böl."
