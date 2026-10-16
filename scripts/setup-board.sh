@@ -9,6 +9,7 @@
 #
 # Kullanım:
 #   scripts/setup-board.sh
+#   REPO=kullanici/repo OWNER=kullanici scripts/setup-board.sh
 #   CURRENT_MILESTONE="Hafta 2: Kurs yönetimi + kayıt" scripts/setup-board.sh   # yeni haftada boş kartlar için
 #
 # Gereken: gh (repo + project scope), jq
@@ -18,7 +19,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 CONFIG="$SCRIPT_DIR/issues.json"
 REPO="${REPO:-$(jq -r '.repo' "$CONFIG")}"
-OWNER="$(jq -r '.project.owner' "$CONFIG")"
+# Board, repo sahibinin hesabında kurulur; farklı bir hesap/organizasyon için OWNER=... ver.
+OWNER="${OWNER:-${REPO%%/*}}"
 TITLE="$(jq -r '.project.title' "$CONFIG")"
 CURRENT_MILESTONE="${CURRENT_MILESTONE:-$(jq -r '.milestones[0].title' "$CONFIG")}"
 
