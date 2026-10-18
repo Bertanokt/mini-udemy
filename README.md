@@ -76,4 +76,4 @@ cd frontend && npm run lint && npm run build
 
 Akış, branch adları, WIP limiti ve Definition of Done: [CONTRIBUTING.md](CONTRIBUTING.md).
 
-Backlog GitHub Project board'unda ("Mini Udemy"). Issue'lar `scripts/issues.json` içinde tanımlı ve `scripts/create-issues.sh` ile oluşturuldu.
+Backlog GitHub Project board'unda ("Mini Udemy"). Issue'lar `scripts/issues.json` içinde tanımlı ve `scripts/create-issues.sh` ile oluşturuldu. Backlog değişiklikleri önce `issues.json`'a yazılır, sonra `scripts/create-issues.sh --sync` ve `scripts/setup-board.sh` çalıştırılır.

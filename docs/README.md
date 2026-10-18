@@ -1,14 +1,26 @@
 # Dokümanlar
 
-| Doküman | Dosya | Issue |
+| Doküman | Dosya | Milestone |
 |---|---|---|
-| Use-case diyagramı | `diagrams/use-case.*` | Hafta 1 |
+| Fonksiyonel / fonksiyonel olmayan gereksinimler | `requirements.md` | Hafta 1 |
+| Kullanım senaryoları + use-case diyagramı | `requirements.md`, `diagrams/use-case.*` | Hafta 1 |
 | ER diyagramı | `diagrams/er.*` | Hafta 1 |
 | API sözleşmesi | `api/openapi.yaml` | Hafta 1 |
-| Mimari kurallar ve rapor | `architecture.md` | Hafta 1 / Hafta 5 |
-| Sınıf diyagramı | `diagrams/class.*` | Hafta 3 |
+| Mimari kurallar | `architecture.md` | Hafta 1 |
+| Mimari karar kayıtları (ADR) | `adr/` | Hafta 1 → |
+| Gantt, görev dağılımı, risk analizi | `plan.md` | Hafta 1 |
+| Haftalık ilerleme raporları | `progress/hafta-N.md` | her hafta |
+| Sistem mimarisi (C4) | `diagrams/c4-*` | Hafta 2 |
+| UI taslakları | `diagrams/wireframes/` | Hafta 2 |
 | Sekans: kursa kayıt | `diagrams/seq-enroll.*` | Hafta 2 |
+| Sınıf diyagramı | `diagrams/class.*` | Hafta 3 |
+| Bileşen diyagramı | `diagrams/component.*` | Hafta 3 |
+| Test planı | `test-plan.md` | Hafta 3 |
 | Sekans: sınav çözme | `diagrams/seq-quiz.*` | Hafta 4 |
+| Dağıtım diyagramı | `diagrams/deployment.*` | Hafta 4 |
+| SOLID ve OOP (koddan örneklerle) | `solid.md` | Hafta 4 |
+| İzlenebilirlik matrisi, test raporu, kütüphaneler | `traceability.md`, `test-report.md`, `dependencies.md` | Hafta 5 |
 | Demo senaryosu | `demo.md` | Hafta 5 |
+| Proje raporu (Word şablonu) | `rapor/` | Sunum (teslim 02.12.2026, .docx) |
 
 Diyagramlar metin tabanlı tutulur (PlantUML `.puml` ya da Mermaid `.mmd`) ve yanında render edilmiş `.png`/`.svg` bulunur; böylece PR'da diff okunabilir.

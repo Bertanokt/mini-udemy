@@ -1,6 +1,6 @@
 {
   "repo": "Bertanokt/mini-udemy",
-  "startDate": "2026-10-15",
+  "startDate": "2026-10-21",
   "project": {
     "title": "Mini Udemy",
     "statuses": [
@@ -98,31 +98,37 @@
       "key": "H1",
       "title": "Hafta 1: Analiz, tasarım, iskelet, auth",
       "description": "Analiz, tasarım, iskelet, auth",
-      "dueOffsetDays": 7
+      "dueDate": "2026-10-27"
     },
     {
       "key": "H2",
       "title": "Hafta 2: Kurs yönetimi + kayıt",
       "description": "Kurs yönetimi + kayıt",
-      "dueOffsetDays": 14
+      "dueDate": "2026-11-03"
     },
     {
       "key": "H3",
       "title": "Hafta 3: Ders izleme, ilerleme, sınav oluşturma",
       "description": "Ders izleme, ilerleme, sınav oluşturma",
-      "dueOffsetDays": 21
+      "dueDate": "2026-11-10"
     },
     {
       "key": "H4",
       "title": "Hafta 4: Sınav çözme/puanlama, admin, entegrasyon (feature freeze sonu)",
       "description": "Sınav çözme/puanlama, admin, entegrasyon (feature freeze sonu)",
-      "dueOffsetDays": 28
+      "dueDate": "2026-11-17"
     },
     {
       "key": "H5",
       "title": "Hafta 5: Bug fix, test, seed data, rapor, demo",
       "description": "Bug fix, test, seed data, rapor, demo",
-      "dueOffsetDays": 35
+      "dueDate": "2026-11-24"
+    },
+    {
+      "key": "SUNUM",
+      "title": "Sunum: Rapor, sunum ve demo hazırlığı",
+      "description": "Proje raporunun Word şablonunda birleştirilmesi, sunum ve provalar. Sunum ve rapor teslimi 02.12.2026 (.docx).",
+      "dueDate": "2026-12-01"
     }
   ],
   "issues": [
@@ -230,7 +236,7 @@
       "criteria": [
         "controller → service → repository bağımlılık yönü ve yasaklar (controller'dan repository yok, entity API'ye çıkmaz) yazılı",
         "Modüller arası iletişim kuralı (başka modülün service'i mi, event mi) yazılı",
-        "Kullanılacak üç desen (Strategy, Observer, DTO+Mapper) ve ilgili issue'lara bağlantı var",
+        "Kullanılacak dört desen (Strategy, Observer, State, DTO+Mapper) ve ilgili issue'lara bağlantı var; mimari kararların docs/adr/ altında tutulduğu yazılı",
         "Katman ve paket yapısını gösteren basit bir diyagram var"
       ]
     },
@@ -286,10 +292,12 @@
       "criteria": [
         "Seçilen yaklaşım ve gerekçesi docs/architecture.md'ye yazıldı",
         "auth/dto altında UserResponse (record) ve auth/mapper altında UserMapper var; password_hash DTO'da yok",
-        "UserMapper için unit test var"
+        "UserMapper için unit test var",
+        "Karar docs/adr/ altında bir ADR olarak yazıldı (bağlam, karar, alternatifler, sonuçlar)"
       ],
       "blockedBy": [
-        "be-user-domain"
+        "be-user-domain",
+        "adr-001"
       ]
     },
     {
@@ -570,11 +578,12 @@
       "criteria": [
         "Başka eğitmenin kursu 403",
         "Olmayan kurs 404",
-        "PUBLISHED kurs silinemiyor (409) — kural docs'ta yazılı",
+        "PUBLISHED kurs silinemiyor (409); izin kararını CourseState veriyor",
         "Silme bölüm ve dersleri de kaldırıyor"
       ],
       "blockedBy": [
-        "be-course-create"
+        "be-course-create",
+        "be-state"
       ]
     },
     {
@@ -648,10 +657,12 @@
       "criteria": [
         "DRAFT/REJECTED → PENDING; diğer durumlarda 409",
         "En az bir bölüm ve bir ders yoksa 400",
-        "Yalnız sahibi eğitmen"
+        "Yalnız sahibi eğitmen",
+        "Durum geçişi CourseState üzerinden yapılıyor; serviste status için if/switch yok"
       ],
       "blockedBy": [
-        "be-course-create"
+        "be-course-create",
+        "be-state"
       ]
     },
     {
@@ -725,12 +736,14 @@
       "criteria": [
         "Oluşturma, sahiplik ihlali (403), PUBLISHED silme (409), onaya gönderme durum geçişleri",
         "Bölüm/ders sıralama",
-        "CI'da çalışıyor"
+        "CI'da çalışıyor",
+        "Her CourseState için izinli ve izinsiz geçiş testleri"
       ],
       "blockedBy": [
         "be-course-update",
         "be-lessons",
-        "be-course-submit"
+        "be-course-submit",
+        "be-state"
       ]
     },
     {
@@ -888,7 +901,8 @@
       "criteria": [
         "docs/diagrams/seq-enroll.(puml|mmd) ve render",
         "JWT doğrulama adımı, tekrar kayıt (409) ve yayında olmayan kurs (404) dalları gösteriliyor",
-        "Gerçek sınıf/metot adları kullanılıyor"
+        "Gerçek sınıf/metot adları kullanılıyor",
+        "Diyagramdaki sınıf ve metot adları koddakiyle birebir aynı (merge sonrası kontrol edildi)"
       ],
       "blockedBy": [
         "api-rest"
@@ -949,10 +963,12 @@
         "LessonCompletedEvent (record: enrollmentId, lessonId) common/event ya da enrollment/domain altında",
         "ProgressListener @EventListener (veya @TransactionalEventListener) ile yüzdeyi yeniden hesaplıyor",
         "Ders tamamlama servisi ProgressListener'a doğrudan bağımlı değil",
-        "Senkron/asenkron ve transaction fazı seçimi gerekçesiyle docs/architecture.md'ye yazıldı"
+        "Senkron/asenkron ve transaction fazı seçimi gerekçesiyle docs/architecture.md'ye yazıldı",
+        "Karar docs/adr/ altında bir ADR olarak yazıldı (bağlam, karar, alternatifler, sonuçlar)"
       ],
       "blockedBy": [
-        "be-complete-lesson"
+        "be-complete-lesson",
+        "adr-001"
       ]
     },
     {
@@ -1128,12 +1144,14 @@
       "description": "Domain ve servis katmanının sınıf diyagramı; üç desen açıkça işaretli.",
       "criteria": [
         "docs/diagrams/class.(puml|mmd) ve render",
-        "Strategy (ScoringStrategy ve uygulamaları), Observer (event + listener), DTO+Mapper ilişkileri stereotype/not ile gösteriliyor",
-        "Kod ile isimler tutarlı"
+        "Strategy (ScoringStrategy ve uygulamaları), Observer (event + listener), State (CourseState), DTO+Mapper ilişkileri stereotype/not ile gösteriliyor",
+        "Sınıf, alan ve metot adları koddakiyle birebir aynı; diyagramda olup kodda olmayan öğe yok",
+        "State (CourseState ve durum sınıfları) diyagramda gösteriliyor"
       ],
       "blockedBy": [
         "be-mapper",
-        "be-observer"
+        "be-observer",
+        "be-state"
       ]
     },
     {
@@ -1153,10 +1171,12 @@
         "Üç uygulama Spring bean'i; seçim scoringType → strateji eşlemesiyle, if/switch yok",
         "QuizService yalnız arayüze bağımlı",
         "Her strateji için ayrı unit test",
-        "Desen ve gerekçesi docs/architecture.md'ye yazıldı"
+        "Desen ve gerekçesi docs/architecture.md'ye yazıldı",
+        "Karar docs/adr/ altında bir ADR olarak yazıldı (bağlam, karar, alternatifler, sonuçlar)"
       ],
       "blockedBy": [
-        "be-v5-quiz"
+        "be-v5-quiz",
+        "adr-001"
       ]
     },
     {
@@ -1291,10 +1311,12 @@
       "criteria": [
         "GET /api/admin/courses?status=PENDING (yalnız ADMIN)",
         "POST approve: PENDING → PUBLISHED; POST reject: PENDING → REJECTED + zorunlu gerekçe",
-        "PENDING olmayan kursta 409"
+        "PENDING olmayan kursta 409",
+        "Onay/red geçişleri CourseState üzerinden yapılıyor; serviste status için if/switch yok"
       ],
       "blockedBy": [
-        "be-course-submit"
+        "be-course-submit",
+        "be-state"
       ]
     },
     {
@@ -1333,7 +1355,8 @@
       ],
       "blockedBy": [
         "be-admin-courses",
-        "be-admin-users"
+        "be-admin-users",
+        "be-state"
       ]
     },
     {
@@ -1387,7 +1410,8 @@
       "criteria": [
         "docs/diagrams/seq-quiz.(puml|mmd) ve render",
         "Strateji seçimi ve ScoringStrategy çağrısı gösteriliyor",
-        "Yetkisiz öğrenci ve geçersiz cevap dalları var"
+        "Yetkisiz öğrenci ve geçersiz cevap dalları var",
+        "Diyagramdaki sınıf ve metot adları koddakiyle birebir aynı (merge sonrası kontrol edildi)"
       ],
       "blockedBy": [
         "be-attempt"
@@ -1399,17 +1423,21 @@
       "labels": [
         "backend",
         "devops",
-        "P2"
+        "P1"
       ],
-      "title": "Entegrasyon testi: Testcontainers ile auth → kurs → kayıt akışı",
-      "description": "Gerçek PostgreSQL ile uçtan uca backend testi; Flyway migration'larını da doğrular.",
+      "title": "Uçtan uca entegrasyon testi (Testcontainers): kayıt → kurs → kursa kayıt → sınav",
+      "description": "Gerçek PostgreSQL ile temel senaryonun uçtan uca backend testi. Ayrı bir UI test aracı kullanılmıyor; temel senaryolar bu testle gösterilir. Flyway migration'larını da doğrular.",
       "criteria": [
-        "Testcontainers PostgreSQL ile @SpringBootTest",
-        "Senaryo: eğitmen kaydı → kurs oluştur → admin onayı → öğrenci kaydı → ders tamamla → ilerleme",
-        "CI'da çalışıyor (ubuntu runner'da Docker var)"
+        "Testcontainers PostgreSQL ile @SpringBootTest + gerçek HTTP çağrıları (MockMvc ya da TestRestTemplate)",
+        "Senaryo: kullanıcı kaydı ve girişi (öğrenci, eğitmen) → eğitmen kurs/bölüm/ders oluşturur → onaya gönderir → admin onaylar → öğrenci kaydolur → ders tamamlar ve ilerleme güncellenir → sınav çözer ve puan doğru hesaplanır",
+        "Yetkisiz rol ve tekrar kayıt gibi en az iki hata yolu da test ediliyor",
+        "CI'da çalışıyor (ubuntu runner'da Docker var); test raporuna sonuç ekleniyor"
       ],
       "blockedBy": [
-        "be-enroll"
+        "be-enroll",
+        "be-attempt",
+        "be-admin-courses",
+        "be-progress"
       ]
     },
     {
@@ -1473,22 +1501,24 @@
     },
     {
       "key": "doc-report",
-      "milestone": "H5",
+      "milestone": "SUNUM",
       "labels": [
         "docs",
         "P1"
       ],
-      "title": "Mimari rapor",
-      "description": "Ders teslimi için mimari rapor (docs/architecture.md'nin tamamlanmış hali ya da ayrı PDF).",
+      "title": "Proje raporu: Word şablonunda birleştirme (.docx)",
+      "description": "Bölüm issue'larında hazırlanan içerik hocanın Proje Yazım Şablonu'nda (.docx) birleştirilir. Teslim: 02.12.2026.",
       "criteria": [
-        "Katmanlı mimari ve paket yapısı, gerekçeleriyle",
-        "Üç desen: problem, çözüm, koddaki yeri, alternatifleri",
-        "Tüm diyagramlar (use-case, ER, sınıf, iki sekans) rapora eklendi",
-        "Bilinen kısıtlar ve kapsam dışı bırakılanlar"
+        "Şablonun tüm başlıkları dolu (önsöz, özet/summary, içindekiler, şekil/tablo listeleri, kısaltmalar, bölüm 1–8, referanslar, ekler)",
+        "Tüm diyagramlar son koda göre güncel sürümleriyle eklendi; şekil ve tablo numaraları doğru",
+        "Kullanılan kütüphaneler ve dış kaynaklar referanslarda",
+        "Tüm grup üyeleri son halini okudu ve onayladı",
+        "Dosya .docx olarak teslim edilmeye hazır"
       ],
       "blockedBy": [
-        "doc-class",
-        "doc-seq-quiz"
+        "report-1-3",
+        "report-4",
+        "report-6-8"
       ]
     },
     {
@@ -1606,6 +1636,586 @@
       "criteria": [
         "İlerleme %100 olunca sertifika kaydı oluşuyor (yeni listener)",
         "Öğrenci sertifikasını görüntüleyebiliyor / PDF indirebiliyor"
+      ]
+    },
+    {
+      "key": "req-fr",
+      "milestone": "H1",
+      "labels": [
+        "docs",
+        "P1"
+      ],
+      "title": "Fonksiyonel gereksinimler (FR-xx)",
+      "description": "Şablon 3.2 için test edilebilir fonksiyonel gereksinim listesi (docs/requirements.md).",
+      "criteria": [
+        "Her gereksinimin kimliği (FR-01…), aktörü ve tek cümlelik tanımı var",
+        "Her gereksinim ölçülebilir kabul kriterine sahip ('kullanıcı dostu' gibi doğrulanamaz ifade yok)",
+        "Öğrenci, eğitmen ve admin tarafının tüm MVP işlevleri kapsanıyor; kapsam dışılar ayrıca listelenmiş",
+        "Öncelik (Must/Should) belirtilmiş"
+      ]
+    },
+    {
+      "key": "req-nfr",
+      "milestone": "H1",
+      "labels": [
+        "docs",
+        "P1"
+      ],
+      "title": "Fonksiyonel olmayan gereksinimler (NFR-xx)",
+      "description": "Şablon 3.3.1–3.3.8 başlıklarıyla: kullanılabilirlik, güvenilirlik, performans, desteklenebilirlik, gerçekleştirim, arayüz, paketleme, yasal konular.",
+      "criteria": [
+        "Sekiz başlığın her birinde en az bir NFR var",
+        "Her NFR ölçülebilir (örn. 'katalog isteği 50 kursla < 500 ms', 'parolalar BCrypt ile saklanır')",
+        "Her NFR'nin nasıl doğrulanacağı (test, inceleme, demo) yazılı"
+      ]
+    },
+    {
+      "key": "req-scenarios",
+      "milestone": "H1",
+      "labels": [
+        "docs",
+        "P1"
+      ],
+      "title": "Kullanım senaryoları (use-case açıklamaları)",
+      "description": "Şablon 3.4.1: use-case diyagramındaki her kullanım durumu için metin açıklama.",
+      "criteria": [
+        "Her senaryoda aktör, ön koşul, ana akış, alternatif/hata akışları ve son koşul var",
+        "Senaryo kimlikleri (UC-xx) use-case diyagramıyla birebir aynı",
+        "Her senaryo ilgili FR'lere bağlanmış"
+      ],
+      "blockedBy": [
+        "doc-usecase",
+        "req-fr"
+      ]
+    },
+    {
+      "key": "adr-001",
+      "milestone": "H1",
+      "labels": [
+        "docs",
+        "P1"
+      ],
+      "title": "ADR altyapısı + ADR-001: modüler monolit ve katmanlı mimari",
+      "description": "docs/adr/ klasörü, ADR şablonu ve ilk karar: neden mikroservis değil modüler monolit, neden modül bazlı paket + katmanlı yapı.",
+      "criteria": [
+        "docs/adr/README.md (ADR nedir, numaralandırma, durumlar: Önerildi/Kabul/Yerine geçti) ve 0000-sablon.md var",
+        "ADR-001: bağlam, karar, değerlendirilen alternatifler (mikroservis, katmanlar en üstte paketleme), sonuçlar",
+        "docs/architecture.md ADR listesine bağlantı veriyor"
+      ],
+      "blockedBy": [
+        "doc-arch-rules"
+      ]
+    },
+    {
+      "key": "adr-002-003",
+      "milestone": "H1",
+      "labels": [
+        "docs",
+        "P1",
+        "mod:auth"
+      ],
+      "title": "ADR-002: JWT ile stateless kimlik doğrulama · ADR-003: Flyway ile şema yönetimi",
+      "description": "İki kısa ADR. JWT: session yerine token, token süresi, saklama yeri. Flyway: ddl-auto yerine versiyonlu migration.",
+      "criteria": [
+        "ADR-002: alternatifler (session + cookie, OAuth sağlayıcısı) ve güvenlik sonuçları (token iptali yok, süre kısa) yazılı",
+        "ADR-003: alternatifler (ddl-auto=update, Liquibase) ve 'merge edilmiş migration değişmez' kuralı yazılı",
+        "İki ADR de koddaki gerçek ayarlara (application.yml, SecurityConfig) atıf yapıyor"
+      ],
+      "blockedBy": [
+        "adr-001",
+        "be-jwt"
+      ]
+    },
+    {
+      "key": "plan-gantt",
+      "milestone": "H1",
+      "labels": [
+        "docs",
+        "P2"
+      ],
+      "title": "Gantt şeması, görev dağılımı ve risk analizi",
+      "description": "Şablon bölüm 6: Gantt (milestone'lardan), faz dağılımı, iş paketleri, rol/görev dağılımı ve risk tablosu. Hafta 5'te gerçekleşenle güncellenir.",
+      "criteria": [
+        "Gantt şeması 6 milestone'u ve ana iş paketlerini gösteriyor",
+        "Rol tablosu (CONTRIBUTING.md) ile görev dağılımı tutarlı",
+        "En az 5 risk: olasılık, etki, önlem",
+        "Bütçe bölümü için açık kaynak araçlar ve 0 TL lisans maliyeti notu"
+      ]
+    },
+    {
+      "key": "progress-h1",
+      "milestone": "H1",
+      "labels": [
+        "docs",
+        "P1"
+      ],
+      "title": "İlerleme raporu – Hafta 1",
+      "description": "Hafta 1 sonunda kısa ilerleme raporu (docs/progress/hafta-1.md). Kalite ve Süreç sorumlusu koordine eder.",
+      "criteria": [
+        "Planlanan / tamamlanan / devreden issue'lar (board'dan)",
+        "Kişi bazında merge edilen PR'lar",
+        "CI durumu ve test sayısı",
+        "Karşılaşılan sorunlar ve gelecek haftanın riski"
+      ]
+    },
+    {
+      "key": "adr-004-005",
+      "milestone": "H2",
+      "labels": [
+        "docs",
+        "P1",
+        "mod:course"
+      ],
+      "title": "ADR-004: video embed (dosya yükleme yok) · ADR-005: ayrı frontend, REST ve önce OpenAPI sözleşmesi",
+      "description": "İki kısa ADR. Video: depolama/maliyet/kapsam gerekçesi. Frontend: Next.js ayrı uygulama, REST, sözleşme önce yazılır.",
+      "criteria": [
+        "ADR-004: alternatifler (dosya yükleme + nesne depolama) ve sonuçları (yalnız YouTube/Vimeo, URL doğrulama)",
+        "ADR-005: alternatifler (sunucu tarafı şablonlar, GraphQL) ve sözleşme-önce akışın ekip için faydası",
+        "İki ADR de ilgili koda ve docs/api/openapi.yaml'a atıf yapıyor"
+      ],
+      "blockedBy": [
+        "adr-001"
+      ]
+    },
+    {
+      "key": "be-state",
+      "milestone": "H2",
+      "labels": [
+        "backend",
+        "P1",
+        "design-pattern",
+        "mod:course"
+      ],
+      "title": "Desen: State — kurs yaşam döngüsü (DRAFT → PENDING → PUBLISHED / REJECTED)",
+      "description": "CourseState arayüzü ve her durum için bir sınıf (DraftState, PendingState, PublishedState, RejectedState). Hangi işlemin (düzenle, sil, onaya gönder, onayla, reddet) hangi durumda izinli olduğuna ve geçişin hedefine durum nesnesi karar verir.",
+      "why": "Kursun durumuna bağlı kurallar üç farklı yerde (eğitmen düzenleme/silme, onaya gönderme, admin onay/red) gerekiyor. Bu kurallar servislerde if/switch olarak yazılırsa dağılır, tutarsızlaşır ve yeni bir durum (örn. ARCHIVED) eklemek her servisi değiştirmeyi gerektirir. State deseniyle her durumun kuralları tek sınıfta toplanır; geçişler tek yerden test edilir ve yeni durum yeni bir sınıf olarak eklenir.",
+      "criteria": [
+        "CourseState arayüzü: edit, delete, submit, approve, reject işlemleri; izinsiz işlem tanımlı bir istisna (409) fırlatıyor",
+        "Dört durum sınıfı; CourseStatus enum'u (DB alanı) ile durum nesnesi arasındaki eşleme tek yerde",
+        "Geçiş tablosu docs/architecture.md'de; her izinli/izinsiz geçiş için unit test",
+        "Karar docs/adr/ altında bir ADR olarak yazıldı (alternatif: enum + switch, Spring Statemachine)"
+      ],
+      "blockedBy": [
+        "be-course-domain",
+        "adr-001"
+      ]
+    },
+    {
+      "key": "be-archunit",
+      "milestone": "H2",
+      "labels": [
+        "backend",
+        "devops",
+        "P1"
+      ],
+      "title": "ArchUnit testleri: katman ve modül bağımlılık kuralları",
+      "description": "docs/architecture.md'deki kurallar test olarak CI'da kontrol edilsin; mimari diyagram ile kodun tutarlılığının kanıtı olur.",
+      "criteria": [
+        "controller → service → repository yönü dışındaki bağımlılıklar testte kırılıyor",
+        "Controller'lar domain entity döndüremiyor; repository'ler yalnız repository paketinde",
+        "Modüller arası izin verilmeyen bağımlılıklar tanımlı",
+        "Kural kasıtlı bozulunca testin kırmızıya döndüğü bir kez denendi ve PR'da belirtildi"
+      ],
+      "blockedBy": [
+        "doc-arch-rules",
+        "be-course-domain"
+      ]
+    },
+    {
+      "key": "doc-c4",
+      "milestone": "H2",
+      "labels": [
+        "docs",
+        "P1"
+      ],
+      "title": "Sistem mimarisi diyagramı (C4: context + container)",
+      "description": "Şablon 3.4.5 / 4.2: kullanıcılar, Next.js frontend, Spring Boot backend, PostgreSQL, YouTube/Vimeo.",
+      "criteria": [
+        "Context ve container seviyesi diyagramlar (docs/diagrams/c4-*.puml|mmd + render)",
+        "Container'lar arası iletişim protokolü ve portlar docker-compose.yml ile aynı",
+        "Dış sistemler (YouTube/Vimeo embed) gösteriliyor"
+      ],
+      "blockedBy": [
+        "doc-arch-rules"
+      ]
+    },
+    {
+      "key": "doc-wireframe",
+      "milestone": "H2",
+      "labels": [
+        "docs",
+        "frontend",
+        "P2"
+      ],
+      "title": "UI taslak çizimleri (wireframe)",
+      "description": "Şablon 3.4.7: temel ekranlar ve ekranlar arası geçişler.",
+      "criteria": [
+        "Katalog, kurs detay, ders izleme, sınav çözme, eğitmen kurs yönetimi, admin onay ekranları",
+        "Ekran geçiş akışı (hangi butondan nereye)",
+        "docs/diagrams/wireframes/ altında görsel olarak"
+      ],
+      "blockedBy": [
+        "req-fr"
+      ]
+    },
+    {
+      "key": "devops-jacoco",
+      "milestone": "H2",
+      "labels": [
+        "devops",
+        "backend",
+        "P1"
+      ],
+      "title": "JaCoCo coverage raporu CI artifact'ı olarak",
+      "description": "Test raporu ve Kalite/Süreç rolü için CI çıktısı.",
+      "criteria": [
+        "./mvnw verify JaCoCo raporu üretiyor",
+        "CI'da HTML rapor artifact olarak yükleniyor",
+        "README'de raporun nereden indirileceği yazılı"
+      ]
+    },
+    {
+      "key": "progress-h2",
+      "milestone": "H2",
+      "labels": [
+        "docs",
+        "P1"
+      ],
+      "title": "İlerleme raporu – Hafta 2",
+      "description": "Hafta 2 sonunda kısa ilerleme raporu (docs/progress/hafta-2.md). Kalite ve Süreç sorumlusu koordine eder.",
+      "criteria": [
+        "Planlanan / tamamlanan / devreden issue'lar (board'dan)",
+        "Kişi bazında merge edilen PR'lar",
+        "CI durumu ve test sayısı",
+        "Karşılaşılan sorunlar ve gelecek haftanın riski"
+      ]
+    },
+    {
+      "key": "doc-component",
+      "milestone": "H3",
+      "labels": [
+        "docs",
+        "P1"
+      ],
+      "title": "UML bileşen diyagramı (component diagram)",
+      "description": "Şablon 4.3: backend modülleri (auth, course, enrollment, quiz, admin, common), sağladıkları/kullandıkları arayüzler ve frontend'in API client katmanı.",
+      "criteria": [
+        "Bileşenler koddaki modül paketleriyle birebir aynı",
+        "Modüller arası bağımlılıklar ArchUnit kurallarıyla tutarlı",
+        "docs/diagrams/component.(puml|mmd) + render"
+      ],
+      "blockedBy": [
+        "doc-c4",
+        "be-archunit"
+      ]
+    },
+    {
+      "key": "doc-testplan",
+      "milestone": "H3",
+      "labels": [
+        "docs",
+        "P1"
+      ],
+      "title": "Test planı",
+      "description": "Şablon 7.5: hangi seviyede (unit, entegrasyon, mimari, manuel) neyin nasıl test edileceği.",
+      "criteria": [
+        "Test seviyeleri, araçlar (JUnit, Mockito, Testcontainers, ArchUnit) ve sorumlular",
+        "Her FR ve ölçülebilir NFR için en az bir test ya da doğrulama yöntemi",
+        "Manuel test kontrol listesi (bug bash için)",
+        "Başarı ölçütleri (örn. tüm testler yeşil, servis katmanı coverage hedefi)"
+      ],
+      "blockedBy": [
+        "req-fr",
+        "req-nfr"
+      ]
+    },
+    {
+      "key": "progress-h3",
+      "milestone": "H3",
+      "labels": [
+        "docs",
+        "P1"
+      ],
+      "title": "İlerleme raporu – Hafta 3",
+      "description": "Hafta 3 sonunda kısa ilerleme raporu (docs/progress/hafta-3.md). Kalite ve Süreç sorumlusu koordine eder.",
+      "criteria": [
+        "Planlanan / tamamlanan / devreden issue'lar (board'dan)",
+        "Kişi bazında merge edilen PR'lar",
+        "CI durumu ve test sayısı",
+        "Karşılaşılan sorunlar ve gelecek haftanın riski"
+      ]
+    },
+    {
+      "key": "doc-deployment",
+      "milestone": "H4",
+      "labels": [
+        "docs",
+        "devops",
+        "P1"
+      ],
+      "title": "UML dağıtım diyagramı (deployment diagram)",
+      "description": "Şablon 4.4: docker compose ortamı: node'lar, container'lar, portlar, artefaktlar.",
+      "criteria": [
+        "postgres, backend, frontend container'ları ve artefaktları (jar, Next.js standalone) gösteriliyor",
+        "Portlar, ağ ve volume docker-compose.yml ile birebir aynı",
+        "docs/diagrams/deployment.(puml|mmd) + render"
+      ]
+    },
+    {
+      "key": "doc-solid",
+      "milestone": "H4",
+      "labels": [
+        "docs",
+        "P1",
+        "design-pattern"
+      ],
+      "title": "SOLID ve nesne yönelimli tasarım dokümanı (koddan örneklerle)",
+      "description": "Şablon 4.6: her SOLID prensibinin kodda nerede ve nasıl uygulandığı. Sunumdaki teknik sorulara hazırlık olarak da kullanılır.",
+      "criteria": [
+        "Beş prensibin her biri için en az bir somut örnek: dosya yolu, sınıf, kısa kod parçası ve açıklama",
+        "Örnekler gerçek koddan (örn. OCP: ScoringStrategy, DIP: servislerin repository arayüzlerine bağımlılığı, SRP: mapper'lar)",
+        "En az bir 'bilinçli olarak uygulanmayan / ödünleşim' notu",
+        "Kapsülleme, kalıtım/çok biçimlilik kullanımının örnekleri"
+      ],
+      "blockedBy": [
+        "be-strategy",
+        "be-observer",
+        "be-state"
+      ]
+    },
+    {
+      "key": "progress-h4",
+      "milestone": "H4",
+      "labels": [
+        "docs",
+        "P1"
+      ],
+      "title": "İlerleme raporu – Hafta 4",
+      "description": "Hafta 4 sonunda kısa ilerleme raporu (docs/progress/hafta-4.md). Kalite ve Süreç sorumlusu koordine eder.",
+      "criteria": [
+        "Planlanan / tamamlanan / devreden issue'lar (board'dan)",
+        "Kişi bazında merge edilen PR'lar",
+        "CI durumu ve test sayısı",
+        "Karşılaşılan sorunlar ve gelecek haftanın riski"
+      ]
+    },
+    {
+      "key": "doc-consistency",
+      "milestone": "H5",
+      "labels": [
+        "docs",
+        "P1"
+      ],
+      "title": "Diyagram–kod tutarlılık kontrolü",
+      "description": "Feature freeze sonrası tüm diyagramlar son koda göre gözden geçirilir ve güncellenir (değerlendirmede %15).",
+      "criteria": [
+        "Use-case, sınıf, iki sekans, ER, C4, bileşen ve dağıtım diyagramlarının her biri koda karşı kontrol edildi",
+        "ER diyagramı Flyway migration'larıyla birebir aynı",
+        "Bulunan her fark düzeltildi; kontrol listesi issue yorumunda",
+        "Kontrolü diyagramı hazırlayandan farklı bir üye yaptı"
+      ],
+      "blockedBy": [
+        "doc-class",
+        "doc-seq-enroll",
+        "doc-seq-quiz",
+        "doc-er",
+        "doc-component",
+        "doc-deployment"
+      ]
+    },
+    {
+      "key": "doc-traceability",
+      "milestone": "H5",
+      "labels": [
+        "docs",
+        "P1"
+      ],
+      "title": "Gereksinim izlenebilirlik matrisi (FR → issue → test)",
+      "description": "Her gereksinimin hangi issue'larla geliştirildiğini ve hangi testle doğrulandığını gösteren tablo.",
+      "criteria": [
+        "Her FR için en az bir issue ve bir test (ya da manuel test adımı)",
+        "Test edilmeyen gereksinim varsa nedeniyle listelenmiş",
+        "Rapora tablo olarak eklenecek formatta"
+      ],
+      "blockedBy": [
+        "req-fr",
+        "doc-testplan"
+      ]
+    },
+    {
+      "key": "doc-testreport",
+      "milestone": "H5",
+      "labels": [
+        "docs",
+        "P1"
+      ],
+      "title": "Test raporu",
+      "description": "Test planına göre gerçekleşen sonuçlar.",
+      "criteria": [
+        "Test sayıları (unit, entegrasyon, mimari) ve son CI çalıştırmasının linki",
+        "JaCoCo coverage özeti",
+        "Uçtan uca entegrasyon testi senaryosu ve sonucu",
+        "Bug bash bulguları ve durumları"
+      ],
+      "blockedBy": [
+        "doc-testplan",
+        "be-it",
+        "devops-jacoco",
+        "qa-bugbash"
+      ]
+    },
+    {
+      "key": "doc-deps",
+      "milestone": "H5",
+      "labels": [
+        "docs",
+        "P1"
+      ],
+      "title": "Kullanılan kütüphaneler ve dış kaynaklar listesi",
+      "description": "Mailde zorunlu: kullanılan kütüphaneler ve dış kaynaklar raporda belirtilmeli.",
+      "criteria": [
+        "Backend (pom.xml) ve frontend (package.json) doğrudan bağımlılıkları: ad, sürüm, lisans, ne için kullanıldığı",
+        "Kullanılan araçlar (Docker, GitHub Actions, diyagram araçları) ve faydalanılan dokümanlar/kaynaklar",
+        "Yapay zekâ araçları kullanıldıysa nerede ve nasıl kullanıldığı"
+      ]
+    },
+    {
+      "key": "progress-h5",
+      "milestone": "H5",
+      "labels": [
+        "docs",
+        "P1"
+      ],
+      "title": "İlerleme raporu – Hafta 5",
+      "description": "Hafta 5 sonunda kısa ilerleme raporu (docs/progress/hafta-5.md). Kalite ve Süreç sorumlusu koordine eder.",
+      "criteria": [
+        "Planlanan / tamamlanan / devreden issue'lar (board'dan)",
+        "Kişi bazında merge edilen PR'lar",
+        "CI durumu ve test sayısı",
+        "Karşılaşılan sorunlar ve gelecek haftanın riski"
+      ]
+    },
+    {
+      "key": "report-1-3",
+      "milestone": "SUNUM",
+      "labels": [
+        "docs",
+        "P1"
+      ],
+      "title": "Rapor bölüm 1–3: giriş, mevcut sistem, önerilen sistem",
+      "description": "Şablon bölüm 1 (amaç, kapsam, hedefler ve başarı kriterleri, tanımlar), 2 (mevcut sistemler: Udemy, Coursera vb. kısa karşılaştırma) ve 3 (gereksinimler, sistem modelleri).",
+      "criteria": [
+        "Başarı kriterleri ölçülebilir ve test raporuyla eşleşiyor",
+        "Bölüm 3'te FR/NFR, kullanım senaryoları, use-case, sınıf, sekans, mimari, ER diyagramları ve wireframe'ler var",
+        "Diyagramlar tutarlılık kontrolünden geçmiş son sürümler"
+      ],
+      "blockedBy": [
+        "req-fr",
+        "req-nfr",
+        "req-scenarios",
+        "doc-consistency",
+        "doc-wireframe"
+      ]
+    },
+    {
+      "key": "report-4",
+      "milestone": "SUNUM",
+      "labels": [
+        "docs",
+        "P1"
+      ],
+      "title": "Rapor bölüm 4: mimari, desenler, SOLID, API, güvenlik, mimari kararlar",
+      "description": "Şablon 4.1–4.9.",
+      "criteria": [
+        "Seçilen mimari ve gerekçesi (ADR-001), sistem mimarisi, bileşen ve dağıtım diyagramları",
+        "Dört desen: problem, çözüm, koddaki yeri, alternatifler (ADR'lere atıf)",
+        "SOLID bölümü doc-solid issue'sundaki koddan örneklerle",
+        "API tasarımı (OpenAPI özeti), güvenlik/yetkilendirme tasarımı, tüm ADR'lerin değerlendirmesi"
+      ],
+      "blockedBy": [
+        "doc-solid",
+        "doc-consistency",
+        "doc-openapi-sync"
+      ]
+    },
+    {
+      "key": "report-6-8",
+      "milestone": "SUNUM",
+      "labels": [
+        "docs",
+        "P1"
+      ],
+      "title": "Rapor bölüm 5–8: sözlük, plan, projeye özgü içerik, sonuç",
+      "description": "Şablon bölüm 5 (açıklayıcı sözlük), 6 (Gantt, bütçe, faz/görev dağılımı, risk), 7 (metodoloji, teknolojiler, erişilebilirlik, kullanım kılavuzu, test planı, bakım planı), 8 (sonuç ve tartışma).",
+      "criteria": [
+        "Gantt ve görev dağılımı gerçekleşenle güncellendi; görev dağılımı Git geçmişiyle tutarlı",
+        "Kullanım kılavuzu seed kullanıcılarıyla adım adım",
+        "Test planı + test raporu özeti, kütüphaneler listesi eklendi",
+        "Sonuç: hedeflere ulaşma durumu, kısıtlar, gelecek çalışmalar (P3 issue'ları)"
+      ],
+      "blockedBy": [
+        "plan-gantt",
+        "doc-testreport",
+        "doc-deps",
+        "doc-traceability"
+      ]
+    },
+    {
+      "key": "pres-slides",
+      "milestone": "SUNUM",
+      "labels": [
+        "docs",
+        "P1"
+      ],
+      "title": "Sunum slaytları (7–8 dakika)",
+      "description": "Mailde istenen akış: projenin amacı, temel işlevler, yazılım mimarisi, önemli tasarım kararları, çalışan uygulamanın kısa demosu.",
+      "criteria": [
+        "En fazla ~10 slayt; her bölüm için süre planı (toplam 7–8 dk, demo dahil)",
+        "Mimari ve desen slaytları rapordaki diyagramların aynısını kullanıyor",
+        "Her grup üyesinin sunumda bir bölümü var"
+      ],
+      "blockedBy": [
+        "report-4",
+        "doc-demo"
+      ]
+    },
+    {
+      "key": "pres-demo-rehearsal",
+      "milestone": "SUNUM",
+      "labels": [
+        "docs",
+        "P1"
+      ],
+      "title": "Demo provası (süre tutularak) + yedek demo kaydı",
+      "description": "Canlı demo başarısız olursa diye yedek ekran kaydı.",
+      "criteria": [
+        "Temiz docker compose up + seed ile demo senaryosu süre tutularak en az iki kez prova edildi",
+        "Toplam sunum 8 dakikayı geçmiyor",
+        "Demo akışının ekran kaydı (yedek) hazır",
+        "Sunum günü kullanılacak bilgisayarda ortam önceden denendi"
+      ],
+      "blockedBy": [
+        "pres-slides",
+        "be-seed"
+      ]
+    },
+    {
+      "key": "pres-qa-rehearsal",
+      "milestone": "SUNUM",
+      "labels": [
+        "docs",
+        "P1"
+      ],
+      "title": "Soru–cevap provası: her üye her modülü anlatabilsin",
+      "description": "Hoca sunumda bireysel teknik sorular soracak ve katkı katsayısını buna göre belirleyecek.",
+      "criteria": [
+        "Soru havuzu: her modül, her desen, her ADR ve SOLID örnekleri için en az 2 soru",
+        "Her üye kendi yazmadığı en az iki modülü ve tüm desenleri kodu göstererek anlatabildi",
+        "Cevaplanamayan sorular için kısa not/eğitim yapıldı"
+      ],
+      "blockedBy": [
+        "pres-slides",
+        "doc-solid"
       ]
     }
   ]
