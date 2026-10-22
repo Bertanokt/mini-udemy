@@ -91,6 +91,51 @@
       "name": "mod:admin",
       "color": "bfd4f2",
       "description": "Modül: admin"
+    },
+    {
+      "name": "mod:content",
+      "color": "bfd4f2",
+      "description": "Modül: ders içerikleri ve dosyalar"
+    },
+    {
+      "name": "mod:progress",
+      "color": "bfd4f2",
+      "description": "Modül: izleme ve ilerleme"
+    },
+    {
+      "name": "mod:certificate",
+      "color": "bfd4f2",
+      "description": "Modül: dijital sertifika"
+    },
+    {
+      "name": "mod:review",
+      "color": "bfd4f2",
+      "description": "Modül: puanlama ve yorumlar"
+    },
+    {
+      "name": "mod:notification",
+      "color": "bfd4f2",
+      "description": "Modül: bildirimler"
+    },
+    {
+      "name": "rol:mimar",
+      "color": "0052cc",
+      "description": "Yazılım Mimarı"
+    },
+    {
+      "name": "rol:alan",
+      "color": "006b75",
+      "description": "Alan Tasarımcısı"
+    },
+    {
+      "name": "rol:veri",
+      "color": "8a5a00",
+      "description": "Veri ve Entegrasyon Sorumlusu"
+    },
+    {
+      "name": "rol:kalite",
+      "color": "5c2d91",
+      "description": "Kalite ve Süreç Sorumlusu"
     }
   ],
   "milestones": [
@@ -137,13 +182,15 @@
       "milestone": "H1",
       "labels": [
         "docs",
-        "P1"
+        "P1",
+        "rol:alan"
       ],
-      "title": "Use-case diyagramı",
-      "description": "Öğrenci, eğitmen ve admin aktörleri için MVP use-case diyagramı. Kapsam dışı işler (ödeme, yorum, sertifika) diyagramda yer almaz.",
+      "title": "Use-case diyagramı (A–L, üç aktör)",
+      "description": "Kursiyer, eğitmen ve yönetici aktörleri için proje tanım dokümanındaki A–L modüllerini kapsayan use-case diyagramı. Ödeme kapsam dışıdır.",
       "criteria": [
         "docs/diagrams/use-case.(puml|mmd) ve render edilmiş png/svg eklendi",
-        "Üç aktör ve en az şu use-case'ler var: kayıt/giriş, kurs-bölüm-ders oluşturma, kursa kayıt, ders tamamlama, sınav oluşturma/çözme, kurs onaylama, kullanıcı listeleme",
+        "A–L modüllerinin her birinden en az bir kullanım durumu var; dokümandaki 5 senaryo diyagramda izlenebiliyor",
+        "Kullanım durumu kimlikleri (UC-xx) kullanım senaryoları issue'su ile ortak",
         "docs/README.md tablosundan bağlantı veriliyor"
       ]
     },
@@ -152,15 +199,17 @@
       "milestone": "H1",
       "labels": [
         "docs",
-        "P1"
+        "P1",
+        "rol:veri"
       ],
-      "title": "ER diyagramı",
-      "description": "Tüm MVP tabloları, ilişkileri ve kısıtları. Flyway migration issue'ları bu diyagramı esas alır.",
+      "title": "ER diyagramı (tüm modüller)",
+      "description": "Tüm modüllerin tabloları, ilişkileri ve kısıtları. Migration issue'ları bu diyagramı esas alır.",
       "criteria": [
-        "docs/diagrams/er.(puml|mmd) ve render eklendi",
-        "users, courses, sections, lessons, enrollments, lesson_progress, quizzes, questions, options, quiz_attempts, attempt_answers tabloları var",
-        "PK/FK, unique kısıtlar (örn. enrollment: user+course) ve kurs durum alanı (DRAFT/PENDING/PUBLISHED/REJECTED) gösteriliyor",
-        "Migration sırası (V1..V6) diyagram altında not olarak yazılı"
+        "users, password_reset_tokens, categories, courses, sections, lessons, stored_files, enrollments, lesson_progress, course_progress, questions, options, quizzes, quiz_questions, quiz_attempts, attempt_answers, certificates, reviews, complaints, notifications tabloları var",
+        "PK/FK ve unique kısıtlar gösteriliyor (örn. enrollment: kursiyer+kurs, review: kullanıcı+kurs, certificate: doğrulama kodu)",
+        "Kurs durum alanı (DRAFT/IN_REVIEW/PUBLISHED/UNPUBLISHED) ve red gerekçesi alanı gösteriliyor",
+        "Her tablonun hangi modüle ait olduğu renk ya da not ile belirtilmiş",
+        "docs/diagrams/er.(puml|mmd) ve render eklendi"
       ]
     },
     {
@@ -168,16 +217,17 @@
       "milestone": "H1",
       "labels": [
         "docs",
+        "mod:auth",
         "P1",
-        "mod:auth"
+        "rol:veri"
       ],
-      "title": "API sözleşmesi (OpenAPI): auth + kullanıcı",
-      "description": "docs/api/openapi.yaml içine auth uçları, ortak hata gövdesi ve JWT güvenlik şeması. Backend ve frontend auth işleri buna göre yazılır.",
+      "title": "API sözleşmesi (OpenAPI): auth, profil, parola yenileme",
+      "description": "docs/api/openapi.yaml içine auth uçları, ortak hata gövdesi ve JWT güvenlik şeması.",
       "criteria": [
-        "POST /api/auth/register, POST /api/auth/login, GET /api/users/me tanımlı (istek/yanıt şemaları ve örnekleri ile)",
-        "bearerAuth güvenlik şeması tanımlı",
-        "Ortak ErrorResponse şeması (status, message, errors) tanımlı; 400/401/403/404 yanıtlarında kullanılıyor",
-        "Dosya bir OpenAPI validator'dan hatasız geçiyor (örn. editor.swagger.io)"
+        "POST /api/auth/register, POST /api/auth/login, GET/PUT /api/users/me tanımlı (şema + örnek)",
+        "POST /api/auth/password-reset/request ve /confirm tanımlı",
+        "bearerAuth güvenlik şeması; ortak ErrorResponse (status, message, errors) 400/401/403/404/409'da kullanılıyor",
+        "Dosya bir OpenAPI validator'dan hatasız geçiyor"
       ]
     },
     {
@@ -185,17 +235,18 @@
       "milestone": "H1",
       "labels": [
         "docs",
+        "mod:course",
         "P1",
-        "mod:course"
+        "rol:veri"
       ],
-      "title": "API sözleşmesi (OpenAPI): kurs / bölüm / ders",
-      "description": "Eğitmenin kurs-bölüm-ders CRUD uçları ve herkese açık kurs kataloğu uçları.",
+      "title": "API sözleşmesi (OpenAPI): kategori, kurs, bölüm, ders, içerik, katalog",
+      "description": "Eğitmenin kurs-bölüm-ders ve içerik uçları, kategori listesi ve herkese açık katalog.",
       "criteria": [
-        "/api/courses (GET liste + sayfalama/arama, POST), /api/courses/{id} (GET, PUT, DELETE) tanımlı",
-        "/api/courses/{id}/sections ve /api/sections/{id}/lessons CRUD uçları tanımlı",
-        "/api/courses/{id}/submit ve /api/instructor/courses tanımlı",
-        "Ders şemasında videoUrl alanı ve kabul edilen sağlayıcılar (YouTube/Vimeo) açıklanmış",
-        "Hangi ucun hangi rolle çağrılabildiği her uçta belirtilmiş"
+        "Kurs: POST/PUT/DELETE /api/courses, GET /api/courses/{id}; alanlar: başlık, açıklama, kategori, seviye, kapak, öğrenme hedefleri",
+        "Bölüm ve ders CRUD + sıralama; ders içerik türü (VIDEO/PDF/DOCUMENT) ve zorunlu ders alanı",
+        "İçerik yükleme (multipart) ve içerik servis uçları; izin verilen türler ve boyut sınırları açıklanmış",
+        "Katalog: q, categoryId, level, instructorId, minRating, page, size parametreleri",
+        "Durum geçiş uçları (submit, unpublish) ve her uçta gereken rol belirtilmiş"
       ],
       "blockedBy": [
         "doc-er"
@@ -206,18 +257,19 @@
       "milestone": "H1",
       "labels": [
         "docs",
-        "P1",
         "mod:enrollment",
         "mod:quiz",
-        "mod:admin"
+        "mod:admin",
+        "P1",
+        "rol:veri"
       ],
-      "title": "API sözleşmesi (OpenAPI): kayıt, ilerleme, sınav, admin",
-      "description": "Kayıt/ilerleme, sınav oluşturma/çözme ve admin uçları.",
+      "title": "API sözleşmesi (OpenAPI): kayıt, ilerleme, sınav, sertifika",
+      "description": "Kayıt, ilerleme, sınav ve sertifika uçları.",
       "criteria": [
         "Kayıt: POST /api/courses/{id}/enroll, GET /api/me/enrollments",
-        "İlerleme: POST /api/lessons/{id}/complete, GET /api/me/courses/{id}/progress",
-        "Sınav: sınav/soru/şık oluşturma, GET sınav (öğrenci görünümü doğru cevabı içermez), POST /api/quizzes/{id}/attempts, GET /api/me/quizzes/{id}/attempts",
-        "Admin: GET /api/admin/courses?status=PENDING, POST approve/reject, GET /api/admin/users",
+        "İlerleme: POST /api/lessons/{id}/complete, GET /api/me/courses/{id}/progress (bölüm + kurs yüzdesi), GET /api/me/courses/{id}/resume",
+        "Sınav: soru bankası CRUD, bölüm sınavı oluşturma, GET sınav (öğrenci görünümü doğru cevabı içermez), POST attempts, GET attempt geçmişi",
+        "Sertifika: GET /api/me/certificates, GET /api/certificates/verify/{code} (herkese açık)",
         "Her uçta gereken rol belirtilmiş"
       ],
       "blockedBy": [
@@ -229,15 +281,16 @@
       "milestone": "H1",
       "labels": [
         "docs",
-        "P1"
+        "P1",
+        "rol:mimar"
       ],
-      "title": "Mimari kurallar: katmanlar ve paket bağımlılıkları (docs/architecture.md)",
-      "description": "Katmanlı mimarinin kurallarını yazılı hale getir: hangi katman neye bağımlı olabilir, DTO/entity sınırı, transaction nerede, modüller birbirini nasıl çağırır. Mimari raporun ilk bölümü olur.",
+      "title": "Mimari kurallar: 10 modül, katmanlar, modüller arası iletişim (docs/architecture.md)",
+      "description": "Katmanlı modüler monolitin kuralları: 10 modül (auth, course, content, enrollment, progress, quiz, certificate, review, notification, admin) + common.",
       "criteria": [
-        "controller → service → repository bağımlılık yönü ve yasaklar (controller'dan repository yok, entity API'ye çıkmaz) yazılı",
-        "Modüller arası iletişim kuralı (başka modülün service'i mi, event mi) yazılı",
-        "Kullanılacak dört desen (Strategy, Observer, State, DTO+Mapper) ve ilgili issue'lara bağlantı var; mimari kararların docs/adr/ altında tutulduğu yazılı",
-        "Katman ve paket yapısını gösteren basit bir diyagram var"
+        "controller → service → repository yönü ve yasaklar (controller'dan repository yok, entity API'ye çıkmaz) yazılı",
+        "Modüller arası iletişim kuralı: başka modülün yalnız service arayüzü ya da domain olayları; başka modülün repository'si ve entity'si kullanılmaz",
+        "Beş desen (State, Observer, Strategy, Factory Method, DTO+Mapper) hangi modülde, ilgili issue bağlantılarıyla",
+        "Modül ve katman yapısını gösteren diyagram; mimari kararların docs/adr/ altında tutulduğu yazılı"
       ]
     },
     {
@@ -245,13 +298,15 @@
       "milestone": "H1",
       "labels": [
         "backend",
+        "mod:auth",
         "P1",
-        "mod:auth"
+        "rol:veri"
       ],
-      "title": "Flyway V1: users tablosu ve rol enum'u",
+      "title": "Flyway migration: users",
       "description": "ER diyagramına göre ilk migration.",
       "criteria": [
-        "V1__create_users.sql: id, email (unique), password_hash, full_name, role (STUDENT/INSTRUCTOR/ADMIN), created_at",
+        "Dosya adı `V<yyyyMMddHHmm>__<aciklama>.sql` (bkz. backend/src/main/resources/db/migration/README.md)",
+        "users: id, email (unique), password_hash, full_name, role (STUDENT/INSTRUCTOR/ADMIN), active, created_at",
         "docker compose ile temiz DB'de migration hatasız uygulanıyor",
         "ddl-auto=validate ile uygulama açılıyor"
       ],
@@ -264,13 +319,14 @@
       "milestone": "H1",
       "labels": [
         "backend",
+        "mod:auth",
         "P1",
-        "mod:auth"
+        "rol:alan"
       ],
       "title": "User entity + UserRepository",
       "description": "auth/domain altında User entity ve Role enum, auth/repository altında UserRepository.",
       "criteria": [
-        "User entity V1 tablosuyla eşleşiyor (validate geçiyor)",
+        "User entity users migration'ıyla eşleşiyor (validate geçiyor)",
         "Role enum: STUDENT, INSTRUCTOR, ADMIN",
         "UserRepository.findByEmail ve existsByEmail var"
       ],
@@ -283,8 +339,9 @@
       "milestone": "H1",
       "labels": [
         "backend",
+        "design-pattern",
         "P1",
-        "design-pattern"
+        "rol:alan"
       ],
       "title": "Desen: DTO + Mapper altyapısı (UserMapper örneği)",
       "description": "Entity'ler API'ye çıkmaz; her modül kendi dto ve mapper paketini kullanır. Bu issue'da yaklaşım seçilir (MapStruct ya da elle yazılmış mapper), gerekiyorsa bağımlılığı eklenir ve ilk örnek olarak UserMapper yazılır.",
@@ -305,8 +362,9 @@
       "milestone": "H1",
       "labels": [
         "backend",
+        "mod:auth",
         "P1",
-        "mod:auth"
+        "rol:mimar"
       ],
       "title": "Spring Security + JWT altyapısı (token servisi, filtre)",
       "description": "spring-boot-starter-security ve bir JWT kütüphanesi eklenir. Stateless security config, JWT üretme/doğrulama servisi ve istek başına token'ı okuyan filtre.",
@@ -327,7 +385,8 @@
       "milestone": "H1",
       "labels": [
         "backend",
-        "P1"
+        "P1",
+        "rol:mimar"
       ],
       "title": "Global exception handler + standart hata gövdesi",
       "description": "common/exception altında @RestControllerAdvice; sözleşmedeki ErrorResponse formatını üretir.",
@@ -346,8 +405,9 @@
       "milestone": "H1",
       "labels": [
         "backend",
+        "mod:auth",
         "P1",
-        "mod:auth"
+        "rol:mimar"
       ],
       "title": "POST /api/auth/register",
       "description": "Öğrenci veya eğitmen olarak kayıt. Admin kayıtla oluşturulamaz (seed ile gelir).",
@@ -369,8 +429,9 @@
       "milestone": "H1",
       "labels": [
         "backend",
+        "mod:auth",
         "P1",
-        "mod:auth"
+        "rol:mimar"
       ],
       "title": "POST /api/auth/login (JWT döner)",
       "description": "Email + parola ile giriş, başarılıysa JWT ve kullanıcı bilgisi döner.",
@@ -389,8 +450,9 @@
       "milestone": "H1",
       "labels": [
         "backend",
+        "mod:auth",
         "P1",
-        "mod:auth"
+        "rol:mimar"
       ],
       "title": "GET /api/users/me + rol bazlı yetkilendirme",
       "description": "Giriş yapmış kullanıcının bilgisi; method security (@PreAuthorize) açılır ve rol kontrolü için örnek oluşturulur.",
@@ -409,8 +471,9 @@
       "milestone": "H1",
       "labels": [
         "backend",
+        "mod:auth",
         "P1",
-        "mod:auth"
+        "rol:kalite"
       ],
       "title": "AuthService unit testleri",
       "description": "Servis katmanı testleri (Mockito; repository ve PasswordEncoder mock).",
@@ -429,8 +492,9 @@
       "milestone": "H1",
       "labels": [
         "frontend",
+        "mod:auth",
         "P1",
-        "mod:auth"
+        "rol:mimar"
       ],
       "title": "FE: auth context, token saklama, API client interceptor'ı",
       "description": "Giriş durumu tüm uygulamada erişilebilir olsun; API client token'ı otomatik eklesin.",
@@ -449,8 +513,9 @@
       "milestone": "H1",
       "labels": [
         "frontend",
+        "mod:auth",
         "P1",
-        "mod:auth"
+        "rol:mimar"
       ],
       "title": "FE: Kayıt sayfası",
       "description": "/register: ad soyad, email, parola, rol (öğrenci/eğitmen) formu.",
@@ -469,8 +534,9 @@
       "milestone": "H1",
       "labels": [
         "frontend",
+        "mod:auth",
         "P1",
-        "mod:auth"
+        "rol:mimar"
       ],
       "title": "FE: Giriş sayfası",
       "description": "/login: email + parola.",
@@ -489,15 +555,16 @@
       "milestone": "H1",
       "labels": [
         "frontend",
+        "mod:auth",
         "P1",
-        "mod:auth"
+        "rol:mimar"
       ],
-      "title": "FE: Rol bazlı route koruma + navbar",
-      "description": "Korumalı sayfalar için ortak koruma ve role göre değişen navbar.",
+      "title": "FE: Rol bazlı route koruma + navbar (mobil menü dahil)",
+      "description": "Korumalı sayfalar için ortak koruma ve role göre değişen, dar ekranda açılır menüye dönüşen navbar.",
       "criteria": [
-        "Girişsiz kullanıcı korumalı sayfada /login'e yönleniyor",
-        "Yanlış rol 'yetkiniz yok' ekranı görüyor",
-        "Navbar: girişsizse Giriş/Kayıt; girişliyse kullanıcı adı, role özel linkler ve Çıkış"
+        "Girişsiz kullanıcı korumalı sayfada /login'e yönleniyor; yanlış rol 'yetkiniz yok' görüyor",
+        "Navbar: girişsizse Giriş/Kayıt; girişliyse kullanıcı, role özel linkler, bildirim alanı yeri ve Çıkış",
+        "360 px genişlikte menü açılır/kapanır, yatay kaydırma yok"
       ],
       "blockedBy": [
         "be-me",
@@ -509,15 +576,16 @@
       "milestone": "H2",
       "labels": [
         "backend",
+        "mod:course",
         "P1",
-        "mod:course"
+        "rol:veri"
       ],
-      "title": "Flyway V2: courses, sections, lessons",
+      "title": "Flyway migration: categories, courses, sections, lessons",
       "description": "ER diyagramına göre kurs yapısı tabloları.",
       "criteria": [
-        "courses: id, instructor_id (FK users), title, description, status (DRAFT/PENDING/PUBLISHED/REJECTED), rejection_reason, created_at",
-        "sections: id, course_id, title, position; lessons: id, section_id, title, video_url, position",
-        "Silmede cascade davranışı ER diyagramıyla tutarlı",
+        "Dosya adı `V<yyyyMMddHHmm>__<aciklama>.sql` (bkz. backend/src/main/resources/db/migration/README.md)",
+        "categories; courses: instructor_id, category_id, title, description, level (BEGINNER/INTERMEDIATE/ADVANCED), cover_file_id, learning_outcomes, status (DRAFT/IN_REVIEW/PUBLISHED/UNPUBLISHED), rejection_reason, created_at",
+        "sections: course_id, title, position; lessons: section_id, title, content_type, mandatory, duration_seconds, position",
         "Temiz DB'de hatasız uygulanıyor"
       ],
       "blockedBy": [
@@ -529,15 +597,17 @@
       "milestone": "H2",
       "labels": [
         "backend",
+        "mod:course",
         "P1",
-        "mod:course"
+        "rol:alan"
       ],
-      "title": "Course / Section / Lesson entity + repository",
+      "title": "Category / Course / Section / Lesson entity + repository",
       "description": "course/domain ve course/repository.",
       "criteria": [
-        "Entity'ler V2 tablolarıyla eşleşiyor (validate geçiyor)",
-        "CourseStatus enum",
-        "İlişkiler lazy; sıralama position alanına göre"
+        "Entity'ler migration ile eşleşiyor (validate geçiyor)",
+        "CourseStatus ve CourseLevel enum'ları",
+        "İlişkiler lazy; bölüm ve ders sıralaması position alanına göre",
+        "Kursun toplam süresi derslerin süresinden hesaplanabiliyor"
       ],
       "blockedBy": [
         "be-v2-course"
@@ -548,21 +618,22 @@
       "milestone": "H2",
       "labels": [
         "backend",
+        "mod:course",
         "P1",
-        "mod:course"
+        "rol:alan"
       ],
-      "title": "POST /api/courses (eğitmen kurs oluşturur)",
-      "description": "Eğitmen yeni kurs oluşturur; kurs DRAFT durumunda başlar.",
+      "title": "POST /api/courses (kategori, seviye, kapak, öğrenme hedefleri)",
+      "description": "Eğitmen yeni kurs oluşturur; kurs Taslak durumunda başlar.",
       "criteria": [
-        "Yalnız INSTRUCTOR rolü (diğerleri 403)",
-        "instructor_id token'daki kullanıcıdan alınır, istekten değil",
-        "Yanıt CourseResponse DTO (mapper ile), status=DRAFT",
-        "Doğrulama: başlık zorunlu, uzunluk sınırları"
+        "Yalnız INSTRUCTOR (diğerleri 403); instructor_id token'dan alınır",
+        "Alanlar: başlık, açıklama, kategori, seviye, öğrenme hedefleri listesi; kapak görseli ayrı yükleme ucuyla bağlanır",
+        "Yanıt CourseResponse (mapper ile), status=DRAFT",
+        "Doğrulama: başlık zorunlu, kategori mevcut olmalı"
       ],
       "blockedBy": [
         "api-course",
         "be-me",
-        "be-course-domain"
+        "be-categories"
       ]
     },
     {
@@ -570,16 +641,16 @@
       "milestone": "H2",
       "labels": [
         "backend",
+        "mod:course",
         "P1",
-        "mod:course"
+        "rol:veri"
       ],
-      "title": "PUT / DELETE /api/courses/{id} (sahiplik kontrolü)",
-      "description": "Eğitmen yalnız kendi kursunu düzenler/siler.",
+      "title": "PUT / DELETE /api/courses/{id} (sahiplik + State)",
+      "description": "Eğitmen yalnız kendi kursunu düzenler/siler; izin kararını CourseState verir.",
       "criteria": [
-        "Başka eğitmenin kursu 403",
-        "Olmayan kurs 404",
-        "PUBLISHED kurs silinemiyor (409); izin kararını CourseState veriyor",
-        "Silme bölüm ve dersleri de kaldırıyor"
+        "Başka eğitmenin kursu 403, olmayan kurs 404",
+        "Düzenleme yalnız Taslak ve Yayından kaldırıldı durumlarında; diğerlerinde 409 (CourseState)",
+        "Silme yalnız Taslak'ta; bölüm, ders ve dosyaları da kaldırıyor"
       ],
       "blockedBy": [
         "be-course-create",
@@ -591,8 +662,9 @@
       "milestone": "H2",
       "labels": [
         "backend",
+        "mod:course",
         "P1",
-        "mod:course"
+        "rol:veri"
       ],
       "title": "Bölüm CRUD: /api/courses/{id}/sections",
       "description": "Kursa bölüm ekleme, düzenleme, silme, sıralama.",
@@ -610,19 +682,22 @@
       "milestone": "H2",
       "labels": [
         "backend",
+        "mod:course",
+        "mod:content",
         "P1",
-        "mod:course"
+        "rol:veri"
       ],
-      "title": "Ders CRUD + YouTube/Vimeo URL doğrulama",
-      "description": "Bölüme ders ekleme. Video dosya olarak yüklenmez; embed linki tutulur.",
+      "title": "Ders CRUD + sıralama + zorunlu ders işareti",
+      "description": "Bölüme ders ekleme, düzenleme, silme, sıralama. İçerik dosyası ayrı yükleme ucuyla bağlanır.",
       "criteria": [
-        "Yalnız kursun sahibi eğitmen",
-        "videoUrl yalnız YouTube (youtube.com/watch, youtu.be) veya Vimeo linki kabul ediyor; diğerleri 400",
-        "Yanıtta frontend'in doğrudan kullanacağı embedUrl alanı var",
-        "URL doğrulayıcı için unit test var"
+        "Yalnız kursun sahibi eğitmen; düzenlenebilirlik CourseState'e göre",
+        "Ders alanları: başlık, içerik türü (Factory Method'daki türlerden), zorunlu mu, süre",
+        "position ile sıralama ve sıra değiştirme",
+        "Yayımlanmış kursa ders eklenince LessonPublished olayı yayınlanıyor (yeni ders bildirimi için)"
       ],
       "blockedBy": [
-        "be-sections"
+        "be-sections",
+        "be-factory"
       ]
     },
     {
@@ -630,18 +705,21 @@
       "milestone": "H2",
       "labels": [
         "backend",
+        "mod:course",
         "P1",
-        "mod:course"
+        "rol:veri"
       ],
-      "title": "GET /api/courses (katalog) + GET /api/courses/{id} (detay)",
-      "description": "Herkese açık katalog yalnız PUBLISHED kursları gösterir.",
+      "title": "Katalog: anahtar kelime / kategori / seviye / eğitmen + sayfalama; kurs detayı",
+      "description": "Herkese açık katalog yalnız Yayımlandı durumundaki kursları gösterir.",
       "criteria": [
-        "Sayfalama (page, size) ve başlıkta arama (q)",
-        "Detay: bölümler ve ders başlıkları sıralı; video linkleri yalnız kayıtlı öğrenci ve sahibine görünür",
-        "PUBLISHED olmayan kurs detayı sahibi ve admin dışındakilere 404"
+        "Filtreler: q (başlık/açıklama), categoryId, level, instructorId; sayfalama (page, size) ve sıralama",
+        "Detay: bölüm ve ders başlıkları sıralı, toplam süre, öğrenme hedefleri, eğitmen, kayıtlı kursiyer sayısı",
+        "Yayımlanmamış kurs detayı sahibi ve admin dışındakilere 404",
+        "Puana göre filtre ve değerlendirmeler ayrı issue'da (P2)"
       ],
       "blockedBy": [
-        "be-course-domain"
+        "be-course-domain",
+        "be-categories"
       ]
     },
     {
@@ -649,16 +727,16 @@
       "milestone": "H2",
       "labels": [
         "backend",
+        "mod:course",
         "P1",
-        "mod:course"
+        "rol:alan"
       ],
-      "title": "POST /api/courses/{id}/submit (onaya gönder)",
-      "description": "Eğitmen DRAFT ya da REJECTED kursu admin onayına gönderir.",
+      "title": "Onaya gönder (Taslak → İncelemede)",
+      "description": "Eğitmen Taslak kursu yönetici incelemesine gönderir.",
       "criteria": [
-        "DRAFT/REJECTED → PENDING; diğer durumlarda 409",
-        "En az bir bölüm ve bir ders yoksa 400",
-        "Yalnız sahibi eğitmen",
-        "Durum geçişi CourseState üzerinden yapılıyor; serviste status için if/switch yok"
+        "Geçiş CourseState üzerinden; Taslak dışında 409",
+        "En az bir bölüm, bir ders ve içeriği yüklenmiş en az bir ders yoksa 400",
+        "Yalnız sahibi eğitmen; önceki red gerekçesi temizleniyor"
       ],
       "blockedBy": [
         "be-course-create",
@@ -670,8 +748,9 @@
       "milestone": "H2",
       "labels": [
         "backend",
+        "mod:course",
         "P1",
-        "mod:course"
+        "rol:veri"
       ],
       "title": "GET /api/instructor/courses",
       "description": "Eğitmenin tüm kursları (her durumda) ve durumları.",
@@ -688,13 +767,15 @@
       "milestone": "H2",
       "labels": [
         "backend",
+        "mod:enrollment",
         "P1",
-        "mod:enrollment"
+        "rol:veri"
       ],
-      "title": "Flyway V3: enrollments",
-      "description": "Öğrenci-kurs kayıt tablosu.",
+      "title": "Flyway migration: enrollments",
+      "description": "Kursiyer-kurs kayıt tablosu.",
       "criteria": [
-        "enrollments: id, student_id, course_id, enrolled_at, progress_percent",
+        "Dosya adı `V<yyyyMMddHHmm>__<aciklama>.sql` (bkz. backend/src/main/resources/db/migration/README.md)",
+        "enrollments: id, student_id, course_id, enrolled_at",
         "(student_id, course_id) unique",
         "Temiz DB'de hatasız uygulanıyor"
       ],
@@ -707,8 +788,9 @@
       "milestone": "H2",
       "labels": [
         "backend",
+        "mod:enrollment",
         "P1",
-        "mod:enrollment"
+        "rol:veri"
       ],
       "title": "POST /api/courses/{id}/enroll + GET /api/me/enrollments",
       "description": "Öğrenci yayındaki bir kursa kaydolur ve kayıtlarını listeler.",
@@ -728,22 +810,22 @@
       "milestone": "H2",
       "labels": [
         "backend",
+        "mod:course",
         "P1",
-        "mod:course"
+        "rol:kalite"
       ],
-      "title": "CourseService unit testleri",
-      "description": "Kurs, bölüm ve ders servislerinin iş kuralları.",
+      "title": "CourseService + State unit testleri",
+      "description": "Kurs, bölüm ve ders servislerinin iş kuralları ve durum geçişleri.",
       "criteria": [
-        "Oluşturma, sahiplik ihlali (403), PUBLISHED silme (409), onaya gönderme durum geçişleri",
+        "Oluşturma, sahiplik ihlali (403), durum dışı düzenleme/silme (409)",
+        "Her CourseState için izinli ve izinsiz geçiş testleri",
         "Bölüm/ders sıralama",
-        "CI'da çalışıyor",
-        "Her CourseState için izinli ve izinsiz geçiş testleri"
+        "CI'da çalışıyor"
       ],
       "blockedBy": [
         "be-course-update",
         "be-lessons",
-        "be-course-submit",
-        "be-state"
+        "be-course-submit"
       ]
     },
     {
@@ -751,8 +833,9 @@
       "milestone": "H2",
       "labels": [
         "backend",
+        "mod:enrollment",
         "P1",
-        "mod:enrollment"
+        "rol:kalite"
       ],
       "title": "EnrollmentService unit testleri",
       "description": "Kayıt kuralları.",
@@ -769,16 +852,17 @@
       "milestone": "H2",
       "labels": [
         "frontend",
+        "mod:course",
         "P1",
-        "mod:course"
+        "rol:alan"
       ],
-      "title": "FE: Eğitmen kurs oluşturma / düzenleme formu",
-      "description": "Eğitmen panelinde yeni kurs ve var olanı düzenleme.",
+      "title": "FE: Eğitmen kurs formu (kategori, seviye, kapak, hedefler)",
+      "description": "Eğitmen panelinde yeni kurs ve düzenleme.",
       "criteria": [
-        "Yalnız eğitmen erişebiliyor (route koruma)",
-        "Oluşturma ve düzenleme aynı formu kullanıyor",
+        "Yalnız eğitmen erişebiliyor",
+        "Kategori ve seviye seçimi, öğrenme hedefleri listesi, kapak yükleme ve önizleme",
         "Doğrulama ve backend hataları gösteriliyor",
-        "Kaydedince bölüm/ders yönetimine geçiliyor"
+        "Kurs durumu düzenlemeye izin vermiyorsa form salt okunur"
       ],
       "blockedBy": [
         "fe-guard-nav",
@@ -791,20 +875,22 @@
       "milestone": "H2",
       "labels": [
         "frontend",
+        "mod:course",
         "P1",
-        "mod:course"
+        "rol:veri"
       ],
-      "title": "FE: Bölüm ve ders yönetimi ekranı",
-      "description": "Kurs içinde bölüm ekle/sil/sırala, bölüme ders ekle (başlık + video linki).",
+      "title": "FE: Bölüm ve ders yönetimi + içerik yükleme",
+      "description": "Kurs içinde bölüm/ders ekleme, sıralama ve ders içeriği yükleme.",
       "criteria": [
-        "Bölüm ve ders ekleme/düzenleme/silme",
-        "Sıralama (yukarı/aşağı butonları yeterli)",
-        "Geçersiz video linki hatası gösteriliyor",
-        "Ders eklerken video önizlemesi (embed) görünüyor"
+        "Bölüm ve ders ekleme/düzenleme/silme, sıralama",
+        "Ders için içerik türü, zorunlu işareti, süre",
+        "Dosya yükleme: ilerleme göstergesi, tür/boyut hatası mesajı",
+        "Yüklenen video/PDF önizlemesi"
       ],
       "blockedBy": [
         "be-sections",
         "be-lessons",
+        "be-content-upload",
         "fe-course-form"
       ]
     },
@@ -813,15 +899,17 @@
       "milestone": "H2",
       "labels": [
         "frontend",
+        "mod:course",
         "P1",
-        "mod:course"
+        "rol:veri"
       ],
-      "title": "FE: Kurs kataloğu (liste + arama)",
-      "description": "Ana sayfada yayındaki kurslar.",
+      "title": "FE: Kurs kataloğu + filtreler",
+      "description": "Ana sayfada yayımlanmış kurslar.",
       "criteria": [
-        "Kart görünümü: başlık, eğitmen, kısa açıklama",
-        "Arama kutusu ve sayfalama",
-        "Boş sonuç ve hata durumları gösteriliyor"
+        "Kart: kapak, başlık, eğitmen, seviye, kategori",
+        "Arama kutusu, kategori/seviye/eğitmen filtreleri, sayfalama",
+        "Filtreler URL'de tutuluyor (geri tuşu çalışıyor)",
+        "Boş sonuç ve hata durumları; mobilde tek sütun"
       ],
       "blockedBy": [
         "be-course-list"
@@ -832,17 +920,18 @@
       "milestone": "H2",
       "labels": [
         "frontend",
-        "P1",
         "mod:course",
-        "mod:enrollment"
+        "mod:enrollment",
+        "P1",
+        "rol:veri"
       ],
-      "title": "FE: Kurs detay sayfası + \"Kayıt ol\" butonu",
-      "description": "/courses/[id]: açıklama, bölüm/ders listesi, kayıt butonu.",
+      "title": "FE: Kurs detay (içerik, süre, kazanımlar) + kayıt ol",
+      "description": "/courses/[id]: açıklama, öğrenme hedefleri, toplam süre, bölüm/ders listesi, kayıt butonu.",
       "criteria": [
-        "Bölüm ve ders başlıkları sıralı görünüyor",
+        "Bölüm ve ders başlıkları sıralı, süreler görünüyor",
         "Girişsiz kullanıcı Kayıt ol'a basınca girişe yönleniyor",
-        "Kayıtlı öğrenci 'Derse devam et' görüyor",
-        "Kayıt sonrası buton durumu güncelleniyor"
+        "Kayıtlı kursiyer 'Derse devam et' görüyor; kayıt sonrası buton güncelleniyor",
+        "Değerlendirmeler bölümü için yer (P2 issue'su doldurur)"
       ],
       "blockedBy": [
         "be-course-list",
@@ -854,14 +943,15 @@
       "milestone": "H2",
       "labels": [
         "frontend",
-        "P2",
-        "mod:enrollment"
+        "mod:enrollment",
+        "P1",
+        "rol:veri"
       ],
-      "title": "FE: Öğrencinin \"Kurslarım\" sayfası",
-      "description": "Kayıtlı kurslar ve ilerleme yüzdeleri.",
+      "title": "FE: Kayıtlı kurslar paneli",
+      "description": "Kursiyerin kayıtlı olduğu kurslar (proje dokümanı E).",
       "criteria": [
-        "Her kurs için ilerleme çubuğu",
-        "Kursa tıklayınca ders izleme sayfasına gidiliyor",
+        "Her kurs için kurs ilerleme yüzdesi ve son izlenen ders",
+        "Kursa tıklayınca kaldığı derse gidiliyor",
         "Kayıt yoksa kataloğa yönlendiren boş durum"
       ],
       "blockedBy": [
@@ -870,18 +960,19 @@
     },
     {
       "key": "fe-instructor-panel",
-      "milestone": "H2",
+      "milestone": "H3",
       "labels": [
         "frontend",
+        "mod:course",
         "P1",
-        "mod:course"
+        "rol:veri"
       ],
-      "title": "FE: Eğitmen paneli (kurslarım + onaya gönder)",
+      "title": "FE: Eğitmen paneli (kurslarım + durum + onaya gönder)",
       "description": "Eğitmenin kurs listesi ve durumları.",
       "criteria": [
-        "Durum rozeti (Taslak / Onay bekliyor / Yayında / Reddedildi)",
-        "Reddedilen kursta red gerekçesi görünüyor",
-        "Onaya gönder butonu yalnız uygun durumlarda aktif"
+        "Durum rozeti: Taslak / İncelemede / Yayımlandı / Yayından kaldırıldı",
+        "Reddedilip Taslak'a dönen kursta red gerekçesi görünüyor",
+        "Onaya gönder ve yeniden incelemeye gönder butonları yalnız uygun durumlarda aktif"
       ],
       "blockedBy": [
         "be-course-submit",
@@ -890,11 +981,12 @@
     },
     {
       "key": "doc-seq-enroll",
-      "milestone": "H2",
+      "milestone": "H3",
       "labels": [
         "docs",
+        "mod:enrollment",
         "P1",
-        "mod:enrollment"
+        "rol:alan"
       ],
       "title": "Sekans diyagramı: kursa kayıt",
       "description": "Öğrencinin kursa kaydolma akışı: frontend → controller → service → repository → DB, hata dalları dahil.",
@@ -913,14 +1005,16 @@
       "milestone": "H3",
       "labels": [
         "backend",
+        "mod:progress",
         "P1",
-        "mod:enrollment"
+        "rol:veri"
       ],
-      "title": "Flyway V4: lesson_progress",
-      "description": "Ders bazında tamamlanma kaydı.",
+      "title": "Flyway migration: lesson_progress, course_progress",
+      "description": "Ders bazında tamamlanma ve kurs bazında ilerleme/son izlenen ders.",
       "criteria": [
-        "lesson_progress: id, enrollment_id, lesson_id, completed_at",
-        "(enrollment_id, lesson_id) unique",
+        "Dosya adı `V<yyyyMMddHHmm>__<aciklama>.sql` (bkz. backend/src/main/resources/db/migration/README.md)",
+        "lesson_progress: enrollment_id, lesson_id, completed_at; (enrollment_id, lesson_id) unique",
+        "course_progress: enrollment_id, progress_percent, last_lesson_id, last_accessed_at",
         "Temiz DB'de hatasız uygulanıyor"
       ],
       "blockedBy": [
@@ -932,15 +1026,16 @@
       "milestone": "H3",
       "labels": [
         "backend",
+        "mod:progress",
         "P1",
-        "mod:enrollment"
+        "rol:alan"
       ],
       "title": "POST /api/lessons/{id}/complete",
-      "description": "Öğrenci bir dersi tamamlandı olarak işaretler. İlerleme hesabı bu uçta yapılmaz; olay yayınlanır (bkz. Observer issue'su).",
+      "description": "Kursiyer bir dersi tamamlandı olarak işaretler. İlerleme hesabı bu uçta yapılmaz; LessonCompleted olayı yayınlanır.",
       "criteria": [
-        "Yalnız kursa kayıtlı öğrenci (aksi 403)",
-        "Aynı dersi tekrar işaretlemek idempotent (200, kopya kayıt yok)",
-        "Başarılı işaretlemede LessonCompletedEvent yayınlanıyor"
+        "Yalnız kursa kayıtlı kursiyer (aksi 403)",
+        "Tekrar işaretleme idempotent (kopya kayıt yok)",
+        "Başarılı işaretlemede LessonCompleted olayı yayınlanıyor"
       ],
       "blockedBy": [
         "be-enroll",
@@ -952,22 +1047,24 @@
       "milestone": "H3",
       "labels": [
         "backend",
-        "P1",
         "design-pattern",
-        "mod:enrollment"
+        "mod:notification",
+        "mod:progress",
+        "P1",
+        "rol:alan"
       ],
-      "title": "Desen: Observer — LessonCompletedEvent + ilerleme listener'ı (Spring events)",
-      "description": "Ders tamamlanınca ApplicationEventPublisher ile LessonCompletedEvent yayınlanır; ProgressListener olayı dinleyip enrollments.progress_percent'i günceller.",
-      "why": "Ders tamamlama (yayıncı) ilerleme hesaplamayı (dinleyici) bilmek zorunda kalmaz; ikisi gevşek bağlı kalır. İleride aynı olaya 'kurs bitti bildirimi' ya da sertifika üretimi gibi yeni dinleyiciler, ders tamamlama koduna dokunmadan eklenebilir (Open/Closed). Spring events bu deseni framework içinde hazır sunduğu için ek altyapı gerekmez.",
+      "title": "Desen: Observer — domain olayları ve dinleyiciler (Spring events)",
+      "description": "Modüller arası tepkiler domain olaylarıyla kurulur: EnrollmentCreated, LessonPublished, LessonCompleted, CourseApproved, CourseRejected, QuizCompleted, CertificateIssued. Yayıncı modül, dinleyicileri (ilerleme, sertifika, bildirim) bilmez.",
+      "why": "Kayıt, ders tamamlama, kurs onayı/reddi, sınav sonucu ve sertifika gibi olaylara birden fazla modül tepki veriyor (ilerleme hesabı, sertifika kontrolü, bildirim). Yayıncı modül bunları doğrudan çağırırsa modüller birbirine sıkı bağlanır ve her yeni tepki yayıncı kodunu değiştirir. Observer ile yayıncı yalnız olayı duyurur; yeni dinleyici yayıncıya dokunmadan eklenir (Open/Closed). Spring events deseni ek altyapı gerektirmeden sağlar.",
       "criteria": [
-        "LessonCompletedEvent (record: enrollmentId, lessonId) common/event ya da enrollment/domain altında",
-        "ProgressListener @EventListener (veya @TransactionalEventListener) ile yüzdeyi yeniden hesaplıyor",
-        "Ders tamamlama servisi ProgressListener'a doğrudan bağımlı değil",
-        "Senkron/asenkron ve transaction fazı seçimi gerekçesiyle docs/architecture.md'ye yazıldı",
-        "Karar docs/adr/ altında bir ADR olarak yazıldı (bağlam, karar, alternatifler, sonuçlar)"
+        "Olay tipleri (record) ilgili modülün domain paketinde; yayınlama ApplicationEventPublisher ile",
+        "Dinleyiciler @TransactionalEventListener(AFTER_COMMIT) ya da gerekçeli başka seçimle; senkron/asenkron kararı yazılı",
+        "Yayıncı servislerde dinleyicilere doğrudan bağımlılık yok (ArchUnit ile kontrol)",
+        "Olay → dinleyici tablosu docs/architecture.md'de",
+        "Karar docs/adr/ altında ADR olarak yazıldı (alternatifler: doğrudan servis çağrısı, mesaj kuyruğu)"
       ],
       "blockedBy": [
-        "be-complete-lesson",
+        "be-enroll",
         "adr-001"
       ]
     },
@@ -976,18 +1073,21 @@
       "milestone": "H3",
       "labels": [
         "backend",
+        "mod:progress",
         "P1",
-        "mod:enrollment"
+        "rol:alan"
       ],
-      "title": "GET /api/me/courses/{id}/progress",
-      "description": "Öğrencinin kurs ilerlemesi.",
+      "title": "Bölüm ve kurs ilerleme yüzdesi (LessonCompleted ile güncellenir)",
+      "description": "ProgressListener LessonCompleted olayını dinleyip course_progress'i günceller; bölüm yüzdeleri sorgu anında hesaplanır.",
       "criteria": [
-        "Yanıt: progressPercent, tamamlanan ders id'leri, toplam ders sayısı",
-        "Kayıtlı değilse 404",
-        "Dersi olmayan kursta yüzde 0 (sıfıra bölme yok)"
+        "Kurs yüzdesi = tamamlanan ders / toplam ders (örn. 20 dersin 15'i → %75); bölüm yüzdesi aynı kuralla",
+        "Dersi olmayan kurs/bölümde yüzde 0 (sıfıra bölme yok); ders silinince yüzde yeniden hesaplanıyor",
+        "GET /api/me/courses/{id}/progress: kurs yüzdesi, bölüm yüzdeleri, tamamlanan ders id'leri",
+        "Hesaplama kuralı docs/architecture.md'de"
       ],
       "blockedBy": [
-        "be-observer"
+        "be-observer",
+        "be-complete-lesson"
       ]
     },
     {
@@ -995,20 +1095,21 @@
       "milestone": "H3",
       "labels": [
         "backend",
+        "mod:progress",
         "P1",
-        "mod:enrollment"
+        "rol:kalite"
       ],
-      "title": "ProgressService + listener unit testleri",
-      "description": "İlerleme hesabı ve olay akışı.",
+      "title": "ProgressService testleri (20 dersin 15'i → %75)",
+      "description": "Proje dokümanı §6: yanlış ilerleme hesaplaması test edilmeli.",
       "criteria": [
-        "Yüzde hesabı: 0 ders, kısmi, tamamı",
-        "Tekrar tamamlama yüzdeyi değiştirmiyor",
-        "Ders tamamlamanın olay yayınladığı doğrulanıyor (publisher mock)",
+        "Kurs ve bölüm yüzdesi: 0 ders, kısmi (15/20 = %75), tamamı",
+        "Tekrar tamamlama yüzdeyi değiştirmiyor; ders silinince yeniden hesap",
+        "Son izlenen ders kuralı",
         "CI'da çalışıyor"
       ],
       "blockedBy": [
-        "be-observer",
-        "be-progress"
+        "be-progress",
+        "be-resume"
       ]
     },
     {
@@ -1016,20 +1117,22 @@
       "milestone": "H3",
       "labels": [
         "frontend",
+        "mod:content",
         "P1",
-        "mod:course"
+        "rol:mimar"
       ],
-      "title": "FE: Ders izleme sayfası (embed + ders listesi)",
-      "description": "/learn/[courseId]/[lessonId]: solda bölüm/ders listesi, ortada YouTube/Vimeo embed.",
+      "title": "FE: Kurs oynatıcısı (video, PDF, doküman)",
+      "description": "/learn/[courseId]/[lessonId]: solda bölüm/ders listesi, ortada içerik.",
       "criteria": [
-        "Yalnız kayıtlı öğrenci erişebiliyor",
-        "Embed iframe backend'in döndüğü embedUrl ile çalışıyor (YouTube ve Vimeo denenmiş)",
-        "Sonraki / önceki ders gezinmesi",
-        "Mobil genişlikte liste daralıyor"
+        "Video HTML5 player ile backend içerik ucundan; ileri sarma çalışıyor",
+        "PDF tarayıcıda görüntüleniyor, doküman indiriliyor",
+        "Önceki / sonraki ders gezinmesi",
+        "403 durumunda 'Bu derse erişmek için kursa kaydolun' ekranı",
+        "Mobilde liste açılır panele dönüşüyor"
       ],
       "blockedBy": [
-        "be-course-list",
-        "be-enroll"
+        "be-content-serve",
+        "be-course-list"
       ]
     },
     {
@@ -1037,15 +1140,16 @@
       "milestone": "H3",
       "labels": [
         "frontend",
+        "mod:progress",
         "P1",
-        "mod:enrollment"
+        "rol:alan"
       ],
-      "title": "FE: \"Tamamlandı\" butonu + ilerleme çubuğu",
-      "description": "Ders izleme sayfasında tamamlama ve kurs ilerlemesi.",
+      "title": "FE: Tamamlandı butonu + bölüm/kurs ilerleme çubukları",
+      "description": "Oynatıcıda tamamlama ve ilerleme göstergeleri.",
       "criteria": [
-        "Tamamlandı butonu dersi işaretliyor; listede tik görünüyor",
-        "İlerleme çubuğu yanıtla güncelleniyor",
-        "Tamamlanmış derste buton pasif / 'Tamamlandı' yazıyor"
+        "Tamamlandı butonu; listede tik",
+        "Kurs ve bölüm ilerleme çubukları yanıtla güncelleniyor",
+        "Tamamlanmış derste buton pasif"
       ],
       "blockedBy": [
         "be-complete-lesson",
@@ -1058,14 +1162,16 @@
       "milestone": "H3",
       "labels": [
         "backend",
+        "mod:quiz",
         "P1",
-        "mod:quiz"
+        "rol:veri"
       ],
-      "title": "Flyway V5: quizzes, questions, options",
-      "description": "Sınav yapısı tabloları.",
+      "title": "Flyway migration: soru bankası ve sınavlar",
+      "description": "Soru bankası (kurs bazında) ve bölüm sonu sınavları.",
       "criteria": [
-        "quizzes: id, course_id, title, scoring_type",
-        "questions: id, quiz_id, text, position, points; options: id, question_id, text, is_correct",
+        "Dosya adı `V<yyyyMMddHHmm>__<aciklama>.sql` (bkz. backend/src/main/resources/db/migration/README.md)",
+        "questions: course_id, text, points; options: question_id, text, is_correct",
+        "quizzes: section_id, title, scoring_type, pass_threshold, required; quiz_questions: quiz_id, question_id, position",
         "Temiz DB'de hatasız uygulanıyor"
       ],
       "blockedBy": [
@@ -1077,20 +1183,19 @@
       "milestone": "H3",
       "labels": [
         "backend",
+        "mod:quiz",
         "P1",
-        "mod:quiz"
+        "rol:alan"
       ],
-      "title": "Sınav oluşturma API'si (sınav, soru, şık)",
-      "description": "Eğitmen kursuna çoktan seçmeli sınav ekler.",
+      "title": "Bölüm sonu sınavı: bankadan soru seçimi + başarı eşiği",
+      "description": "Eğitmen bir bölüme sınav ekler, sorularını kursun soru bankasından seçer.",
       "criteria": [
-        "Yalnız kursun sahibi eğitmen",
-        "Her soruda en az 2 şık ve en az 1 doğru şık; aksi 400",
-        "Puanlama tipi (scoringType) sınav düzeyinde seçiliyor",
-        "Sınav entity + repository + DTO + mapper"
+        "Sınav: başlık, puanlama tipi (Strategy'deki türler), başarı eşiği (%), sertifika için zorunlu mu",
+        "Yalnız aynı kursun bankasındaki sorular seçilebiliyor",
+        "Yalnız kursun sahibi eğitmen; düzenlenebilirlik CourseState'e göre"
       ],
       "blockedBy": [
-        "api-rest",
-        "be-v5-quiz"
+        "be-question-bank"
       ]
     },
     {
@@ -1098,8 +1203,9 @@
       "milestone": "H3",
       "labels": [
         "backend",
+        "mod:quiz",
         "P1",
-        "mod:quiz"
+        "rol:veri"
       ],
       "title": "GET sınav (öğrenci görünümü doğru cevabı göstermez)",
       "description": "Öğrenci ve eğitmen için iki ayrı DTO.",
@@ -1117,19 +1223,20 @@
       "milestone": "H3",
       "labels": [
         "frontend",
+        "mod:quiz",
         "P1",
-        "mod:quiz"
+        "rol:alan"
       ],
-      "title": "FE: Eğitmen sınav oluşturma formu",
-      "description": "Kurs yönetiminde sınav sekmesi.",
+      "title": "FE: Bölüm sonu sınavı oluşturma",
+      "description": "Bölüm için sınav ve bankadan soru seçimi.",
       "criteria": [
-        "Soru ekle/sil, şık ekle/sil, doğru şıkkı işaretle",
-        "Puanlama tipi seçimi",
-        "İstemci tarafında 'en az 2 şık / en az 1 doğru' kontrolü",
+        "Bankadan soru seçme ve sıralama",
+        "Puanlama tipi, başarı eşiği, zorunlu işareti",
         "Kaydedilen sınav tekrar açılınca düzenlenebiliyor"
       ],
       "blockedBy": [
-        "be-quiz-create"
+        "be-quiz-create",
+        "fe-question-bank"
       ]
     },
     {
@@ -1137,21 +1244,22 @@
       "milestone": "H3",
       "labels": [
         "docs",
+        "design-pattern",
         "P1",
-        "design-pattern"
+        "rol:alan"
       ],
-      "title": "Sınıf diyagramı (desenler dahil)",
-      "description": "Domain ve servis katmanının sınıf diyagramı; üç desen açıkça işaretli.",
+      "title": "Sınıf diyagramı (5 desen dahil)",
+      "description": "Domain ve servis katmanının sınıf diyagramı; desenler açıkça işaretli.",
       "criteria": [
-        "docs/diagrams/class.(puml|mmd) ve render",
-        "Strategy (ScoringStrategy ve uygulamaları), Observer (event + listener), State (CourseState), DTO+Mapper ilişkileri stereotype/not ile gösteriliyor",
-        "Sınıf, alan ve metot adları koddakiyle birebir aynı; diyagramda olup kodda olmayan öğe yok",
-        "State (CourseState ve durum sınıfları) diyagramda gösteriliyor"
+        "docs/diagrams/class.(puml|mmd) ve render; gerekirse modül başına ayrı diyagram",
+        "State (CourseState), Observer (olaylar + dinleyiciler), Strategy (ScoringStrategy), Factory Method (LessonContentFactory), DTO+Mapper stereotype/not ile gösteriliyor",
+        "Sınıf, alan ve metot adları koddakiyle birebir aynı"
       ],
       "blockedBy": [
         "be-mapper",
         "be-observer",
-        "be-state"
+        "be-state",
+        "be-factory"
       ]
     },
     {
@@ -1159,9 +1267,10 @@
       "milestone": "H4",
       "labels": [
         "backend",
-        "P1",
         "design-pattern",
-        "mod:quiz"
+        "mod:quiz",
+        "P1",
+        "rol:alan"
       ],
       "title": "Desen: Strategy — ScoringStrategy ve uygulamaları",
       "description": "ScoringStrategy arayüzü ve üç uygulama: SingleAnswerScoring (tek doğru), MultiAnswerAllOrNothing (çoklu doğru, tam eşleşme), MultiAnswerPartialScoring (çoklu doğru, kısmi puan). Sınavın scoringType'ına göre doğru strateji bir resolver/map ile seçilir.",
@@ -1175,8 +1284,7 @@
         "Karar docs/adr/ altında bir ADR olarak yazıldı (bağlam, karar, alternatifler, sonuçlar)"
       ],
       "blockedBy": [
-        "be-v5-quiz",
-        "adr-001"
+        "be-v5-quiz"
       ]
     },
     {
@@ -1184,13 +1292,15 @@
       "milestone": "H4",
       "labels": [
         "backend",
+        "mod:quiz",
         "P1",
-        "mod:quiz"
+        "rol:veri"
       ],
-      "title": "Flyway V6: quiz_attempts, attempt_answers",
+      "title": "Flyway migration: quiz_attempts, attempt_answers",
       "description": "Sınav denemeleri ve verilen cevaplar.",
       "criteria": [
-        "quiz_attempts: id, quiz_id, student_id, score, max_score, submitted_at",
+        "Dosya adı `V<yyyyMMddHHmm>__<aciklama>.sql` (bkz. backend/src/main/resources/db/migration/README.md)",
+        "quiz_attempts: id, quiz_id, student_id, score, max_score, passed, submitted_at",
         "attempt_answers: id, attempt_id, question_id, option_id",
         "Temiz DB'de hatasız uygulanıyor"
       ],
@@ -1203,21 +1313,23 @@
       "milestone": "H4",
       "labels": [
         "backend",
+        "mod:quiz",
         "P1",
-        "mod:quiz"
+        "rol:alan"
       ],
-      "title": "POST /api/quizzes/{id}/attempts (gönder + otomatik puanla)",
-      "description": "Öğrenci cevaplarını gönderir; puan ScoringStrategy ile hesaplanır ve kaydedilir.",
+      "title": "Sınav çözme: puanlama, başarı eşiği, QuizCompleted olayı",
+      "description": "Kursiyer cevaplarını gönderir; puan ScoringStrategy ile hesaplanır, eşiğe göre geçti/kaldı belirlenir.",
       "criteria": [
-        "Yalnız kursa kayıtlı öğrenci",
-        "Sınava ait olmayan soru/şık id'si 400",
-        "Yanıtta puan, maksimum puan ve soru bazında doğru/yanlış",
-        "Deneme ve cevaplar kaydediliyor"
+        "Yalnız kursa kayıtlı kursiyer; sınava ait olmayan soru/şık 400",
+        "Yanıt: puan, maksimum puan, yüzde, geçti/kaldı, soru bazında doğru/yanlış",
+        "Deneme ve cevaplar kaydediliyor",
+        "QuizCompleted olayı yayınlanıyor (bildirim ve sertifika kontrolü için)"
       ],
       "blockedBy": [
         "be-quiz-get",
         "be-strategy",
-        "be-v6-attempt"
+        "be-v6-attempt",
+        "be-observer"
       ]
     },
     {
@@ -1225,8 +1337,9 @@
       "milestone": "H4",
       "labels": [
         "backend",
+        "mod:quiz",
         "P2",
-        "mod:quiz"
+        "rol:veri"
       ],
       "title": "GET /api/me/quizzes/{id}/attempts",
       "description": "Öğrencinin bir sınavdaki denemeleri.",
@@ -1243,8 +1356,9 @@
       "milestone": "H4",
       "labels": [
         "backend",
+        "mod:quiz",
         "P1",
-        "mod:quiz"
+        "rol:kalite"
       ],
       "title": "Puanlama stratejileri + QuizService unit testleri",
       "description": "Strategy uygulamaları ve deneme akışı.",
@@ -1264,8 +1378,9 @@
       "milestone": "H4",
       "labels": [
         "frontend",
+        "mod:quiz",
         "P1",
-        "mod:quiz"
+        "rol:alan"
       ],
       "title": "FE: Sınav çözme ekranı",
       "description": "Öğrenci kurs içinden sınava girer.",
@@ -1284,35 +1399,37 @@
       "milestone": "H4",
       "labels": [
         "frontend",
-        "P2",
-        "mod:quiz"
+        "mod:quiz",
+        "P1",
+        "rol:alan"
       ],
-      "title": "FE: Sınav sonuç ekranı",
-      "description": "Deneme sonucu ve geçmiş denemeler.",
+      "title": "FE: Sınav sonucu (puan, eşik, geçti/kaldı)",
+      "description": "Deneme sonrası sonuç ekranı.",
       "criteria": [
-        "Puan / maksimum puan ve soru bazında doğru-yanlış",
-        "Önceki denemelerin listesi",
-        "Tekrar dene butonu"
+        "Puan / maksimum, yüzde, başarı eşiği ve geçti/kaldı",
+        "Soru bazında doğru-yanlış",
+        "Kaldıysa 'Tekrar dene', geçtiyse kursa dönüş"
       ],
       "blockedBy": [
-        "be-attempt-list"
+        "be-attempt"
       ]
     },
     {
       "key": "be-admin-courses",
-      "milestone": "H4",
+      "milestone": "H3",
       "labels": [
         "backend",
+        "mod:admin",
         "P1",
-        "mod:admin"
+        "rol:alan"
       ],
-      "title": "Admin: bekleyen kurslar + onayla/reddet API'si",
-      "description": "Admin PENDING kursları görür, onaylar ya da gerekçeyle reddeder.",
+      "title": "Admin: incelemedeki kurslar, onayla / reddet (gerekçeli)",
+      "description": "Yönetici İncelemede durumundaki kursları görür; onaylar (→ Yayımlandı) ya da gerekçeyle reddeder (→ Taslak).",
       "criteria": [
-        "GET /api/admin/courses?status=PENDING (yalnız ADMIN)",
-        "POST approve: PENDING → PUBLISHED; POST reject: PENDING → REJECTED + zorunlu gerekçe",
-        "PENDING olmayan kursta 409",
-        "Onay/red geçişleri CourseState üzerinden yapılıyor; serviste status için if/switch yok"
+        "GET /api/admin/courses?status=IN_REVIEW (yalnız ADMIN); kurs içeriği incelenebiliyor",
+        "Onay ve red geçişleri CourseState üzerinden; red gerekçesi zorunlu ve kursta saklanıyor",
+        "Onayda CourseApproved, redde CourseRejected (gerekçe ile) olayı yayınlanıyor",
+        "İncelemede olmayan kursta 409"
       ],
       "blockedBy": [
         "be-course-submit",
@@ -1324,15 +1441,17 @@
       "milestone": "H4",
       "labels": [
         "backend",
-        "P1",
-        "mod:admin"
+        "mod:admin",
+        "P2",
+        "rol:veri"
       ],
-      "title": "Admin: GET /api/admin/users",
-      "description": "Kullanıcı listesi.",
+      "title": "Admin: kullanıcı / eğitmen yönetimi",
+      "description": "Proje dokümanı K: kullanıcı ve eğitmen yönetimi.",
       "criteria": [
-        "Yalnız ADMIN",
-        "Sayfalama ve rol filtresi",
-        "password_hash yanıtta yok"
+        "GET /api/admin/users: sayfalama, rol filtresi, arama",
+        "Hesabı pasifleştirme/aktifleştirme (pasif kullanıcı giriş yapamaz)",
+        "password_hash yanıtta yok",
+        "Yalnız ADMIN; admin kendini pasifleştiremez"
       ],
       "blockedBy": [
         "be-me"
@@ -1343,40 +1462,42 @@
       "milestone": "H4",
       "labels": [
         "backend",
+        "mod:admin",
         "P1",
-        "mod:admin"
+        "rol:kalite"
       ],
-      "title": "AdminService unit testleri",
-      "description": "Onay/red durum geçişleri ve kullanıcı listesi.",
+      "title": "Admin + kurs durum geçişi testleri",
+      "description": "Onay, red, yayından kaldırma iş kuralları.",
       "criteria": [
-        "Onay, red (gerekçe zorunlu), yanlış durumdan geçiş (409)",
-        "Rol filtresi",
+        "Onay, red (gerekçe zorunlu, kursta saklanıyor, Taslak'a dönüş), yayından kaldırma, yanlış durumdan geçiş (409)",
+        "Onay/red olaylarının yayınlandığı doğrulanıyor",
         "CI'da çalışıyor"
       ],
       "blockedBy": [
         "be-admin-courses",
-        "be-admin-users",
-        "be-state"
+        "be-unpublish"
       ]
     },
     {
       "key": "fe-admin-courses",
-      "milestone": "H4",
+      "milestone": "H3",
       "labels": [
         "frontend",
+        "mod:admin",
         "P1",
-        "mod:admin"
+        "rol:alan"
       ],
-      "title": "FE: Admin kurs onay ekranı",
-      "description": "Onay bekleyen kursların listesi ve incelemesi.",
+      "title": "FE: Admin kurs onay / red / yayından kaldırma",
+      "description": "İncelemedeki kursların listesi ve incelemesi; yayımlanmış kursları yayından kaldırma.",
       "criteria": [
-        "Yalnız admin erişebiliyor",
-        "Kurs içeriğini (bölüm/ders) inceleyebiliyor",
-        "Onayla; Reddet gerekçe ister",
+        "Yalnız admin",
+        "Kurs içeriğini (bölüm/ders/içerik) inceleyebiliyor",
+        "Onayla; Reddet ve Yayından kaldır gerekçe ister",
         "İşlem sonrası liste güncelleniyor"
       ],
       "blockedBy": [
-        "be-admin-courses"
+        "be-admin-courses",
+        "be-unpublish"
       ]
     },
     {
@@ -1384,14 +1505,16 @@
       "milestone": "H4",
       "labels": [
         "frontend",
+        "mod:admin",
         "P2",
-        "mod:admin"
+        "rol:veri"
       ],
-      "title": "FE: Admin kullanıcı listesi",
-      "description": "Kullanıcı tablosu.",
+      "title": "FE: Admin kullanıcı yönetimi",
+      "description": "Kullanıcı tablosu ve işlemler.",
       "criteria": [
-        "Tablo: ad, email, rol, kayıt tarihi",
-        "Rol filtresi ve sayfalama"
+        "Tablo: ad, e-posta, rol, durum, kayıt tarihi",
+        "Rol filtresi, arama, sayfalama",
+        "Pasifleştir/aktifleştir"
       ],
       "blockedBy": [
         "be-admin-users"
@@ -1402,8 +1525,9 @@
       "milestone": "H4",
       "labels": [
         "docs",
+        "mod:quiz",
         "P1",
-        "mod:quiz"
+        "rol:alan"
       ],
       "title": "Sekans diyagramı: sınav çözme",
       "description": "Cevap gönderiminden puanın kaydedilmesine kadar akış; strateji seçimi görünür olmalı.",
@@ -1423,21 +1547,22 @@
       "labels": [
         "backend",
         "devops",
-        "P1"
+        "P1",
+        "rol:kalite"
       ],
-      "title": "Uçtan uca entegrasyon testi (Testcontainers): kayıt → kurs → kursa kayıt → sınav",
-      "description": "Gerçek PostgreSQL ile temel senaryonun uçtan uca backend testi. Ayrı bir UI test aracı kullanılmıyor; temel senaryolar bu testle gösterilir. Flyway migration'larını da doğrular.",
+      "title": "Uçtan uca entegrasyon testi (Testcontainers): Senaryo 1–3",
+      "description": "Gerçek PostgreSQL ve gerçek HTTP çağrılarıyla dokümandaki ilk üç senaryo.",
       "criteria": [
-        "Testcontainers PostgreSQL ile @SpringBootTest + gerçek HTTP çağrıları (MockMvc ya da TestRestTemplate)",
-        "Senaryo: kullanıcı kaydı ve girişi (öğrenci, eğitmen) → eğitmen kurs/bölüm/ders oluşturur → onaya gönderir → admin onaylar → öğrenci kaydolur → ders tamamlar ve ilerleme güncellenir → sınav çözer ve puan doğru hesaplanır",
-        "Yetkisiz rol ve tekrar kayıt gibi en az iki hata yolu da test ediliyor",
-        "CI'da çalışıyor (ubuntu runner'da Docker var); test raporuna sonuç ekleniyor"
+        "Testcontainers PostgreSQL + @SpringBootTest; dosya yüklemeleri geçici dizinde",
+        "Senaryo 1: eğitmen kurs/bölüm/ders + içerik + sınav hazırlar → onaya gönderir → yönetici onaylar → katalogda görünür",
+        "Senaryo 2: kursiyer arar → kaydolur → içeriğe erişir → dersleri tamamlar → ilerleme güncellenir",
+        "Senaryo 3: kursiyer geri döner → son ders ve yüzde doğru",
+        "CI'da çalışıyor (test sınıfı adı *IT)"
       ],
       "blockedBy": [
-        "be-enroll",
-        "be-attempt",
         "be-admin-courses",
-        "be-progress"
+        "be-resume",
+        "be-content-serve"
       ]
     },
     {
@@ -1446,13 +1571,14 @@
       "labels": [
         "docs",
         "backend",
-        "P2"
+        "P1",
+        "rol:kalite"
       ],
       "title": "OpenAPI'yi kodla eşitle (springdoc çıktısıyla karşılaştır)",
       "description": "Feature freeze öncesi sözleşme ile gerçek API arasındaki farkları kapat.",
       "criteria": [
         "springdoc-openapi eklendi, /v3/api-docs ve /swagger-ui çalışıyor (dev profili)",
-        "docs/api/openapi.yaml ile üretilen şema karşılaştırıldı; farklar giderildi ya da issue açıldı",
+        "docs/api/openapi.yaml ile üretilen şema karşılaştırıldı; farklar giderildi",
         "README'ye Swagger UI adresi eklendi"
       ],
       "blockedBy": [
@@ -1465,19 +1591,22 @@
       "milestone": "H5",
       "labels": [
         "backend",
-        "P1"
+        "P1",
+        "rol:kalite"
       ],
-      "title": "Seed data (demo verisi)",
-      "description": "Demo ve manuel test için hazır veri. Yalnız dev/demo profilinde yüklenir.",
+      "title": "Seed data: örnek kurslar, dosyalar, kullanıcılar",
+      "description": "Demo ve manuel test için hazır veri (proje dokümanı §7: örnek kurs verileri). Yalnız dev/demo profilinde yüklenir.",
       "criteria": [
-        "1 admin, 2 eğitmen, 5 öğrenci (şifreler README'de)",
-        "3 yayında kurs (bölüm + gerçek YouTube/Vimeo dersleri), 1 onay bekleyen kurs",
-        "En az 1 kursta sınav; bazı öğrencilerde kayıt ve kısmi ilerleme",
+        "1 admin, 2 eğitmen, 6 kursiyer (şifreler README'de)",
+        "Senaryo 1'deki gibi bir Python kursu: bölümler, küçük örnek videolar ve PDF'ler (lisans sorunu olmayan, repoda küçük dosyalar), soru bankası ve bölüm sınavları",
+        "Her durumdan en az bir kurs (Taslak, İncelemede, Yayımlandı, Yayından kaldırıldı)",
+        "Farklı ilerleme seviyelerinde kursiyerler, en az bir sertifika, yorumlar, bildirimler",
         "prod profilinde yüklenmiyor"
       ],
       "blockedBy": [
         "be-attempt",
-        "be-admin-courses"
+        "be-admin-courses",
+        "be-certificate"
       ]
     },
     {
@@ -1486,7 +1615,8 @@
       "labels": [
         "backend",
         "frontend",
-        "P1"
+        "P1",
+        "rol:kalite"
       ],
       "title": "Bug bash: tüm akışlarda manuel test",
       "description": "Seed data üzerinde üç rolün tüm akışlarını dene, bulunan her hata için bug issue aç.",
@@ -1504,7 +1634,8 @@
       "milestone": "SUNUM",
       "labels": [
         "docs",
-        "P1"
+        "P1",
+        "rol:kalite"
       ],
       "title": "Proje raporu: Word şablonunda birleştirme (.docx)",
       "description": "Bölüm issue'larında hazırlanan içerik hocanın Proje Yazım Şablonu'nda (.docx) birleştirilir. Teslim: 02.12.2026.",
@@ -1526,13 +1657,14 @@
       "milestone": "H5",
       "labels": [
         "docs",
-        "P1"
+        "P1",
+        "rol:kalite"
       ],
-      "title": "Demo senaryosu",
+      "title": "Demo senaryosu (dokümandaki 5 senaryo)",
       "description": "Sunumda canlı gösterilecek adım adım akış (docs/demo.md).",
       "criteria": [
-        "Seed kullanıcılarıyla adım adım senaryo: eğitmen kurs oluşturur → admin onaylar → öğrenci kaydolur, ders tamamlar, sınav çözer",
-        "Her adımda gösterilecek mimari nokta (hangi desen nerede devreye giriyor) not edildi",
+        "Seed kullanıcılarıyla Senaryo 1–5 adım adım",
+        "Her adımda gösterilecek mimari nokta (hangi desen nerede devreye giriyor)",
         "Senaryo temiz bir docker compose up ile baştan sona bir kez denendi"
       ],
       "blockedBy": [
@@ -1544,14 +1676,15 @@
       "milestone": "H5",
       "labels": [
         "frontend",
-        "P2"
+        "P1",
+        "rol:mimar"
       ],
-      "title": "FE: yükleniyor / hata / boş durum cilası",
-      "description": "Tüm sayfalarda tutarlı durum gösterimi.",
+      "title": "FE: mobil uyumluluk + yükleniyor / hata / boş durum",
+      "description": "Proje dokümanı §5: mobil uyumlu web arayüzü; tüm sayfalarda tutarlı durum gösterimi.",
       "criteria": [
-        "Ortak Loading, ErrorMessage, EmptyState bileşenleri",
-        "Tüm listeleme sayfalarında kullanılıyor",
-        "Mobil genişlikte yatay kaydırma yok"
+        "Tüm sayfalar 360 px genişlikte yatay kaydırma olmadan kullanılabiliyor (kontrol listesi PR'da)",
+        "Ortak Loading, ErrorMessage, EmptyState bileşenleri tüm listeleme sayfalarında",
+        "Dokunma hedefleri en az 44 px"
       ]
     },
     {
@@ -1559,7 +1692,8 @@
       "milestone": "H5",
       "labels": [
         "docs",
-        "P2"
+        "P2",
+        "rol:kalite"
       ],
       "title": "README güncellemesi + ekran görüntüleri",
       "description": "Teslim öncesi README'nin son hali.",
@@ -1577,7 +1711,8 @@
       "milestone": "H5",
       "labels": [
         "devops",
-        "P2"
+        "P2",
+        "rol:mimar"
       ],
       "title": "Tek komutla demo: compose prod profili",
       "description": "Demo makinesinde tek komutla, seed verisiyle ayağa kalkan kurulum.",
@@ -1604,7 +1739,11 @@
         "Kursa fiyat alanı",
         "Ödeme sağlayıcısının test modu ile ödeme akışı",
         "Ödeme başarılı olunca kayıt oluşuyor"
-      ]
+      ],
+      "close": {
+        "reason": "not planned",
+        "comment": "Proje tanım dokümanı §2: gerçek ödeme entegrasyonu kapsam dışı."
+      }
     },
     {
       "key": "nth-review",
@@ -1621,7 +1760,11 @@
         "Yalnız kayıtlı öğrenci, kurs başına bir yorum",
         "Kurs detayında ortalama puan ve yorumlar",
         "Katalogda ortalama puan"
-      ]
+      ],
+      "close": {
+        "reason": "not planned",
+        "comment": "Proje tanım dokümanıyla kapsama alındı; yerine #126–#128 ve moderasyon/puan issue'ları açıldı."
+      }
     },
     {
       "key": "nth-certificate",
@@ -1636,22 +1779,27 @@
       "criteria": [
         "İlerleme %100 olunca sertifika kaydı oluşuyor (yeni listener)",
         "Öğrenci sertifikasını görüntüleyebiliyor / PDF indirebiliyor"
-      ]
+      ],
+      "close": {
+        "reason": "not planned",
+        "comment": "Proje tanım dokümanıyla kapsama alındı; yerine #129–#132 açıldı."
+      }
     },
     {
       "key": "req-fr",
       "milestone": "H1",
       "labels": [
         "docs",
-        "P1"
+        "P1",
+        "rol:alan"
       ],
-      "title": "Fonksiyonel gereksinimler (FR-xx)",
-      "description": "Şablon 3.2 için test edilebilir fonksiyonel gereksinim listesi (docs/requirements.md).",
+      "title": "Fonksiyonel gereksinimler (FR-xx, A–L)",
+      "description": "Şablon 3.2: proje tanım dokümanının A–L modüllerinden türetilen test edilebilir fonksiyonel gereksinimler (docs/requirements.md).",
       "criteria": [
-        "Her gereksinimin kimliği (FR-01…), aktörü ve tek cümlelik tanımı var",
-        "Her gereksinim ölçülebilir kabul kriterine sahip ('kullanıcı dostu' gibi doğrulanamaz ifade yok)",
-        "Öğrenci, eğitmen ve admin tarafının tüm MVP işlevleri kapsanıyor; kapsam dışılar ayrıca listelenmiş",
-        "Öncelik (Must/Should) belirtilmiş"
+        "Her gereksinimin kimliği (FR-01…), aktörü, tanımı ve kaynağı (A–L maddesi) var",
+        "Her gereksinim ölçülebilir kabul kriterine sahip (örn. '20 dersin 15'i tamamlandığında ilerleme %75')",
+        "A–L'nin tüm maddeleri kapsanıyor; kapsam dışı (gerçek ödeme) ayrıca yazılı",
+        "Öncelik (P1: 5 senaryo için gerekli / P2) belirtilmiş"
       ]
     },
     {
@@ -1659,14 +1807,15 @@
       "milestone": "H1",
       "labels": [
         "docs",
-        "P1"
+        "P1",
+        "rol:mimar"
       ],
-      "title": "Fonksiyonel olmayan gereksinimler (NFR-xx)",
-      "description": "Şablon 3.3.1–3.3.8 başlıklarıyla: kullanılabilirlik, güvenilirlik, performans, desteklenebilirlik, gerçekleştirim, arayüz, paketleme, yasal konular.",
+      "title": "Fonksiyonel olmayan gereksinimler (NFR-xx, §5 dahil)",
+      "description": "Şablon 3.3.1–3.3.8 başlıkları; proje dokümanı §5 teknik beklentileri ölçülebilir NFR'lere çevrilir.",
       "criteria": [
-        "Sekiz başlığın her birinde en az bir NFR var",
-        "Her NFR ölçülebilir (örn. 'katalog isteği 50 kursla < 500 ms', 'parolalar BCrypt ile saklanır')",
-        "Her NFR'nin nasıl doğrulanacağı (test, inceleme, demo) yazılı"
+        "Sekiz başlığın her birinde en az bir NFR",
+        "§5: mobil uyumluluk (360 px genişlikte yatay kaydırma yok), dosya türü/boyut sınırları (video ≤ 200 MB mp4/webm, PDF/doküman ≤ 20 MB, kapak ≤ 2 MB), içerik erişim kontrolü, sayfalama",
+        "Her NFR'nin doğrulama yöntemi (test, inceleme, demo) yazılı"
       ]
     },
     {
@@ -1674,14 +1823,15 @@
       "milestone": "H1",
       "labels": [
         "docs",
-        "P1"
+        "P1",
+        "rol:alan"
       ],
-      "title": "Kullanım senaryoları (use-case açıklamaları)",
-      "description": "Şablon 3.4.1: use-case diyagramındaki her kullanım durumu için metin açıklama.",
+      "title": "Kullanım senaryoları (dokümandaki 5 senaryo + use-case açıklamaları)",
+      "description": "Şablon 3.4.1: proje dokümanındaki 5 temel senaryo ve use-case diyagramındaki her kullanım durumu için metin açıklama.",
       "criteria": [
-        "Her senaryoda aktör, ön koşul, ana akış, alternatif/hata akışları ve son koşul var",
-        "Senaryo kimlikleri (UC-xx) use-case diyagramıyla birebir aynı",
-        "Her senaryo ilgili FR'lere bağlanmış"
+        "Senaryo 1–5 ayrıntılı: aktör, ön koşul, ana akış, alternatif/hata akışları, son koşul",
+        "Diğer kullanım durumları (UC-xx) aynı formatta",
+        "Her senaryo ilgili FR'lere ve kapatan issue'lara bağlanmış"
       ],
       "blockedBy": [
         "doc-usecase",
@@ -1693,12 +1843,13 @@
       "milestone": "H1",
       "labels": [
         "docs",
-        "P1"
+        "P1",
+        "rol:mimar"
       ],
-      "title": "ADR altyapısı + ADR-001: modüler monolit ve katmanlı mimari",
-      "description": "docs/adr/ klasörü, ADR şablonu ve ilk karar: neden mikroservis değil modüler monolit, neden modül bazlı paket + katmanlı yapı.",
+      "title": "ADR altyapısı + ADR-001: modüler monolit (10 modül)",
+      "description": "docs/adr/ klasörü, ADR şablonu ve ilk karar: proje dokümanının önerdiği katmanlı modüler monolit, 10 modül.",
       "criteria": [
-        "docs/adr/README.md (ADR nedir, numaralandırma, durumlar: Önerildi/Kabul/Yerine geçti) ve 0000-sablon.md var",
+        "docs/adr/README.md (numaralandırma, durumlar) ve 0000-sablon.md",
         "ADR-001: bağlam, karar, değerlendirilen alternatifler (mikroservis, katmanlar en üstte paketleme), sonuçlar",
         "docs/architecture.md ADR listesine bağlantı veriyor"
       ],
@@ -1711,8 +1862,9 @@
       "milestone": "H1",
       "labels": [
         "docs",
+        "mod:auth",
         "P1",
-        "mod:auth"
+        "rol:mimar"
       ],
       "title": "ADR-002: JWT ile stateless kimlik doğrulama · ADR-003: Flyway ile şema yönetimi",
       "description": "İki kısa ADR. JWT: session yerine token, token süresi, saklama yeri. Flyway: ddl-auto yerine versiyonlu migration.",
@@ -1731,7 +1883,8 @@
       "milestone": "H1",
       "labels": [
         "docs",
-        "P2"
+        "P2",
+        "rol:kalite"
       ],
       "title": "Gantt şeması, görev dağılımı ve risk analizi",
       "description": "Şablon bölüm 6: Gantt (milestone'lardan), faz dağılımı, iş paketleri, rol/görev dağılımı ve risk tablosu. Hafta 5'te gerçekleşenle güncellenir.",
@@ -1747,7 +1900,8 @@
       "milestone": "H1",
       "labels": [
         "docs",
-        "P1"
+        "P1",
+        "rol:kalite"
       ],
       "title": "İlerleme raporu – Hafta 1",
       "description": "Hafta 1 sonunda kısa ilerleme raporu (docs/progress/hafta-1.md). Kalite ve Süreç sorumlusu koordine eder.",
@@ -1763,15 +1917,16 @@
       "milestone": "H2",
       "labels": [
         "docs",
+        "mod:content",
         "P1",
-        "mod:course"
+        "rol:mimar"
       ],
-      "title": "ADR-004: video embed (dosya yükleme yok) · ADR-005: ayrı frontend, REST ve önce OpenAPI sözleşmesi",
-      "description": "İki kısa ADR. Video: depolama/maliyet/kapsam gerekçesi. Frontend: Next.js ayrı uygulama, REST, sözleşme önce yazılır.",
+      "title": "ADR-004: yerel dosya depolama (Docker volume, yetki kontrollü servis) · ADR-005: ayrı frontend + REST + önce OpenAPI",
+      "description": "İki kısa ADR. Dosyalar: Docker volume + backend üzerinden yetki kontrollü servis, MinIO/S3 yok. Frontend: Next.js ayrı uygulama, REST, sözleşme önce yazılır.",
       "criteria": [
-        "ADR-004: alternatifler (dosya yükleme + nesne depolama) ve sonuçları (yalnız YouTube/Vimeo, URL doğrulama)",
+        "ADR-004: alternatifler (MinIO/S3, statik dosya sunucusu, YouTube/Vimeo embed) ve sonuçları (yedekleme, ölçek, Range desteği, tür/boyut sınırları)",
         "ADR-005: alternatifler (sunucu tarafı şablonlar, GraphQL) ve sözleşme-önce akışın ekip için faydası",
-        "İki ADR de ilgili koda ve docs/api/openapi.yaml'a atıf yapıyor"
+        "İki ADR de ilgili koda, docker-compose.yml'a ve docs/api/openapi.yaml'a atıf yapıyor"
       ],
       "blockedBy": [
         "adr-001"
@@ -1782,18 +1937,20 @@
       "milestone": "H2",
       "labels": [
         "backend",
-        "P1",
         "design-pattern",
-        "mod:course"
+        "mod:course",
+        "P1",
+        "rol:alan"
       ],
-      "title": "Desen: State — kurs yaşam döngüsü (DRAFT → PENDING → PUBLISHED / REJECTED)",
-      "description": "CourseState arayüzü ve her durum için bir sınıf (DraftState, PendingState, PublishedState, RejectedState). Hangi işlemin (düzenle, sil, onaya gönder, onayla, reddet) hangi durumda izinli olduğuna ve geçişin hedefine durum nesnesi karar verir.",
-      "why": "Kursun durumuna bağlı kurallar üç farklı yerde (eğitmen düzenleme/silme, onaya gönderme, admin onay/red) gerekiyor. Bu kurallar servislerde if/switch olarak yazılırsa dağılır, tutarsızlaşır ve yeni bir durum (örn. ARCHIVED) eklemek her servisi değiştirmeyi gerektirir. State deseniyle her durumun kuralları tek sınıfta toplanır; geçişler tek yerden test edilir ve yeni durum yeni bir sınıf olarak eklenir.",
+      "title": "Desen: State — kurs yaşam döngüsü (Taslak / İncelemede / Yayımlandı / Yayından kaldırıldı)",
+      "description": "CourseState arayüzü ve dört durum sınıfı (DraftState, InReviewState, PublishedState, UnpublishedState). Düzenle, sil, onaya gönder, onayla, reddet, yayından kaldır işlemlerinin hangi durumda izinli olduğuna ve geçişin hedefine durum nesnesi karar verir. Red: İncelemede → Taslak, gerekçe kursta saklanır.",
+      "why": "Kurs durumuna bağlı kurallar üç farklı yerde gerekiyor (eğitmen düzenleme/silme, onaya gönderme, yönetici onay/red/yayından kaldırma). Bunlar servislerde if/switch olarak yazılırsa dağılır ve tutarsızlaşır; yeni bir durum eklemek her servisi değiştirmeyi gerektirir. State deseni her durumun kurallarını tek sınıfta toplar, geçişleri tek yerden test edilebilir kılar.",
       "criteria": [
-        "CourseState arayüzü: edit, delete, submit, approve, reject işlemleri; izinsiz işlem tanımlı bir istisna (409) fırlatıyor",
-        "Dört durum sınıfı; CourseStatus enum'u (DB alanı) ile durum nesnesi arasındaki eşleme tek yerde",
+        "CourseState: edit, delete, submit, approve, reject(gerekçe), unpublish işlemleri; izinsiz işlem 409 ile sonuçlanan tanımlı bir istisna fırlatıyor",
+        "Geçişler: Taslak → İncelemede; İncelemede → Yayımlandı (onay) / Taslak (red, rejection_reason dolar); Yayımlandı → Yayından kaldırıldı; Yayından kaldırıldı → İncelemede",
+        "CourseStatus enum'u (DB alanı) ile durum nesnesi eşlemesi tek yerde; serviste status için if/switch yok",
         "Geçiş tablosu docs/architecture.md'de; her izinli/izinsiz geçiş için unit test",
-        "Karar docs/adr/ altında bir ADR olarak yazıldı (alternatif: enum + switch, Spring Statemachine)"
+        "Karar docs/adr/ altında ADR olarak yazıldı (alternatifler: enum + switch, Spring Statemachine)"
       ],
       "blockedBy": [
         "be-course-domain",
@@ -1806,14 +1963,15 @@
       "labels": [
         "backend",
         "devops",
-        "P1"
+        "P1",
+        "rol:mimar"
       ],
-      "title": "ArchUnit testleri: katman ve modül bağımlılık kuralları",
-      "description": "docs/architecture.md'deki kurallar test olarak CI'da kontrol edilsin; mimari diyagram ile kodun tutarlılığının kanıtı olur.",
+      "title": "ArchUnit: katman ve modül bağımlılık kuralları (10 modül)",
+      "description": "docs/architecture.md'deki kurallar test olarak CI'da kontrol edilir.",
       "criteria": [
-        "controller → service → repository yönü dışındaki bağımlılıklar testte kırılıyor",
-        "Controller'lar domain entity döndüremiyor; repository'ler yalnız repository paketinde",
-        "Modüller arası izin verilmeyen bağımlılıklar tanımlı",
+        "controller → service → repository dışındaki bağımlılıklar testte kırılıyor; controller entity döndüremiyor",
+        "Bir modül başka modülün repository ve domain entity paketlerine erişemiyor (yalnız service arayüzü ve olaylar)",
+        "10 modülün hepsi kurallara dahil",
         "Kural kasıtlı bozulunca testin kırmızıya döndüğü bir kez denendi ve PR'da belirtildi"
       ],
       "blockedBy": [
@@ -1823,17 +1981,18 @@
     },
     {
       "key": "doc-c4",
-      "milestone": "H2",
+      "milestone": "H3",
       "labels": [
         "docs",
-        "P1"
+        "P1",
+        "rol:mimar"
       ],
       "title": "Sistem mimarisi diyagramı (C4: context + container)",
-      "description": "Şablon 3.4.5 / 4.2: kullanıcılar, Next.js frontend, Spring Boot backend, PostgreSQL, YouTube/Vimeo.",
+      "description": "Şablon 3.4.5 / 4.2: kullanıcılar (kursiyer, eğitmen, yönetici), Next.js frontend, Spring Boot backend, PostgreSQL ve dosya deposu (Docker volume).",
       "criteria": [
         "Context ve container seviyesi diyagramlar (docs/diagrams/c4-*.puml|mmd + render)",
         "Container'lar arası iletişim protokolü ve portlar docker-compose.yml ile aynı",
-        "Dış sistemler (YouTube/Vimeo embed) gösteriliyor"
+        "Dosya deposu (uploads volume) ve dosyalara yalnız backend üzerinden erişildiği gösteriliyor"
       ],
       "blockedBy": [
         "doc-arch-rules"
@@ -1841,18 +2000,19 @@
     },
     {
       "key": "doc-wireframe",
-      "milestone": "H2",
+      "milestone": "H1",
       "labels": [
         "docs",
         "frontend",
-        "P2"
+        "P2",
+        "rol:mimar"
       ],
-      "title": "UI taslak çizimleri (wireframe)",
-      "description": "Şablon 3.4.7: temel ekranlar ve ekranlar arası geçişler.",
+      "title": "UI taslak çizimleri (mobil + masaüstü)",
+      "description": "Şablon 3.4.7: temel ekranlar ve geçişler; mobil uyumluluk için dar ekran görünümleri.",
       "criteria": [
-        "Katalog, kurs detay, ders izleme, sınav çözme, eğitmen kurs yönetimi, admin onay ekranları",
-        "Ekran geçiş akışı (hangi butondan nereye)",
-        "docs/diagrams/wireframes/ altında görsel olarak"
+        "Katalog, kurs detay, kurs oynatıcısı, sınav, sertifika, kayıtlı kurslar, eğitmen paneli, yönetici onay ekranları",
+        "Her ekranın mobil (≈360 px) ve masaüstü taslağı",
+        "Ekran geçiş akışı; docs/diagrams/wireframes/ altında"
       ],
       "blockedBy": [
         "req-fr"
@@ -1860,11 +2020,12 @@
     },
     {
       "key": "devops-jacoco",
-      "milestone": "H2",
+      "milestone": "H3",
       "labels": [
         "devops",
         "backend",
-        "P1"
+        "P1",
+        "rol:kalite"
       ],
       "title": "JaCoCo coverage raporu CI artifact'ı olarak",
       "description": "Test raporu ve Kalite/Süreç rolü için CI çıktısı.",
@@ -1879,7 +2040,8 @@
       "milestone": "H2",
       "labels": [
         "docs",
-        "P1"
+        "P1",
+        "rol:kalite"
       ],
       "title": "İlerleme raporu – Hafta 2",
       "description": "Hafta 2 sonunda kısa ilerleme raporu (docs/progress/hafta-2.md). Kalite ve Süreç sorumlusu koordine eder.",
@@ -1895,7 +2057,8 @@
       "milestone": "H3",
       "labels": [
         "docs",
-        "P1"
+        "P1",
+        "rol:mimar"
       ],
       "title": "UML bileşen diyagramı (component diagram)",
       "description": "Şablon 4.3: backend modülleri (auth, course, enrollment, quiz, admin, common), sağladıkları/kullandıkları arayüzler ve frontend'in API client katmanı.",
@@ -1914,7 +2077,8 @@
       "milestone": "H3",
       "labels": [
         "docs",
-        "P1"
+        "P1",
+        "rol:kalite"
       ],
       "title": "Test planı",
       "description": "Şablon 7.5: hangi seviyede (unit, entegrasyon, mimari, manuel) neyin nasıl test edileceği.",
@@ -1934,7 +2098,8 @@
       "milestone": "H3",
       "labels": [
         "docs",
-        "P1"
+        "P1",
+        "rol:kalite"
       ],
       "title": "İlerleme raporu – Hafta 3",
       "description": "Hafta 3 sonunda kısa ilerleme raporu (docs/progress/hafta-3.md). Kalite ve Süreç sorumlusu koordine eder.",
@@ -1951,14 +2116,18 @@
       "labels": [
         "docs",
         "devops",
-        "P1"
+        "P1",
+        "rol:mimar"
       ],
       "title": "UML dağıtım diyagramı (deployment diagram)",
-      "description": "Şablon 4.4: docker compose ortamı: node'lar, container'lar, portlar, artefaktlar.",
+      "description": "Şablon 4.4: docker compose ortamı.",
       "criteria": [
-        "postgres, backend, frontend container'ları ve artefaktları (jar, Next.js standalone) gösteriliyor",
-        "Portlar, ağ ve volume docker-compose.yml ile birebir aynı",
+        "postgres, backend, frontend container'ları; uploads ve pgdata volume'ları; artefaktlar (jar, Next.js standalone)",
+        "Portlar, ağ ve volume'lar docker-compose.yml ile birebir aynı",
         "docs/diagrams/deployment.(puml|mmd) + render"
+      ],
+      "blockedBy": [
+        "be-file-storage"
       ]
     },
     {
@@ -1966,21 +2135,23 @@
       "milestone": "H4",
       "labels": [
         "docs",
+        "design-pattern",
         "P1",
-        "design-pattern"
+        "rol:alan"
       ],
       "title": "SOLID ve nesne yönelimli tasarım dokümanı (koddan örneklerle)",
-      "description": "Şablon 4.6: her SOLID prensibinin kodda nerede ve nasıl uygulandığı. Sunumdaki teknik sorulara hazırlık olarak da kullanılır.",
+      "description": "Şablon 4.6: her SOLID prensibinin kodda nerede ve nasıl uygulandığı.",
       "criteria": [
-        "Beş prensibin her biri için en az bir somut örnek: dosya yolu, sınıf, kısa kod parçası ve açıklama",
-        "Örnekler gerçek koddan (örn. OCP: ScoringStrategy, DIP: servislerin repository arayüzlerine bağımlılığı, SRP: mapper'lar)",
-        "En az bir 'bilinçli olarak uygulanmayan / ödünleşim' notu",
-        "Kapsülleme, kalıtım/çok biçimlilik kullanımının örnekleri"
+        "Beş prensibin her biri için en az bir somut örnek: dosya yolu, sınıf, kısa kod parçası, açıklama",
+        "Örnekler gerçek koddan (örn. OCP: ScoringStrategy ve LessonContentFactory, DIP: PasswordResetNotifier ve StorageService, SRP: mapper'lar)",
+        "En az bir bilinçli ödünleşim notu",
+        "Kapsülleme ve çok biçimlilik örnekleri (CourseState)"
       ],
       "blockedBy": [
         "be-strategy",
         "be-observer",
-        "be-state"
+        "be-state",
+        "be-factory"
       ]
     },
     {
@@ -1988,7 +2159,8 @@
       "milestone": "H4",
       "labels": [
         "docs",
-        "P1"
+        "P1",
+        "rol:kalite"
       ],
       "title": "İlerleme raporu – Hafta 4",
       "description": "Hafta 4 sonunda kısa ilerleme raporu (docs/progress/hafta-4.md). Kalite ve Süreç sorumlusu koordine eder.",
@@ -2004,12 +2176,13 @@
       "milestone": "H5",
       "labels": [
         "docs",
-        "P1"
+        "P1",
+        "rol:kalite"
       ],
       "title": "Diyagram–kod tutarlılık kontrolü",
-      "description": "Feature freeze sonrası tüm diyagramlar son koda göre gözden geçirilir ve güncellenir (değerlendirmede %15).",
+      "description": "Feature freeze sonrası tüm diyagramlar son koda göre gözden geçirilir (değerlendirmede %15).",
       "criteria": [
-        "Use-case, sınıf, iki sekans, ER, C4, bileşen ve dağıtım diyagramlarının her biri koda karşı kontrol edildi",
+        "Use-case, sınıf, üç sekans, ER, C4, bileşen ve dağıtım diyagramlarının her biri koda karşı kontrol edildi",
         "ER diyagramı Flyway migration'larıyla birebir aynı",
         "Bulunan her fark düzeltildi; kontrol listesi issue yorumunda",
         "Kontrolü diyagramı hazırlayandan farklı bir üye yaptı"
@@ -2018,6 +2191,7 @@
         "doc-class",
         "doc-seq-enroll",
         "doc-seq-quiz",
+        "doc-seq-certificate",
         "doc-er",
         "doc-component",
         "doc-deployment"
@@ -2028,13 +2202,14 @@
       "milestone": "H5",
       "labels": [
         "docs",
-        "P1"
+        "P1",
+        "rol:kalite"
       ],
-      "title": "Gereksinim izlenebilirlik matrisi (FR → issue → test)",
-      "description": "Her gereksinimin hangi issue'larla geliştirildiğini ve hangi testle doğrulandığını gösteren tablo.",
+      "title": "İzlenebilirlik matrisi (doküman maddesi / FR → issue → test)",
+      "description": "Proje tanım dokümanının her maddesinin (A–L, senaryo 1–5, §5–7) ve her FR'nin hangi issue'larla geliştirildiğini ve hangi testle doğrulandığını gösteren tablo.",
       "criteria": [
-        "Her FR için en az bir issue ve bir test (ya da manuel test adımı)",
-        "Test edilmeyen gereksinim varsa nedeniyle listelenmiş",
+        "Her doküman maddesi ve her FR için en az bir issue ve bir test (ya da manuel test adımı)",
+        "Test edilmeyen madde varsa nedeniyle listelenmiş",
         "Rapora tablo olarak eklenecek formatta"
       ],
       "blockedBy": [
@@ -2047,19 +2222,21 @@
       "milestone": "H5",
       "labels": [
         "docs",
-        "P1"
+        "P1",
+        "rol:kalite"
       ],
       "title": "Test raporu",
       "description": "Test planına göre gerçekleşen sonuçlar.",
       "criteria": [
         "Test sayıları (unit, entegrasyon, mimari) ve son CI çalıştırmasının linki",
         "JaCoCo coverage özeti",
-        "Uçtan uca entegrasyon testi senaryosu ve sonucu",
+        "Senaryo 1–5 entegrasyon testleri ve Bölüm 6 kritik test durumlarının sonuçları",
         "Bug bash bulguları ve durumları"
       ],
       "blockedBy": [
         "doc-testplan",
-        "be-it",
+        "be-it-2",
+        "test-critical",
         "devops-jacoco",
         "qa-bugbash"
       ]
@@ -2069,7 +2246,8 @@
       "milestone": "H5",
       "labels": [
         "docs",
-        "P1"
+        "P1",
+        "rol:mimar"
       ],
       "title": "Kullanılan kütüphaneler ve dış kaynaklar listesi",
       "description": "Mailde zorunlu: kullanılan kütüphaneler ve dış kaynaklar raporda belirtilmeli.",
@@ -2084,7 +2262,8 @@
       "milestone": "H5",
       "labels": [
         "docs",
-        "P1"
+        "P1",
+        "rol:kalite"
       ],
       "title": "İlerleme raporu – Hafta 5",
       "description": "Hafta 5 sonunda kısa ilerleme raporu (docs/progress/hafta-5.md). Kalite ve Süreç sorumlusu koordine eder.",
@@ -2100,7 +2279,8 @@
       "milestone": "SUNUM",
       "labels": [
         "docs",
-        "P1"
+        "P1",
+        "rol:alan"
       ],
       "title": "Rapor bölüm 1–3: giriş, mevcut sistem, önerilen sistem",
       "description": "Şablon bölüm 1 (amaç, kapsam, hedefler ve başarı kriterleri, tanımlar), 2 (mevcut sistemler: Udemy, Coursera vb. kısa karşılaştırma) ve 3 (gereksinimler, sistem modelleri).",
@@ -2122,15 +2302,16 @@
       "milestone": "SUNUM",
       "labels": [
         "docs",
-        "P1"
+        "P1",
+        "rol:mimar"
       ],
       "title": "Rapor bölüm 4: mimari, desenler, SOLID, API, güvenlik, mimari kararlar",
       "description": "Şablon 4.1–4.9.",
       "criteria": [
         "Seçilen mimari ve gerekçesi (ADR-001), sistem mimarisi, bileşen ve dağıtım diyagramları",
-        "Dört desen: problem, çözüm, koddaki yeri, alternatifler (ADR'lere atıf)",
-        "SOLID bölümü doc-solid issue'sundaki koddan örneklerle",
-        "API tasarımı (OpenAPI özeti), güvenlik/yetkilendirme tasarımı, tüm ADR'lerin değerlendirmesi"
+        "Beş desen (State, Observer, Strategy, Factory Method, DTO+Mapper): problem, çözüm, koddaki yeri, alternatifler (ADR'lere atıf)",
+        "SOLID bölümü koddan örneklerle",
+        "API tasarımı (OpenAPI özeti), güvenlik/yetkilendirme ve dosya erişim tasarımı, tüm ADR'lerin değerlendirmesi"
       ],
       "blockedBy": [
         "doc-solid",
@@ -2143,7 +2324,8 @@
       "milestone": "SUNUM",
       "labels": [
         "docs",
-        "P1"
+        "P1",
+        "rol:kalite"
       ],
       "title": "Rapor bölüm 5–8: sözlük, plan, projeye özgü içerik, sonuç",
       "description": "Şablon bölüm 5 (açıklayıcı sözlük), 6 (Gantt, bütçe, faz/görev dağılımı, risk), 7 (metodoloji, teknolojiler, erişilebilirlik, kullanım kılavuzu, test planı, bakım planı), 8 (sonuç ve tartışma).",
@@ -2165,7 +2347,8 @@
       "milestone": "SUNUM",
       "labels": [
         "docs",
-        "P1"
+        "P1",
+        "rol:mimar"
       ],
       "title": "Sunum slaytları (7–8 dakika)",
       "description": "Mailde istenen akış: projenin amacı, temel işlevler, yazılım mimarisi, önemli tasarım kararları, çalışan uygulamanın kısa demosu.",
@@ -2184,7 +2367,8 @@
       "milestone": "SUNUM",
       "labels": [
         "docs",
-        "P1"
+        "P1",
+        "rol:kalite"
       ],
       "title": "Demo provası (süre tutularak) + yedek demo kaydı",
       "description": "Canlı demo başarısız olursa diye yedek ekran kaydı.",
@@ -2204,7 +2388,8 @@
       "milestone": "SUNUM",
       "labels": [
         "docs",
-        "P1"
+        "P1",
+        "rol:alan"
       ],
       "title": "Soru–cevap provası: her üye her modülü anlatabilsin",
       "description": "Hoca sunumda bireysel teknik sorular soracak ve katkı katsayısını buna göre belirleyecek.",
@@ -2216,6 +2401,862 @@
       "blockedBy": [
         "pres-slides",
         "doc-solid"
+      ]
+    },
+    {
+      "key": "api-panels",
+      "milestone": "H1",
+      "labels": [
+        "docs",
+        "mod:review",
+        "mod:notification",
+        "mod:admin",
+        "P1",
+        "rol:veri"
+      ],
+      "title": "API sözleşmesi (OpenAPI): yorum, bildirim, eğitmen paneli, yönetici paneli",
+      "description": "Yorum/puan, bildirim, eğitmen istatistikleri ve yönetici uçları.",
+      "criteria": [
+        "Yorum: POST/GET /api/courses/{id}/reviews, moderasyon uçları",
+        "Bildirim: GET /api/me/notifications, okundu işaretleme, okunmamış sayısı",
+        "Eğitmen: GET /api/instructor/courses/{id}/stats, /students",
+        "Yönetici: kurs onay/red/yayından kaldırma, kullanıcı, kategori, şikâyet ve rapor uçları",
+        "Her uçta gereken rol belirtilmiş"
+      ],
+      "blockedBy": [
+        "doc-er"
+      ]
+    },
+    {
+      "key": "be-categories",
+      "milestone": "H2",
+      "labels": [
+        "backend",
+        "mod:course",
+        "P1",
+        "rol:veri"
+      ],
+      "title": "Kategori listesi API'si + başlangıç kategorileri",
+      "description": "Kurs oluşturma ve katalog filtresi için kategoriler. Başlangıç kategorileri migration ile gelir; yönetimi ayrı (P2) issue'da.",
+      "criteria": [
+        "GET /api/categories herkese açık",
+        "Başlangıç kategorileri (Yazılım, Veri Bilimi, Tasarım, İş, Dil) migration ile ekleniyor (Dosya adı `V<yyyyMMddHHmm>__<aciklama>.sql` (bkz. backend/src/main/resources/db/migration/README.md))",
+        "Kategori DTO + mapper"
+      ],
+      "blockedBy": [
+        "be-course-domain"
+      ]
+    },
+    {
+      "key": "be-factory",
+      "milestone": "H2",
+      "labels": [
+        "backend",
+        "design-pattern",
+        "mod:content",
+        "P1",
+        "rol:alan"
+      ],
+      "title": "Desen: Factory Method — ders içerik türleri (VIDEO, PDF, DOCUMENT)",
+      "description": "LessonContentFactory (creator) ve her tür için alt sınıf (VideoContentFactory, PdfContentFactory, DocumentContentFactory). Her fabrika kendi içerik nesnesini üretir: izin verilen biçimler, boyut sınırı ve sunuluş şekli (oynatma ya da indirme) türün kendi sınıfındadır. Tür → fabrika seçimi tek bir kayıt (registry) üzerinden yapılır.",
+      "why": "Ders içerik türleri doğrulama, saklama ve sunuluş bakımından farklıdır. Bu farklar içerik servisinde if/switch ile çözülürse her yeni tür (örn. ses, metin) servisi değiştirir ve kurallar dağılır. Factory Method, nesneyi oluşturan kodu türe göre alt sınıflara bırakır; servis yalnız ortak arayüzle çalışır.",
+      "criteria": [
+        "LessonContent soyut ürün + VideoContent, PdfContent, DocumentContent",
+        "Tür başına kurallar: video mp4/webm ≤ 200 MB (inline, Range); PDF ≤ 20 MB (inline); doküman pdf/docx/pptx ≤ 20 MB (indirme)",
+        "Yükleme servisi yalnız fabrika arayüzünü biliyor; yeni tür eklemek yeni bir fabrika sınıfı demek, serviste if/switch yok",
+        "Her fabrika için unit test",
+        "Karar docs/adr/ altında ADR olarak yazıldı (alternatifler: tek sınıfta switch, Abstract Factory)"
+      ],
+      "blockedBy": [
+        "be-course-domain",
+        "adr-001"
+      ]
+    },
+    {
+      "key": "be-file-storage",
+      "milestone": "H2",
+      "labels": [
+        "backend",
+        "devops",
+        "mod:content",
+        "P1",
+        "rol:mimar"
+      ],
+      "title": "Dosya depolama: Docker volume, StorageService, tür/boyut denetimi",
+      "description": "Dosyalar Docker volume'da yerel diskte saklanır (MinIO/S3 yok). StorageService arayüzü + yerel disk uygulaması; dosya meta verisi stored_files tablosunda.",
+      "criteria": [
+        "docker-compose.yml'a uploads volume'u, application.yml'a depolama dizini ve multipart sınırları eklendi",
+        "Flyway migration: stored_files (Dosya adı `V<yyyyMMddHHmm>__<aciklama>.sql` (bkz. backend/src/main/resources/db/migration/README.md))",
+        "Tür denetimi uzantıya değil dosyanın gerçek içeriğine (magic bytes) bakıyor; sınır aşımı 413, yanlış tür 415 + standart hata gövdesi",
+        "Dosya adları sunucuda üretiliyor (UUID); kullanıcının verdiği yol kullanılmıyor (path traversal yok)",
+        "Docker volume'un kalıcılığı docker compose down/up ile denendi"
+      ],
+      "blockedBy": [
+        "doc-er",
+        "adr-004-005"
+      ]
+    },
+    {
+      "key": "be-content-upload",
+      "milestone": "H2",
+      "labels": [
+        "backend",
+        "mod:content",
+        "P1",
+        "rol:veri"
+      ],
+      "title": "İçerik yükleme API'si: video, PDF, doküman, kapak görseli",
+      "description": "Eğitmen dersin içerik dosyasını ve kursun kapak görselini yükler.",
+      "criteria": [
+        "POST /api/lessons/{id}/content (multipart); tür kuralları Factory Method'dan",
+        "POST /api/courses/{id}/cover: jpg/png/webp ≤ 2 MB",
+        "Yalnız kursun sahibi eğitmen; düzenlenebilirlik CourseState'e göre",
+        "Eski dosya değiştirildiğinde diskten de siliniyor"
+      ],
+      "blockedBy": [
+        "be-file-storage",
+        "be-lessons"
+      ]
+    },
+    {
+      "key": "be-content-serve",
+      "milestone": "H2",
+      "labels": [
+        "backend",
+        "mod:content",
+        "P1",
+        "rol:mimar"
+      ],
+      "title": "Yetki kontrollü içerik servisi (kayıtsız 403, Range)",
+      "description": "İçerik dosyaları yalnız backend üzerinden, yetki kontrolüyle sunulur; diskteki dosyaya doğrudan erişim yoktur.",
+      "criteria": [
+        "GET /api/lessons/{id}/content: kursa kayıtlı kursiyer, kursun eğitmeni ve admin erişebiliyor; diğerleri 403, girişsiz 401",
+        "Video için HTTP Range desteği (206 Partial Content); ileri sarma çalışıyor",
+        "Content-Type ve Content-Disposition türe göre (Factory Method'daki sunuluş şekli)",
+        "Kapak görselleri herkese açık uçtan sunuluyor"
+      ],
+      "blockedBy": [
+        "be-content-upload",
+        "be-enroll"
+      ]
+    },
+    {
+      "key": "test-content",
+      "milestone": "H2",
+      "labels": [
+        "backend",
+        "mod:content",
+        "P1",
+        "rol:kalite"
+      ],
+      "title": "İçerik ve depolama unit testleri (tür, boyut, erişim)",
+      "description": "Proje dokümanı §5: dosya türü/boyutu denetimleri için testler.",
+      "criteria": [
+        "İzin verilen/verilmeyen türler (uzantısı değiştirilmiş dosya dahil)",
+        "Boyut sınırı aşımı",
+        "Erişim kararı: kayıtlı, kayıtsız, eğitmen, admin",
+        "CI'da çalışıyor"
+      ],
+      "blockedBy": [
+        "be-content-upload",
+        "be-content-serve"
+      ]
+    },
+    {
+      "key": "be-password-reset",
+      "milestone": "H2",
+      "labels": [
+        "backend",
+        "mod:auth",
+        "P2",
+        "rol:mimar"
+      ],
+      "title": "Parola yenileme (PasswordResetNotifier, dev'de token log'a yazılır)",
+      "description": "E-posta gönderilmez. Token üretilir ve PasswordResetNotifier arayüzüne verilir; dev profilindeki uygulama bağlantıyı log'a yazar. İleride Mailpit/SMTP uygulaması aynı arayüzle eklenebilir.",
+      "criteria": [
+        "Flyway migration: password_reset_tokens (tek kullanımlık, süreli, hash'lenmiş) (Dosya adı `V<yyyyMMddHHmm>__<aciklama>.sql` (bkz. backend/src/main/resources/db/migration/README.md))",
+        "POST /api/auth/password-reset/request: kayıtlı olmayan e-postada da aynı yanıt (kullanıcı varlığı sızmıyor)",
+        "POST /api/auth/password-reset/confirm: süresi geçmiş ya da kullanılmış token reddediliyor",
+        "LoggingPasswordResetNotifier yalnız dev profilinde aktif; prod'da token log'a yazılmıyor",
+        "Unit test: token süre/kullanım kuralları"
+      ],
+      "blockedBy": [
+        "be-login"
+      ]
+    },
+    {
+      "key": "be-profile",
+      "milestone": "H2",
+      "labels": [
+        "backend",
+        "mod:auth",
+        "P2",
+        "rol:mimar"
+      ],
+      "title": "Profil görüntüleme ve güncelleme",
+      "description": "Kullanıcının kendi profili.",
+      "criteria": [
+        "GET/PUT /api/users/me: ad soyad, kısa biyografi",
+        "E-posta ve rol bu uçla değiştirilemiyor",
+        "Doğrulama hataları standart gövdeyle"
+      ],
+      "blockedBy": [
+        "be-me"
+      ]
+    },
+    {
+      "key": "fe-profile-reset",
+      "milestone": "H2",
+      "labels": [
+        "frontend",
+        "mod:auth",
+        "P2",
+        "rol:mimar"
+      ],
+      "title": "FE: profil + parola yenileme sayfaları",
+      "description": "Profil düzenleme, 'parolamı unuttum' ve yeni parola sayfaları.",
+      "criteria": [
+        "Profil formu",
+        "/forgot-password ve /reset-password?token=... sayfaları",
+        "Hata ve başarı mesajları"
+      ],
+      "blockedBy": [
+        "be-password-reset",
+        "be-profile"
+      ]
+    },
+    {
+      "key": "be-admin-categories",
+      "milestone": "H2",
+      "labels": [
+        "backend",
+        "mod:admin",
+        "mod:course",
+        "P2",
+        "rol:veri"
+      ],
+      "title": "Admin: kategori yönetimi",
+      "description": "Yönetici kategori ekler, düzenler, siler.",
+      "criteria": [
+        "Yalnız ADMIN",
+        "Kullanılan kategori silinemiyor (409)",
+        "Kategori adı unique"
+      ],
+      "blockedBy": [
+        "be-categories"
+      ]
+    },
+    {
+      "key": "be-resume",
+      "milestone": "H3",
+      "labels": [
+        "backend",
+        "mod:progress",
+        "P1",
+        "rol:alan"
+      ],
+      "title": "Son izlenen ders + kaldığı yerden devam API'si",
+      "description": "Senaryo 3: kursiyer geri döndüğünde son izlediği ders ve ilerleme yüzdesi.",
+      "criteria": [
+        "Ders içeriği açıldığında son izlenen ders ve zaman damgası güncelleniyor",
+        "GET /api/me/courses/{id}/resume: son ders (yoksa ilk tamamlanmamış ders), ilerleme yüzdesi",
+        "Kayıtlı kurslar listesinde son ders bilgisi"
+      ],
+      "blockedBy": [
+        "be-v4-progress",
+        "be-enroll"
+      ]
+    },
+    {
+      "key": "fe-resume",
+      "milestone": "H3",
+      "labels": [
+        "frontend",
+        "mod:progress",
+        "P1",
+        "rol:alan"
+      ],
+      "title": "FE: Kaldığı yerden devam",
+      "description": "Senaryo 3 arayüzü.",
+      "criteria": [
+        "Kayıtlı kurslar panelinde ve kurs detayında 'Kaldığın yerden devam et' + son ders adı + yüzde",
+        "Butona basınca son izlenen dersin oynatıcısı açılıyor"
+      ],
+      "blockedBy": [
+        "be-resume",
+        "fe-my-courses"
+      ]
+    },
+    {
+      "key": "be-question-bank",
+      "milestone": "H3",
+      "labels": [
+        "backend",
+        "mod:quiz",
+        "P1",
+        "rol:veri"
+      ],
+      "title": "Soru bankası CRUD (çoktan seçmeli)",
+      "description": "Eğitmen kursu için soru bankası oluşturur.",
+      "criteria": [
+        "Yalnız kursun sahibi eğitmen",
+        "Her soruda en az 2 şık ve en az 1 doğru şık; aksi 400",
+        "Bir sınavda kullanılan soru silinemiyor (409)",
+        "Entity + repository + DTO + mapper"
+      ],
+      "blockedBy": [
+        "api-rest",
+        "be-v5-quiz"
+      ]
+    },
+    {
+      "key": "fe-question-bank",
+      "milestone": "H3",
+      "labels": [
+        "frontend",
+        "mod:quiz",
+        "P1",
+        "rol:veri"
+      ],
+      "title": "FE: Soru bankası",
+      "description": "Eğitmen için soru bankası ekranı.",
+      "criteria": [
+        "Soru ekle/düzenle/sil, şık ekle/sil, doğru şıkları işaretle",
+        "'En az 2 şık / en az 1 doğru' istemci kontrolü",
+        "Sorular listesinde arama"
+      ],
+      "blockedBy": [
+        "be-question-bank"
+      ]
+    },
+    {
+      "key": "be-unpublish",
+      "milestone": "H3",
+      "labels": [
+        "backend",
+        "mod:admin",
+        "mod:course",
+        "P1",
+        "rol:alan"
+      ],
+      "title": "Yayından kaldırma + yeniden incelemeye gönderme",
+      "description": "Yönetici ya da eğitmen yayımlanmış kursu yayından kaldırır; eğitmen düzenledikten sonra yeniden incelemeye gönderir.",
+      "criteria": [
+        "Yayımlandı → Yayından kaldırıldı (admin: gerekçeli; eğitmen: kendi kursu)",
+        "Yayından kaldırıldı → İncelemede (eğitmen)",
+        "Yayından kaldırılan kurs katalogda görünmüyor; mevcut kayıtlı kursiyerlerin erişim kuralı docs'ta yazılı",
+        "Geçişler CourseState üzerinden"
+      ],
+      "blockedBy": [
+        "be-admin-courses"
+      ]
+    },
+    {
+      "key": "be-notification",
+      "milestone": "H3",
+      "labels": [
+        "backend",
+        "mod:notification",
+        "P1",
+        "rol:alan"
+      ],
+      "title": "Bildirim modülü: olay dinleyicileri + kayıt (6 olay)",
+      "description": "notification modülü domain olaylarını dinleyip uygulama içi bildirim kaydı oluşturur.",
+      "criteria": [
+        "Flyway migration: notifications (user_id, type, title, body, link, read_at, created_at) (Dosya adı `V<yyyyMMddHHmm>__<aciklama>.sql` (bkz. backend/src/main/resources/db/migration/README.md))",
+        "Dinleyiciler: kursa kayıt (eğitmene), yeni ders (kayıtlı kursiyerlere), kurs onayı (eğitmene), kurs reddi + gerekçe (eğitmene), sınav sonucu (kursiyere), sertifika oluşturuldu (kursiyere)",
+        "Yayıncı modüller notification modülüne bağımlı değil (yalnız olay)",
+        "Bildirim metinleri tek yerde"
+      ],
+      "blockedBy": [
+        "be-observer"
+      ]
+    },
+    {
+      "key": "be-notification-api",
+      "milestone": "H3",
+      "labels": [
+        "backend",
+        "mod:notification",
+        "P1",
+        "rol:mimar"
+      ],
+      "title": "Bildirim API'si: liste, okundu, sayaç",
+      "description": "Kullanıcının kendi bildirimleri.",
+      "criteria": [
+        "GET /api/me/notifications (sayfalı, en yeni önce)",
+        "POST okundu işaretle (tek / hepsi)",
+        "GET okunmamış sayısı",
+        "Başkasının bildirimi 404"
+      ],
+      "blockedBy": [
+        "be-notification"
+      ]
+    },
+    {
+      "key": "be-review",
+      "milestone": "H3",
+      "labels": [
+        "backend",
+        "mod:review",
+        "P2",
+        "rol:veri"
+      ],
+      "title": "Puan ve yorum (kayıtlı kullanıcı, tek değerlendirme)",
+      "description": "Proje dokümanı I: kayıtlı kullanıcı kursa 1–5 yıldız ve yorum bırakır.",
+      "criteria": [
+        "Flyway migration: reviews (Dosya adı `V<yyyyMMddHHmm>__<aciklama>.sql` (bkz. backend/src/main/resources/db/migration/README.md)); (user_id, course_id) unique",
+        "Yalnız kursa kayıtlı kursiyer; ikinci değerlendirme 409, kendi değerlendirmesini düzenleyebiliyor",
+        "GET /api/courses/{id}/reviews (sayfalı) + ortalama puan ve dağılım"
+      ],
+      "blockedBy": [
+        "be-enroll",
+        "api-panels"
+      ]
+    },
+    {
+      "key": "fe-reviews",
+      "milestone": "H3",
+      "labels": [
+        "frontend",
+        "mod:review",
+        "P2",
+        "rol:veri"
+      ],
+      "title": "FE: Yorum formu + kurs detayında değerlendirmeler",
+      "description": "Kurs detayında puan/yorum.",
+      "criteria": [
+        "Kayıtlı kursiyer için yıldız + yorum formu; kendi yorumunu düzenleme",
+        "Ortalama puan, dağılım ve yorum listesi (sayfalı)"
+      ],
+      "blockedBy": [
+        "be-review",
+        "fe-course-detail"
+      ]
+    },
+    {
+      "key": "test-review",
+      "milestone": "H3",
+      "labels": [
+        "backend",
+        "mod:review",
+        "P2",
+        "rol:kalite"
+      ],
+      "title": "ReviewService testleri (mükerrer değerlendirme)",
+      "description": "Proje dokümanı I: mükerrer değerlendirmenin engellenmesi.",
+      "criteria": [
+        "Kayıtsız kullanıcı reddi, ikinci değerlendirme 409, puan aralığı (1–5) doğrulaması",
+        "Ortalama hesabı",
+        "CI'da çalışıyor"
+      ],
+      "blockedBy": [
+        "be-review"
+      ]
+    },
+    {
+      "key": "be-certificate",
+      "milestone": "H4",
+      "labels": [
+        "backend",
+        "mod:certificate",
+        "P1",
+        "rol:alan"
+      ],
+      "title": "Sertifika: uygunluk kuralı, doğrulama kodu, CertificateIssued",
+      "description": "Proje dokümanı H: zorunlu dersleri ve sınav koşullarını tamamlayan kursiyere platform içi sertifika.",
+      "criteria": [
+        "Flyway migration: certificates (enrollment_id unique, verification_code unique, issued_at) (Dosya adı `V<yyyyMMddHHmm>__<aciklama>.sql` (bkz. backend/src/main/resources/db/migration/README.md))",
+        "Uygunluk: tüm zorunlu dersler tamamlanmış ve tüm zorunlu sınavlar eşik üstünde geçilmiş",
+        "LessonCompleted ve QuizCompleted dinleyicileri koşulu kontrol ediyor; bir kursiyere bir kurs için tek sertifika",
+        "Doğrulama kodu tahmin edilemez (güvenli rastgele) ve kısa",
+        "CertificateIssued olayı yayınlanıyor"
+      ],
+      "blockedBy": [
+        "be-progress",
+        "be-attempt"
+      ]
+    },
+    {
+      "key": "be-certificate-api",
+      "milestone": "H4",
+      "labels": [
+        "backend",
+        "mod:certificate",
+        "P1",
+        "rol:mimar"
+      ],
+      "title": "Sertifika görüntüleme + herkese açık doğrulama",
+      "description": "Kursiyer sertifikalarını görür; herkes doğrulama koduyla sertifikayı doğrulayabilir.",
+      "criteria": [
+        "GET /api/me/certificates ve GET /api/me/certificates/{id}",
+        "GET /api/certificates/verify/{code}: girişsiz erişilebilir; yalnız ad, kurs, tarih ve geçerlilik döner",
+        "Yanıtta 'resmî akreditasyon değildir' ibaresi alanı"
+      ],
+      "blockedBy": [
+        "be-certificate"
+      ]
+    },
+    {
+      "key": "fe-certificate",
+      "milestone": "H4",
+      "labels": [
+        "frontend",
+        "mod:certificate",
+        "P1",
+        "rol:mimar"
+      ],
+      "title": "FE: Sertifika + doğrulama sayfası",
+      "description": "Yazdırılabilir sertifika ve herkese açık doğrulama sayfası.",
+      "criteria": [
+        "Sertifika sayfası: kursiyer adı, kurs, tarih, doğrulama kodu, doğrulama bağlantısı; yazdırma görünümü",
+        "Görünür 'Bu belge platform içi katılım belgesidir, resmî akreditasyon değildir' ibaresi",
+        "/verify/[code] sayfası girişsiz çalışıyor"
+      ],
+      "blockedBy": [
+        "be-certificate-api"
+      ]
+    },
+    {
+      "key": "test-certificate",
+      "milestone": "H4",
+      "labels": [
+        "backend",
+        "mod:certificate",
+        "P1",
+        "rol:kalite"
+      ],
+      "title": "CertificateService testleri",
+      "description": "Sertifika uygunluk kuralları.",
+      "criteria": [
+        "Zorunlu ders eksik / zorunlu sınav kalınmış / hepsi tamam durumları",
+        "Tekrar sertifika oluşmuyor",
+        "Doğrulama kodu benzersiz",
+        "CI'da çalışıyor"
+      ],
+      "blockedBy": [
+        "be-certificate"
+      ]
+    },
+    {
+      "key": "be-instructor-stats",
+      "milestone": "H4",
+      "labels": [
+        "backend",
+        "mod:course",
+        "P1",
+        "rol:veri"
+      ],
+      "title": "Eğitmen paneli istatistikleri (kayıt, tamamlanma, sınav başarısı)",
+      "description": "Senaryo 5: eğitmen kayıt, ilerleme ve sınav istatistiklerini inceler.",
+      "criteria": [
+        "GET /api/instructor/courses/{id}/stats: kayıtlı kursiyer sayısı, ortalama ilerleme, tamamlanma oranı, sınav başına deneme sayısı ve başarı oranı",
+        "Yalnız kursun sahibi eğitmen",
+        "Veriler ilgili modüllerin service arayüzlerinden (başka modülün repository'si kullanılmadan)"
+      ],
+      "blockedBy": [
+        "be-progress",
+        "be-attempt",
+        "api-panels"
+      ]
+    },
+    {
+      "key": "be-instructor-students",
+      "milestone": "H4",
+      "labels": [
+        "backend",
+        "mod:course",
+        "mod:progress",
+        "P1",
+        "rol:veri"
+      ],
+      "title": "Eğitmen: kursiyer ilerleme listesi",
+      "description": "Proje dokümanı §2: eğitmen kursiyer ilerlemesini izler.",
+      "criteria": [
+        "GET /api/instructor/courses/{id}/students: ad, kayıt tarihi, ilerleme yüzdesi, son erişim, sınav sonuçları (sayfalı)",
+        "Yalnız kursun sahibi eğitmen"
+      ],
+      "blockedBy": [
+        "be-progress"
+      ]
+    },
+    {
+      "key": "fe-instructor-dashboard",
+      "milestone": "H4",
+      "labels": [
+        "frontend",
+        "mod:course",
+        "P1",
+        "rol:veri"
+      ],
+      "title": "FE: Eğitmen analitik paneli",
+      "description": "Senaryo 5 arayüzü.",
+      "criteria": [
+        "Kurs başına istatistik kartları ve basit grafikler",
+        "Kursiyer ilerleme tablosu (sayfalı, sıralanabilir)",
+        "Mobilde kartlar alt alta"
+      ],
+      "blockedBy": [
+        "be-instructor-stats",
+        "be-instructor-students",
+        "fe-instructor-panel"
+      ]
+    },
+    {
+      "key": "fe-notifications",
+      "milestone": "H4",
+      "labels": [
+        "frontend",
+        "mod:notification",
+        "P1",
+        "rol:mimar"
+      ],
+      "title": "FE: Bildirim zili + liste",
+      "description": "Navbar'da okunmamış sayısı ve bildirim listesi.",
+      "criteria": [
+        "Zil ikonu + okunmamış sayısı",
+        "Liste: başlık, zaman, bağlantı; tıklayınca okundu",
+        "Hepsini okundu işaretle"
+      ],
+      "blockedBy": [
+        "be-notification-api"
+      ]
+    },
+    {
+      "key": "test-notification",
+      "milestone": "H4",
+      "labels": [
+        "backend",
+        "mod:notification",
+        "P1",
+        "rol:kalite"
+      ],
+      "title": "Bildirim dinleyici testleri (6 olay)",
+      "description": "Observer dinleyicileri doğru kişiye doğru bildirimi oluşturuyor mu.",
+      "criteria": [
+        "Altı olayın her biri için alıcı ve içerik testi (red gerekçesi dahil)",
+        "Okundu/sayaç kuralları",
+        "CI'da çalışıyor"
+      ],
+      "blockedBy": [
+        "be-notification",
+        "be-certificate"
+      ]
+    },
+    {
+      "key": "be-it-2",
+      "milestone": "H4",
+      "labels": [
+        "backend",
+        "devops",
+        "P1",
+        "rol:kalite"
+      ],
+      "title": "Uçtan uca entegrasyon testi (Testcontainers): Senaryo 4–5",
+      "description": "Dokümandaki son iki senaryo.",
+      "criteria": [
+        "Senaryo 4: zorunlu dersler + sınav başarıyla tamamlanınca doğrulama kodlu sertifika oluşuyor ve doğrulama ucu çalışıyor; bildirim oluşuyor",
+        "Senaryo 5: eğitmen istatistik uçları beklenen sayıları döndürüyor",
+        "CI'da çalışıyor"
+      ],
+      "blockedBy": [
+        "be-it",
+        "be-certificate",
+        "be-instructor-stats"
+      ]
+    },
+    {
+      "key": "test-critical",
+      "milestone": "H4",
+      "labels": [
+        "backend",
+        "P1",
+        "rol:kalite"
+      ],
+      "title": "Bölüm 6 kritik test durumları + API erişim matrisi",
+      "description": "Proje dokümanı §5–6'nın açıkça istediği testler, entegrasyon seviyesinde.",
+      "criteria": [
+        "Kursa kayıt olmadan özel derse/içeriğe erişim → 403",
+        "Mükerrer kayıt → 409",
+        "Yetkisiz kurs düzenleme (başka eğitmen, kursiyer) → 403",
+        "Yanlış ilerleme hesabı yok: 20 dersin 15'i → %75",
+        "Dosya türü/boyutu ihlali → 415/413",
+        "Rol × uç erişim matrisi testi (her korumalı uç için girişsiz/yanlış rol)"
+      ],
+      "blockedBy": [
+        "be-content-serve",
+        "be-enroll",
+        "be-course-update",
+        "be-progress"
+      ]
+    },
+    {
+      "key": "doc-seq-certificate",
+      "milestone": "H4",
+      "labels": [
+        "docs",
+        "design-pattern",
+        "mod:certificate",
+        "P1",
+        "rol:alan"
+      ],
+      "title": "Sekans diyagramı: sertifika oluşturma ve bildirim (Observer)",
+      "description": "Son zorunlu dersin tamamlanmasından sertifika ve bildirime kadar olay zinciri.",
+      "criteria": [
+        "docs/diagrams/seq-certificate.(puml|mmd) ve render",
+        "LessonCompleted/QuizCompleted → CertificateListener → CertificateIssued → NotificationListener zinciri görünüyor",
+        "Koşul sağlanmadığında dal",
+        "Sınıf ve metot adları koddakiyle birebir aynı"
+      ],
+      "blockedBy": [
+        "be-certificate",
+        "be-notification"
+      ]
+    },
+    {
+      "key": "fe-quiz-history",
+      "milestone": "H4",
+      "labels": [
+        "frontend",
+        "mod:quiz",
+        "P2",
+        "rol:veri"
+      ],
+      "title": "FE: Sınav sonuç geçmişi",
+      "description": "Kursiyerin bir sınavdaki denemeleri.",
+      "criteria": [
+        "Denemeler listesi: tarih, puan, geçti/kaldı",
+        "Bir denemeye tıklayınca sonuç ayrıntısı"
+      ],
+      "blockedBy": [
+        "be-attempt-list"
+      ]
+    },
+    {
+      "key": "be-review-moderation",
+      "milestone": "H4",
+      "labels": [
+        "backend",
+        "mod:review",
+        "mod:admin",
+        "P2",
+        "rol:alan"
+      ],
+      "title": "Yorum moderasyonu (admin gizle / kaldır)",
+      "description": "Proje dokümanı I ve K: yorum moderasyonu.",
+      "criteria": [
+        "Yönetici yorumu gizler/geri açar; gizli yorum herkese açık listede görünmüyor ve ortalamaya katılmıyor",
+        "Moderasyon gerekçesi saklanıyor",
+        "Yalnız ADMIN"
+      ],
+      "blockedBy": [
+        "be-review"
+      ]
+    },
+    {
+      "key": "be-catalog-rating",
+      "milestone": "H4",
+      "labels": [
+        "backend",
+        "mod:review",
+        "mod:course",
+        "P2",
+        "rol:veri"
+      ],
+      "title": "Katalogda ortalama puan + puana göre filtre + eğitmen puan istatistiği",
+      "description": "Proje dokümanı D ve J: puana göre arama/filtre, değerlendirme istatistikleri.",
+      "criteria": [
+        "Katalog yanıtında ortalama puan ve değerlendirme sayısı",
+        "minRating filtresi ve puana göre sıralama",
+        "Eğitmen istatistiklerine ortalama puan ve dağılım eklendi"
+      ],
+      "blockedBy": [
+        "be-review",
+        "be-course-list"
+      ]
+    },
+    {
+      "key": "be-complaints",
+      "milestone": "H4",
+      "labels": [
+        "backend",
+        "mod:admin",
+        "P2",
+        "rol:alan"
+      ],
+      "title": "Şikâyet: oluşturma + admin inceleme",
+      "description": "Proje dokümanı K: şikâyet inceleme.",
+      "criteria": [
+        "Flyway migration: complaints (Dosya adı `V<yyyyMMddHHmm>__<aciklama>.sql` (bkz. backend/src/main/resources/db/migration/README.md))",
+        "Kullanıcı bir kursu ya da yorumu gerekçeyle şikâyet eder",
+        "Yönetici şikâyetleri listeler, durumunu değiştirir (açık / incelendi / reddedildi) ve gerekirse yorumu gizler ya da kursu yayından kaldırır"
+      ],
+      "blockedBy": [
+        "be-review"
+      ]
+    },
+    {
+      "key": "be-admin-reports",
+      "milestone": "H4",
+      "labels": [
+        "backend",
+        "mod:admin",
+        "P2",
+        "rol:kalite"
+      ],
+      "title": "Platform raporları",
+      "description": "Proje dokümanı K ve §5: yönetim raporları.",
+      "criteria": [
+        "Toplam kullanıcı (role göre), kurs (duruma göre), kayıt, tamamlanma ve sertifika sayıları",
+        "En çok kayıt alan kurslar, kategori dağılımı",
+        "Tarih aralığı filtresi",
+        "Yalnız ADMIN; veriler modüllerin service arayüzlerinden"
+      ],
+      "blockedBy": [
+        "be-enroll",
+        "be-progress"
+      ]
+    },
+    {
+      "key": "fe-admin-ops",
+      "milestone": "H4",
+      "labels": [
+        "frontend",
+        "mod:admin",
+        "P2",
+        "rol:alan"
+      ],
+      "title": "FE: Admin kategori, şikâyet ve yorum moderasyonu ekranları",
+      "description": "Yönetici paneli P2 ekranları.",
+      "criteria": [
+        "Kategori listesi ve CRUD",
+        "Şikâyet listesi ve durum değiştirme",
+        "Yorum gizle/geri aç"
+      ],
+      "blockedBy": [
+        "be-admin-categories",
+        "be-complaints",
+        "be-review-moderation"
+      ]
+    },
+    {
+      "key": "fe-admin-reports",
+      "milestone": "H4",
+      "labels": [
+        "frontend",
+        "mod:admin",
+        "P2",
+        "rol:kalite"
+      ],
+      "title": "FE: Platform raporları ekranı",
+      "description": "Yönetici rapor ekranı.",
+      "criteria": [
+        "Özet kartlar ve basit grafikler",
+        "Tarih aralığı seçimi",
+        "Mobilde okunabilir"
+      ],
+      "blockedBy": [
+        "be-admin-reports"
       ]
     }
   ]

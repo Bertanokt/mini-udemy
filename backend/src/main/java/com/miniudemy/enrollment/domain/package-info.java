@@ -1,4 +1,4 @@
 /**
- * JPA entity'leri ve enum'lar. Diğer katmanlara bağımlı değildir.
+ * JPA entity'leri, enum'lar ve domain olayları. Diğer katmanlara bağımlı değildir.
  */
 package com.miniudemy.enrollment.domain;

@@ -1,5 +1,10 @@
 # Yerel geliştirme: docker compose ile ayağa kalkan postgres'e bağlanır.
 spring:
+  flyway:
+    # Zaman damgalı sürümlerde (V<yyyyMMddHHmm>__...) başkasının daha eski tarihli migration'ı
+    # sizin yerel DB'nize sonradan gelebilir; dev'de sırasız uygulamaya izin verilir.
+    # CI ve demo temiz DB'den başladığı için orada sıra zaten doğrudur.
+    out-of-order: true
   jpa:
     show-sql: true
     properties:

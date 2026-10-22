@@ -1,4 +1,4 @@
 /**
- * Kursa kayıt, ders tamamlama ve kurs ilerleme yüzdesi.
+ * Yayımlanmış kurslara ücretsiz kayıt, kayıtlı kurslar paneli, mükerrer kayıt engeli.
  */
 package com.miniudemy.enrollment;

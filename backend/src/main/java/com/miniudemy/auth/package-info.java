@@ -1,4 +1,4 @@
 /**
- * Kimlik doğrulama: kayıt, giriş, JWT, kullanıcı ve roller (öğrenci, eğitmen, admin).
+ * Kimlik doğrulama: kayıt, giriş, JWT, parola yenileme, profil; kursiyer/eğitmen/yönetici rolleri.
  */
 package com.miniudemy.auth;

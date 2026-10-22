@@ -7,6 +7,8 @@
 #     varsa yeniden oluşturulmaz.
 #   - --sync verilirse var olan milestone'ların açıklama/bitiş tarihi ve issue'ların başlık, gövde, etiket, milestone'u
 #     issues.json'a eşitlenir. Ekibin işaretlediği kabul kriterleri ([x]) korunur.
+#   - issues.json'da "close": {"reason": "not planned", "comment": "..."} olan issue açıksa yorumla kapatılır
+#     (yoksa hiç oluşturulmaz). Board'daki kartını setup-board.sh arşivler.
 # "Blocked by #X" numaraları issues.json'daki anahtarlardan çözülür. Bağımlılık listede sonra gelen bir issue'ya da
 # işaret edebilir: önce eksik issue'lar açılır, sonra gövdeler gerçek numaralarla yazılır.
 #
@@ -125,6 +127,9 @@ for ((i = 0; i < count; i++)); do
   key=$(jq -r '.key' <<<"$issue")
   title=$(jq -r '.title' <<<"$issue")
   number=$(find_existing "$key" "$title")
+  if [[ -z "$number" ]] && jq -e '.close' <<<"$issue" >/dev/null; then
+    continue   # kapatılacak bir issue hiç açılmamışsa oluşturma
+  fi
   if [[ -z "$number" ]]; then
     args=(--repo "$REPO" --title "$title" --body "Hazırlanıyor… <!-- key: $key -->")
     for label in $(jq -r '.labels[]' <<<"$issue"); do args+=(--label "$label"); done
@@ -143,11 +148,26 @@ done
 # 2. geçiş: gövdeleri (ve --sync ile başlık/etiket/milestone'u) yaz
 log "== Issue'lar: gövde ve alanlar"
 updated=0
-existing=$(gh issue list --repo "$REPO" --state all --limit 1000 --json number,title,body,labels,milestone)
+closed=0
+existing=$(gh issue list --repo "$REPO" --state all --limit 1000 --json number,title,body,labels,milestone,state)
 for ((i = 0; i < count; i++)); do
   issue=$(jq -c --argjson i "$i" '.issues[$i]' "$CONFIG")
   key=$(jq -r '.key' <<<"$issue")
   number=$(lookup "$key")
+  [[ -z "$number" ]] && continue
+
+  if jq -e '.close' <<<"$issue" >/dev/null; then
+    state=$(jq -r --argjson n "$number" 'map(select(.number == $n)) | .[0].state' <<<"$existing")
+    if [[ "$state" == "OPEN" ]]; then
+      gh issue close "$number" --repo "$REPO" \
+        --reason "$(jq -r '.close.reason' <<<"$issue")" \
+        --comment "$(jq -r '.close.comment' <<<"$issue")" >/dev/null
+      closed=$((closed + 1))
+      log "  x #$number kapatıldı ($(jq -r '.close.reason' <<<"$issue"))"
+    fi
+    continue
+  fi
+
   is_new=false
   [[ " $new_keys " == *" $key "* ]] && is_new=true
   $SYNC || $is_new || continue
@@ -187,4 +207,4 @@ for ((i = 0; i < count; i++)); do
   $is_new || { updated=$((updated + 1)); log "  ~ #$number ${changes[*]}"; }
 done
 
-log "== Bitti: $created yeni, $updated güncellendi. Anahtar → numara: $MAP_FILE"
+log "== Bitti: $created yeni, $updated güncellendi, $closed kapatıldı. Anahtar → numara: $MAP_FILE"

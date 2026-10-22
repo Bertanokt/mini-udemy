@@ -4,6 +4,7 @@
 # - Project yoksa oluşturur ve repoya bağlar.
 # - Status alanının seçeneklerini issues.json'daki listeye (Backlog, Bu Hafta, In Progress, Review, Done) eşitler.
 #   Seçenekler zaten aynıysa dokunmaz (değiştirmek mevcut kartların durumunu sıfırlar).
+# - "not planned" ile kapatılmış issue'ların kartlarını arşivler.
 # - Board'a eklenmemiş issue'ları ekler. Durumu boş olan kartlara: CURRENT_MILESTONE'dakiler "Bu Hafta", diğerleri "Backlog".
 #   Ekibin taşıdığı kartların durumuna dokunmaz.
 #
@@ -66,7 +67,17 @@ thisweek_id=$(opt_id "Bu Hafta")
 
 # ---------------------------------------------------------------- kartlar
 items=$(gh project item-list "$number" --owner "$OWNER" --format json --limit 1000)
-issues=$(gh issue list --repo "$REPO" --state all --limit 1000 --json number,url,milestone)
+issues=$(gh issue list --repo "$REPO" --state all --limit 1000 --json number,url,milestone,stateReason)
+
+# "not planned" ile kapatılmış issue'ların kartları arşivlenir (Done kolonunu kirletmesin)
+archived=0
+for num in $(jq -r '.[] | select(.stateReason == "NOT_PLANNED") | .number' <<<"$issues"); do
+  item_id=$(jq -r --argjson n "$num" '.items[] | select(.content.type == "Issue" and .content.number == $n) | .id' <<<"$items")
+  [[ -z "$item_id" ]] && continue
+  gh project item-archive "$number" --owner "$OWNER" --id "$item_id" >/dev/null
+  archived=$((archived + 1))
+done
+issues=$(jq -c 'map(select(.stateReason != "NOT_PLANNED"))' <<<"$issues")
 
 added=0; to_week=0; to_backlog=0
 while read -r issue; do
@@ -91,5 +102,5 @@ while read -r issue; do
     --field-id "$status_field_id" --single-select-option-id "$opt" >/dev/null
 done < <(jq -c 'sort_by(.number)[]' <<<"$issues")
 
-log "= Kartlar: $added yeni eklendi; durum atanan: $to_week → Bu Hafta, $to_backlog → Backlog"
+log "= Kartlar: $added yeni eklendi; durum atanan: $to_week → Bu Hafta, $to_backlog → Backlog; arşivlenen: $archived"
 log "Board: $project_url"

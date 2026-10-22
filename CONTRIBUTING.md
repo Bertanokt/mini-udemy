@@ -33,8 +33,10 @@
 
 ## İş seçme
 
-- Issue'lar kimseye atanmış olarak açılmaz; herkes işi **"Bu Hafta" kolonundan kendisi seçer**, issue'yu kendine atar ve "In Progress"e taşır.
-- **Önce P1 (milestone bazında):** o haftanın milestone'undaki P1'ler bitmeden o haftanın P2'si alınmaz. P3 / `nice-to-have` işler yalnız MVP bittikten sonra.
+- **Rol = kişi.** Her issue'nun tek bir rol etiketi var (`rol:mimar`, `rol:alan`, `rol:veri`, `rol:kalite`); o rolü üstlenen üye o issue'yu yapar. Frontend issue'ları ilgili backend işinin rolündedir.
+- Issue'lar atanmış olarak açılmaz; üye **"Bu Hafta" kolonundan kendi rol etiketli işini** seçer, kendine atar ve "In Progress"e taşır. Rolünün işi bitmişse ya da takıldıysa planlamada başka bir rolün işini devralabilir (etiketi değiştirerek).
+- **Önce P1 (milestone bazında):** o haftanın milestone'undaki P1'ler bitmeden o haftanın P2'si alınmaz.
+- **P2 kesme kuralı:** Hafta 4 sprint planlamasında (11.11) Hafta 3'ün P1'leri bitmemişse Hafta 4'ün P2'leri "not planned" olarak kapatılır, kaydırılmaz.
 - **WIP limiti:** kişi başı aynı anda en fazla **2** issue (In Progress + Review toplamı).
 - Bir işe başlamadan önce "Blocked by #X" satırına bak; bağımlı olduğu issue kapanmadan başlama.
 - Ekip dışından gelen bir engel varsa (hoca onayı, erişim, karar bekleniyor) issue'ya elle `blocked` etiketi ekle ve nedenini yorum olarak yaz. Bağımlılık zaten issue metninde yazdığı için `blocked` etiketi bunun için kullanılmaz.
@@ -47,6 +49,8 @@
   - özellik: `feature/#<issue-no>-kisa-ad` → `feature/#12-auth-register`
   - hata: `fix/#<issue-no>-kisa-ad` → `fix/#71-login-redirect`
 - Commit mesajında ve PR açıklamasında `Closes #<no>` bulunur; merge edildiğinde issue otomatik kapanır.
+- **Aynı modülde birbirine bağlı küçük issue'lar tek PR'da kapatılabilir:** `Closes #a #b #c` (her biri ayrı `Closes` ile de yazılabilir: `Closes #a, closes #b`). Branch adı ilk issue'nun numarasını taşır. Farklı modüllere dokunan işler ayrı PR olur.
+- PR açıklamasındaki **"Ne / Neden" bölümünü PR sahibi kendi cümleleriyle yazar** (Claude Code ya da başka bir araç bu bölümü yazmaz). Sunumda kodunu anlatabilmen buna bağlı.
 - Branch'i güncel tutmak için `main`'i rebase ya da merge et; PR "Squash and merge" ile birleştirilir.
 
 ## Definition of Done
@@ -57,11 +61,12 @@ Bir issue ancak şunların hepsi sağlandığında "Done"dır:
 - [ ] En az 1 review onayı (modül sorumlusundan)
 - [ ] CI yeşil (backend build + test, frontend lint + build)
 - [ ] Issue'daki kabul kriterlerinin tamamı işaretli
-- [ ] Gerekiyorsa docs / diyagram / OpenAPI sözleşmesi güncel
+- [ ] Kod değiştiyse ilgili diyagram (ER, sınıf, sekans, bileşen) ve OpenAPI aynı PR'da güncellendi
+- [ ] Yeni mimari karar varsa ADR yazıldı
 
 ## Roller
 
-Dersin önerdiği rol dağılımı. Herkes kod yazar; rol yalnız o alanın koordinasyonundan ve çıktılarından kimin sorumlu olduğunu belirtir. Gerekirse roller değiştirilebilir.
+Dersin önerdiği rol dağılımı. **Her üye bir rol üstlenir ve rol etiketli issue'ların sahibidir** (rol = kişi). Rol etiketleri kod issue'larını da kapsar; herkes kod yazar. Backlog kişi başı 33–38 issue olacak şekilde dengelendi.
 
 | Rol | Temel sorumluluk | Beklenen çıktı | Kişi |
 |---|---|---|---|
@@ -75,7 +80,7 @@ Dersin önerdiği rol dağılımı. Herkes kod yazar; rol yalnız o alanın koor
 Not, grup notuna bireysel katkı katsayısı (0,5–1,1) uygulanarak verilir. Katsayı Git geçmişine, geliştirilen modüllere ve sunumdaki teknik sorulara verilen cevaplara göre belirlenir. Bu yüzden:
 
 - **Herkes her hafta kendi adına en az bir PR merge ettirir.**
-- **Herkes en az bir modülü backend ve frontend tarafıyla baştan sona geliştirir** (bkz. modül sorumluları).
+- **Herkes en az bir modülü backend ve frontend tarafıyla baştan sona geliştirir** (frontend issue'ları ilgili backend işinin rolünde olduğu için bu kendiliğinden sağlanır).
 - Review'lar modüller arasında dönüşümlü yapılır; herkes kendi yazmadığı modülleri de sunumda anlatabilecek kadar bilir.
 - Commit'ler kendi GitHub hesabınla ve kendi e-postanla atılır (`git config user.email` GitHub hesabındakiyle aynı olmalı; yoksa katkı profilinde görünmez).
 - PR'lar squash merge ile birleşir; merge commit'inin author'ı PR'ı açan kişidir, katkı izlenebilir kalır. Birlikte çalıştığınız bir PR'da diğer kişiyi `Co-authored-by:` satırıyla ekleyin.
@@ -90,31 +95,39 @@ Not, grup notuna bireysel katkı katsayısı (0,5–1,1) uygulanarak verilir. Ka
 
 | Modül | Etiket | Sorumlu |
 |---|---|---|
-| Auth | `mod:auth` | |
-| Kurs | `mod:course` | |
-| Kayıt / ilerleme | `mod:enrollment` | |
+| Kullanıcı ve yetkilendirme | `mod:auth` | |
+| Kurs, kategori, katalog, eğitmen paneli | `mod:course` | |
+| Ders içerikleri ve dosyalar | `mod:content` | |
+| Kursa kayıt | `mod:enrollment` | |
+| İzleme ve ilerleme | `mod:progress` | |
 | Sınav | `mod:quiz` | |
-| Admin | `mod:admin` | |
+| Sertifika | `mod:certificate` | |
+| Puanlama ve yorumlar | `mod:review` | |
+| Bildirimler | `mod:notification` | |
+| Yönetici paneli | `mod:admin` | |
 | Docs / DevOps | `docs`, `devops` | |
 
 ## Mimari kurallar (özet)
 
-- Backend modül bazlı paketlenir: `com.miniudemy.<modül>.{controller,service,repository,dto,mapper,domain}`.
+- Backend modül bazlı paketlenir: `com.miniudemy.<modül>.{controller,service,repository,dto,mapper,domain}`. Modüller: auth, course, content, enrollment, progress, quiz, certificate, review, notification, admin (+ common).
+- Bir modül başka modülün yalnız service arayüzünü ya da domain olaylarını kullanır; başka modülün repository'sine ve entity'sine erişmez.
 - Controller yalnız DTO alır/döner; entity (domain) API'ye çıkmaz. Dönüşüm mapper'da yapılır.
 - İş kuralı service katmanında; controller ve repository'de iş kuralı olmaz.
-- Şema değişikliği yalnız Flyway migration'ı ile yapılır (`backend/src/main/resources/db/migration/README.md`).
-- Bilinçli kullanılan desenler: puanlamada Strategy, ilerleme güncellemede Observer (Spring events), kurs yaşam döngüsünde State, DTO + Mapper. Ayrıntı: `docs/architecture.md`.
+- Şema değişikliği yalnız Flyway migration'ı ile yapılır; dosya adı zaman damgalı: `V<yyyyMMddHHmm>__aciklama.sql` (`backend/src/main/resources/db/migration/README.md`).
+- Bilinçli kullanılan desenler: kurs yayın durumlarında State, kayıt/ders/onay/red/sınav/sertifika olaylarında Observer (Spring events), sınav puanlamada Strategy, ders içerik türlerinde Factory Method, katman sınırlarında DTO + Mapper. Ayrıntı: `docs/architecture.md`.
 - Önemli her mimari karar `docs/adr/` altında bir ADR olarak yazılır (bağlam, karar, alternatifler, sonuçlar).
 - Katman ve modül kuralları ArchUnit testleriyle CI'da kontrol edilir.
+- Geliştirme Claude Code ile yapılıyorsa kurallar `CLAUDE.md`'de, her issue için kullanılacak akış ve prompt şablonu `docs/claude-code-workflow.md`'de.
 
 ## Etiketler
 
 | Etiket | Kullanım |
 |---|---|
 | `backend`, `frontend`, `docs`, `devops` | Alan |
-| `P1`, `P2`, `P3` | Öncelik (aynı milestone'da P1'ler bitmeden P2 alınmaz) |
+| `P1`, `P2`, `P3` | Öncelik. P1: proje dokümanındaki 5 senaryo, Bölüm 6 test durumları ve tasarım çıktıları; P2: senaryo dışı ayrıntılar. Aynı milestone'da P1'ler bitmeden P2 alınmaz |
+| `rol:mimar`, `rol:alan`, `rol:veri`, `rol:kalite` | Issue'nun sahibi olan rol (= kişi) |
 | `nice-to-have` | MVP dışı |
 | `bug` | Hata |
 | `blocked` | Ekip dışı bir engel var (elle) |
 | `design-pattern` | Ders için önemli desen uygulaması |
-| `mod:auth`, `mod:course`, `mod:enrollment`, `mod:quiz`, `mod:admin` | Modül (review sorumlusu buna göre) |
+| `mod:auth`, `mod:course`, `mod:content`, `mod:enrollment`, `mod:progress`, `mod:quiz`, `mod:certificate`, `mod:review`, `mod:notification`, `mod:admin` | Modül (review sorumlusu buna göre) |

@@ -13,7 +13,7 @@ Yazılım Mimarisi dersi için online kurs platformu. Eğitmenler kurs → böl�
 ## Klasör yapısı
 
 ```
-backend/    Spring Boot uygulaması (modül bazlı paketler: auth, course, enrollment, quiz, admin, common)
+backend/    Spring Boot uygulaması (modül bazlı paketler: auth, course, content, enrollment, progress, quiz, certificate, review, notification, admin, common)
 frontend/   Next.js uygulaması (src/lib/api: API client katmanı, src/components/layout: ortak layout)
 docs/       Diyagramlar, OpenAPI sözleşmesi, mimari rapor
 scripts/    GitHub kurulum script'leri (etiket, milestone, issue, board)
@@ -75,5 +75,8 @@ cd frontend && npm run lint && npm run build
 ## Çalışma şekli
 
 Akış, branch adları, WIP limiti ve Definition of Done: [CONTRIBUTING.md](CONTRIBUTING.md).
+Claude Code kuralları: [CLAUDE.md](CLAUDE.md); her issue için akış ve prompt şablonu: [docs/claude-code-workflow.md](docs/claude-code-workflow.md).
+
+Veritabanı şeması yalnız Flyway ile değişir; migration dosyaları zaman damgalı adlandırılır: `V<yyyyMMddHHmm>__aciklama.sql` (ayrıntı: [backend/src/main/resources/db/migration/README.md](backend/src/main/resources/db/migration/README.md)).
 
 Backlog GitHub Project board'unda ("Mini Udemy"). Issue'lar `scripts/issues.json` içinde tanımlı ve `scripts/create-issues.sh` ile oluşturuldu. Backlog değişiklikleri önce `issues.json`'a yazılır, sonra `scripts/create-issues.sh --sync` ve `scripts/setup-board.sh` çalıştırılır.
