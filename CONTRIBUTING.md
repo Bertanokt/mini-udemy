@@ -34,7 +34,12 @@
 ## İş seçme
 
 - **Rol = kişi.** Her issue'nun tek bir rol etiketi var (`rol:mimar`, `rol:alan`, `rol:veri`, `rol:kalite`); o rolü üstlenen üye o issue'yu yapar. Frontend issue'ları ilgili backend işinin rolündedir.
-- Issue'lar atanmış olarak açılmaz; üye **"Bu Hafta" kolonundan kendi rol etiketli işini** seçer, kendine atar ve "In Progress"e taşır. Rolünün işi bitmişse ya da takıldıysa planlamada başka bir rolün işini devralabilir (etiketi değiştirerek).
+- Issue'lar atanmış olarak açılmaz; üye **"Bu Hafta" kolonundan kendi rol etiketli işini** seçer. Rolünün işi bitmişse ya da takıldıysa planlamada başka bir rolün işini devralabilir (etiketi değiştirerek).
+- **İşe başlarken iki adım zorunlu:** issue'yu alan **kendini assignee yapar** ve board'da **kartı "In Progress"e taşır**. Assignee'si olmayan bir issue'da kimse çalışmıyor sayılır; aynı işi iki kişinin yapmasını bu önler.
+  ```bash
+  gh issue edit <no> --add-assignee @me
+  ```
+  Kartı board'da (Mini Udemy project) sürükleyerek "In Progress"e taşı. İşi bırakırsan assignee'yi kaldır ve kartı "Bu Hafta"ya geri al.
 - **Önce P1 (milestone bazında):** o haftanın milestone'undaki P1'ler bitmeden o haftanın P2'si alınmaz.
 - **P2 kesme kuralı:** Hafta 4 sprint planlamasında (11.11) Hafta 3'ün P1'leri bitmemişse Hafta 4'ün P2'leri "not planned" olarak kapatılır, kaydırılmaz.
 - **WIP limiti:** kişi başı aynı anda en fazla **2** issue (In Progress + Review toplamı).

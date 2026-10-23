@@ -4,3 +4,4 @@
 *.log
 .env
 scripts/.issue-map.tsv
+.claude/settings.local.json

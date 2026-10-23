@@ -489,7 +489,7 @@
     },
     {
       "key": "fe-auth-core",
-      "milestone": "H1",
+      "milestone": "H2",
       "labels": [
         "frontend",
         "mod:auth",
@@ -510,7 +510,7 @@
     },
     {
       "key": "fe-register",
-      "milestone": "H1",
+      "milestone": "H3",
       "labels": [
         "frontend",
         "mod:auth",
@@ -531,7 +531,7 @@
     },
     {
       "key": "fe-login",
-      "milestone": "H1",
+      "milestone": "H2",
       "labels": [
         "frontend",
         "mod:auth",
@@ -552,7 +552,7 @@
     },
     {
       "key": "fe-guard-nav",
-      "milestone": "H1",
+      "milestone": "H2",
       "labels": [
         "frontend",
         "mod:auth",
@@ -573,7 +573,7 @@
     },
     {
       "key": "be-v2-course",
-      "milestone": "H2",
+      "milestone": "H1",
       "labels": [
         "backend",
         "mod:course",
@@ -594,7 +594,7 @@
     },
     {
       "key": "be-course-domain",
-      "milestone": "H2",
+      "milestone": "H1",
       "labels": [
         "backend",
         "mod:course",
@@ -643,7 +643,7 @@
         "backend",
         "mod:course",
         "P1",
-        "rol:veri"
+        "rol:mimar"
       ],
       "title": "PUT / DELETE /api/courses/{id} (sahiplik + State)",
       "description": "Eğitmen yalnız kendi kursunu düzenler/siler; izin kararını CourseState verir.",
@@ -664,7 +664,7 @@
         "backend",
         "mod:course",
         "P1",
-        "rol:veri"
+        "rol:kalite"
       ],
       "title": "Bölüm CRUD: /api/courses/{id}/sections",
       "description": "Kursa bölüm ekleme, düzenleme, silme, sıralama.",
@@ -702,7 +702,7 @@
     },
     {
       "key": "be-course-list",
-      "milestone": "H2",
+      "milestone": "H1",
       "labels": [
         "backend",
         "mod:course",
@@ -745,7 +745,7 @@
     },
     {
       "key": "be-instructor-courses",
-      "milestone": "H2",
+      "milestone": "H3",
       "labels": [
         "backend",
         "mod:course",
@@ -981,7 +981,7 @@
     },
     {
       "key": "doc-seq-enroll",
-      "milestone": "H3",
+      "milestone": "H2",
       "labels": [
         "docs",
         "mod:enrollment",
@@ -1028,7 +1028,7 @@
         "backend",
         "mod:progress",
         "P1",
-        "rol:alan"
+        "rol:mimar"
       ],
       "title": "POST /api/lessons/{id}/complete",
       "description": "Kursiyer bir dersi tamamlandı olarak işaretler. İlerleme hesabı bu uçta yapılmaz; LessonCompleted olayı yayınlanır.",
@@ -1044,7 +1044,7 @@
     },
     {
       "key": "be-observer",
-      "milestone": "H3",
+      "milestone": "H2",
       "labels": [
         "backend",
         "design-pattern",
@@ -1241,7 +1241,7 @@
     },
     {
       "key": "doc-class",
-      "milestone": "H3",
+      "milestone": "H2",
       "labels": [
         "docs",
         "design-pattern",
@@ -1353,7 +1353,7 @@
     },
     {
       "key": "test-quiz",
-      "milestone": "H4",
+      "milestone": "H5",
       "labels": [
         "backend",
         "mod:quiz",
@@ -1416,7 +1416,7 @@
     },
     {
       "key": "be-admin-courses",
-      "milestone": "H3",
+      "milestone": "H2",
       "labels": [
         "backend",
         "mod:admin",
@@ -1459,7 +1459,7 @@
     },
     {
       "key": "test-admin",
-      "milestone": "H4",
+      "milestone": "H3",
       "labels": [
         "backend",
         "mod:admin",
@@ -1522,7 +1522,7 @@
     },
     {
       "key": "doc-seq-quiz",
-      "milestone": "H4",
+      "milestone": "H5",
       "labels": [
         "docs",
         "mod:quiz",
@@ -1859,7 +1859,7 @@
     },
     {
       "key": "adr-002-003",
-      "milestone": "H1",
+      "milestone": "H2",
       "labels": [
         "docs",
         "mod:auth",
@@ -2132,7 +2132,7 @@
     },
     {
       "key": "doc-solid",
-      "milestone": "H4",
+      "milestone": "H5",
       "labels": [
         "docs",
         "design-pattern",
@@ -2429,7 +2429,7 @@
     },
     {
       "key": "be-categories",
-      "milestone": "H2",
+      "milestone": "H1",
       "labels": [
         "backend",
         "mod:course",
@@ -2564,7 +2564,7 @@
     },
     {
       "key": "be-password-reset",
-      "milestone": "H2",
+      "milestone": "H3",
       "labels": [
         "backend",
         "mod:auth",
@@ -2586,7 +2586,7 @@
     },
     {
       "key": "be-profile",
-      "milestone": "H2",
+      "milestone": "H3",
       "labels": [
         "backend",
         "mod:auth",
@@ -2606,7 +2606,7 @@
     },
     {
       "key": "fe-profile-reset",
-      "milestone": "H2",
+      "milestone": "H3",
       "labels": [
         "frontend",
         "mod:auth",

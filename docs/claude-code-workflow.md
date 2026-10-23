@@ -12,7 +12,7 @@ Amaç yalnız kodu yazdırmak değil: sunumda hoca her üyeye kendi kodu hakkın
 
 ## Standart prompt şablonu
 
-Board'da "Bu Hafta" kolonundan kendi rol etiketli issue'nu al, kendine ata, "In Progress"e taşı. Sonra Claude Code'a şunu yapıştır (`<no>` yerine issue numarası):
+Board'da "Bu Hafta" kolonundan kendi rol etiketli issue'nu seç. **Kendini assignee yap** (`gh issue edit <no> --add-assignee @me`) ve **kartı "In Progress"e taşı**; bu ikisi yapılmadan işe başlanmaz (CONTRIBUTING.md). Sonra Claude Code'a şunu yapıştır (`<no>` yerine issue numarası):
 
 ```text
 #<no> numaralı issue üzerinde çalışacağız. Aşağıdaki adımları sırayla izle; her "DUR" noktasında benim cevabımı bekle.
