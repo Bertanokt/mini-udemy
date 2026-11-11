@@ -9,7 +9,7 @@ Kapsamın tek kaynağı hocanın proje tanım dokümanıdır (modüller A–L, s
 | ER diyagramı | `diagrams/er.*` | Hafta 1 |
 | API sözleşmesi | `api/openapi.yaml` | Hafta 1 |
 | Mimari kurallar (10 modül, 5 desen) | `architecture.md` | Hafta 1 |
-| Mimari karar kayıtları (ADR) | `adr/` | Hafta 1 → |
+| Mimari karar kayıtları (ADR) | [`adr/`](adr/README.md) | Hafta 1 → |
 | Gantt, görev dağılımı, risk analizi | `plan.md` | Hafta 1 |
 | Haftalık ilerleme raporları | `progress/hafta-N.md` | her hafta |
 | Sistem mimarisi (C4) | `diagrams/c4-*` | Hafta 2 |
