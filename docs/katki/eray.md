@@ -7,7 +7,7 @@ GitHub: [@eraygame113-beep](https://github.com/eraygame113-beep)
 | Issue | PR | Çıktı |
 |---|---|---|
 | [#2 ER diyagramı (tüm modüller)](https://github.com/Bertanokt/mini-udemy/issues/2) | [#153](https://github.com/Bertanokt/mini-udemy/pull/153) | `docs/diagrams/er.puml` + `er.svg` / `er.png`: 10 modül, 20 tablo, PK/FK/unique/CHECK kısıtları |
-| [#3 API sözleşmesi: auth, profil, parola yenileme](https://github.com/Bertanokt/mini-udemy/issues/3) | [#154](https://github.com/Bertanokt/mini-udemy/pull/154) | `docs/api/openapi.yaml`: register, login, parola yenileme (request/confirm), `GET/PUT /api/users/me` |
+| [#3 API sözleşmesi: auth, profil, parola yenileme](https://github.com/Bertanokt/mini-udemy/issues/3) | [#154](https://github.com/Bertanokt/mini-udemy/pull/154) | `docs/api/openapi.yaml`: register, login, parola yenileme (request/confirm), `GET/PUT /api/me` |
 
 ## Kararlar ve nedenleri
 
@@ -28,7 +28,7 @@ GitHub: [@eraygame113-beep](https://github.com/eraygame113-beep)
 ## Karşılaştığım problemler
 
 - **İlk taslakta ilerleme ve sertifika tabloları `user_id`'ye bağlıydı.** Issue #40 ve #129 ile karşılaştırınca uyuşmadığını gördüm ve `enrollment_id`'ye çevirdim.
-- **`/api/me` mi `/api/users/me` mi?** `CLAUDE.md` kendi kaynakları `/api/me/...` altında istiyor, issue #3, #14 ve #116 ise `/api/users/me` istiyor. Issue'ya uydum, karar PR #154'te ekibe soruldu.
+- **`/api/me` mi `/api/users/me` mi?** `CLAUDE.md` kendi kaynakları `/api/me/...` altında istiyor, issue #3, #14 ve #116 ise `/api/users/me` istiyor. Önce issue'ya uydum ve PR #154'te ekibe sordum. Backlog'daki diğer kullanıcı uçlarının hepsi `/api/me/...` altında olduğu için tutarlılık adına `/api/me`'ye geçtik.
 - **`users` tablosunda `bio` kolonu yok:** Profil ucu (#116) `bio` alanını kullanıyor, ama #7'deki migration tanımında bu alan yok. #7'de eklenmesi gerekiyor.
 - **Bilgisayarımda Java kurulu değil:** PlantUML diyagramını ve OpenAPI doğrulamasını Docker imajlarıyla çalıştırdım (`plantuml/plantuml`, `redocly/cli`).
 - **Diyagramda üç modülün rengi birbirine çok yakındı,** tablolar karışıyordu. Renkleri ve tablo aralıklarını değiştirip yeniden render ettim.
