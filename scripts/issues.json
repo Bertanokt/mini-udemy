@@ -224,7 +224,7 @@
       "title": "API sözleşmesi (OpenAPI): auth, profil, parola yenileme",
       "description": "docs/api/openapi.yaml içine auth uçları, ortak hata gövdesi ve JWT güvenlik şeması.",
       "criteria": [
-        "POST /api/auth/register, POST /api/auth/login, GET/PUT /api/users/me tanımlı (şema + örnek)",
+        "POST /api/auth/register, POST /api/auth/login, GET/PUT /api/me tanımlı (şema + örnek)",
         "POST /api/auth/password-reset/request ve /confirm tanımlı",
         "bearerAuth güvenlik şeması; ortak ErrorResponse (status, message, errors) 400/401/403/404/409'da kullanılıyor",
         "Dosya bir OpenAPI validator'dan hatasız geçiyor"
@@ -454,7 +454,7 @@
         "P1",
         "rol:mimar"
       ],
-      "title": "GET /api/users/me + rol bazlı yetkilendirme",
+      "title": "GET /api/me + rol bazlı yetkilendirme",
       "description": "Giriş yapmış kullanıcının bilgisi; method security (@PreAuthorize) açılır ve rol kontrolü için örnek oluşturulur.",
       "criteria": [
         "Token'sız istek 401, geçerli token ile 200 + UserResponse",
@@ -1808,7 +1808,7 @@
       "labels": [
         "docs",
         "P1",
-        "rol:mimar"
+        "rol:kalite"
       ],
       "title": "Fonksiyonel olmayan gereksinimler (NFR-xx, §5 dahil)",
       "description": "Şablon 3.3.1–3.3.8 başlıkları; proje dokümanı §5 teknik beklentileri ölçülebilir NFR'lere çevrilir.",
@@ -2596,7 +2596,7 @@
       "title": "Profil görüntüleme ve güncelleme",
       "description": "Kullanıcının kendi profili.",
       "criteria": [
-        "GET/PUT /api/users/me: ad soyad, kısa biyografi",
+        "GET/PUT /api/me: ad soyad, kısa biyografi",
         "E-posta ve rol bu uçla değiştirilemiyor",
         "Doğrulama hataları standart gövdeyle"
       ],
