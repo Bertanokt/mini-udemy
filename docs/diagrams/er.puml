@@ -1,0 +1,375 @@
+@startuml er
+title Mini Udemy - ER diyagramı (PostgreSQL, 20 tablo, 10 modül)
+
+hide circle
+skinparam shadowing false
+skinparam defaultFontSize 12
+skinparam nodesep 60
+skinparam ranksep 80
+skinparam packageStyle rectangle
+skinparam entity {
+  BackgroundColor White
+  BorderColor #444444
+}
+
+' ---------------------------------------------------------------
+' auth
+' ---------------------------------------------------------------
+package "auth" #DCEBFA {
+  entity users {
+    * id : bigserial <<PK>>
+    --
+    * email : varchar(255) <<UK>>
+    * password_hash : varchar(255)
+    * full_name : varchar(150)
+    bio : text
+    * role : varchar(20)
+    * active : boolean
+    * created_at : timestamptz
+    * updated_at : timestamptz
+    --
+    role: STUDENT | INSTRUCTOR | ADMIN
+  }
+
+  entity password_reset_tokens {
+    * id : bigserial <<PK>>
+    --
+    * user_id : bigint <<FK>>
+    * token_hash : varchar(64) <<UK>>
+    * expires_at : timestamptz
+    used_at : timestamptz
+    * created_at : timestamptz
+    --
+    tek kullanımlık, süreli, hash'li
+  }
+}
+
+' ---------------------------------------------------------------
+' course
+' ---------------------------------------------------------------
+package "course" #E3F4DC {
+  entity categories {
+    * id : bigserial <<PK>>
+    --
+    * name : varchar(100) <<UK>>
+    * created_at : timestamptz
+  }
+
+  entity courses {
+    * id : bigserial <<PK>>
+    --
+    * instructor_id : bigint <<FK>>
+    * category_id : bigint <<FK>>
+    cover_file_id : bigint <<FK>>
+    * title : varchar(200)
+    * description : text
+    * level : varchar(20)
+    learning_outcomes : text[]
+    * status : varchar(20)
+    rejection_reason : text
+    * created_at : timestamptz
+    * updated_at : timestamptz
+    --
+    level: BEGINNER | INTERMEDIATE | ADVANCED
+    status: DRAFT | IN_REVIEW | PUBLISHED | UNPUBLISHED
+    rejection_reason: red gerekçesi (IN_REVIEW -> DRAFT)
+  }
+
+  entity sections {
+    * id : bigserial <<PK>>
+    --
+    * course_id : bigint <<FK>>
+    * title : varchar(200)
+    * position : int
+    * created_at : timestamptz
+  }
+
+  entity lessons {
+    * id : bigserial <<PK>>
+    --
+    * section_id : bigint <<FK>>
+    content_file_id : bigint <<FK>>
+    * title : varchar(200)
+    * content_type : varchar(20)
+    * mandatory : boolean
+    * duration_seconds : int
+    * position : int
+    * created_at : timestamptz
+    * updated_at : timestamptz
+    --
+    content_type: VIDEO | PDF | DOCUMENT
+  }
+}
+
+' ---------------------------------------------------------------
+' content
+' ---------------------------------------------------------------
+package "content" #FFF59D {
+  entity stored_files {
+    * id : bigserial <<PK>>
+    --
+    * uploader_id : bigint <<FK>>
+    * storage_key : varchar(100) <<UK>>
+    * original_name : varchar(255)
+    * mime_type : varchar(100)
+    * size_bytes : bigint
+    * created_at : timestamptz
+    --
+    storage_key: sunucuda üretilen UUID adı
+  }
+}
+
+' ---------------------------------------------------------------
+' enrollment
+' ---------------------------------------------------------------
+package "enrollment" #F8DCE8 {
+  entity enrollments {
+    * id : bigserial <<PK>>
+    --
+    * student_id : bigint <<FK>>
+    * course_id : bigint <<FK>>
+    * enrolled_at : timestamptz
+    --
+    UK(student_id, course_id)
+  }
+}
+
+' ---------------------------------------------------------------
+' progress
+' ---------------------------------------------------------------
+package "progress" #E6DDF5 {
+  entity lesson_progress {
+    * id : bigserial <<PK>>
+    --
+    * enrollment_id : bigint <<FK>>
+    * lesson_id : bigint <<FK>>
+    * completed_at : timestamptz
+    --
+    UK(enrollment_id, lesson_id)
+  }
+
+  entity course_progress {
+    * id : bigserial <<PK>>
+    --
+    * enrollment_id : bigint <<FK>> <<UK>>
+    * progress_percent : numeric(5,2)
+    last_lesson_id : bigint <<FK>>
+    last_accessed_at : timestamptz
+    * updated_at : timestamptz
+    --
+    CHECK (progress_percent BETWEEN 0 AND 100)
+  }
+}
+
+' ---------------------------------------------------------------
+' quiz
+' ---------------------------------------------------------------
+package "quiz" #FFE0CC {
+  entity questions {
+    * id : bigserial <<PK>>
+    --
+    * course_id : bigint <<FK>>
+    * text : text
+    * points : int
+    * created_at : timestamptz
+    --
+    kurs bazında soru bankası
+  }
+
+  entity options {
+    * id : bigserial <<PK>>
+    --
+    * question_id : bigint <<FK>>
+    * text : text
+    * is_correct : boolean
+  }
+
+  entity quizzes {
+    * id : bigserial <<PK>>
+    --
+    * section_id : bigint <<FK>>
+    * title : varchar(200)
+    * scoring_type : varchar(30)
+    * pass_threshold : int
+    * required : boolean
+    * created_at : timestamptz
+    --
+    scoring_type: SINGLE_ANSWER | MULTI_ALL_OR_NOTHING
+    | MULTI_PARTIAL
+    CHECK (pass_threshold BETWEEN 0 AND 100)
+  }
+
+  entity quiz_questions {
+    * quiz_id : bigint <<PK>> <<FK>>
+    * question_id : bigint <<PK>> <<FK>>
+    --
+    * position : int
+    --
+    PK(quiz_id, question_id)
+  }
+
+  entity quiz_attempts {
+    * id : bigserial <<PK>>
+    --
+    * quiz_id : bigint <<FK>>
+    * student_id : bigint <<FK>>
+    * score : numeric(7,2)
+    * max_score : numeric(7,2)
+    * passed : boolean
+    * submitted_at : timestamptz
+  }
+
+  entity attempt_answers {
+    * id : bigserial <<PK>>
+    --
+    * attempt_id : bigint <<FK>>
+    * question_id : bigint <<FK>>
+    * option_id : bigint <<FK>>
+    --
+    UK(attempt_id, question_id, option_id)
+  }
+}
+
+' ---------------------------------------------------------------
+' certificate
+' ---------------------------------------------------------------
+package "certificate" #D8F2F0 {
+  entity certificates {
+    * id : bigserial <<PK>>
+    --
+    * enrollment_id : bigint <<FK>> <<UK>>
+    * verification_code : varchar(20) <<UK>>
+    * issued_at : timestamptz
+    --
+    kursiyer+kurs = enrollment; kurs başına tek sertifika
+  }
+}
+
+' ---------------------------------------------------------------
+' review
+' ---------------------------------------------------------------
+package "review" #FFCDD2 {
+  entity reviews {
+    * id : bigserial <<PK>>
+    --
+    * user_id : bigint <<FK>>
+    * course_id : bigint <<FK>>
+    * rating : smallint
+    comment : text
+    * hidden : boolean
+    moderation_reason : text
+    * created_at : timestamptz
+    * updated_at : timestamptz
+    --
+    UK(user_id, course_id)
+    CHECK (rating BETWEEN 1 AND 5)
+  }
+}
+
+' ---------------------------------------------------------------
+' notification
+' ---------------------------------------------------------------
+package "notification" #B2DFDB {
+  entity notifications {
+    * id : bigserial <<PK>>
+    --
+    * user_id : bigint <<FK>>
+    * type : varchar(40)
+    * title : varchar(200)
+    * body : text
+    link : varchar(255)
+    read_at : timestamptz
+    * created_at : timestamptz
+    --
+    type: ENROLLMENT_CREATED | LESSON_PUBLISHED
+    | COURSE_APPROVED | COURSE_REJECTED
+    | QUIZ_COMPLETED | CERTIFICATE_ISSUED
+  }
+}
+
+' ---------------------------------------------------------------
+' admin
+' ---------------------------------------------------------------
+package "admin" #EADCCB {
+  entity complaints {
+    * id : bigserial <<PK>>
+    --
+    * reporter_id : bigint <<FK>>
+    course_id : bigint <<FK>>
+    review_id : bigint <<FK>>
+    resolved_by_id : bigint <<FK>>
+    * reason : text
+    * status : varchar(20)
+    * created_at : timestamptz
+    resolved_at : timestamptz
+    --
+    status: OPEN | REVIEWED | REJECTED
+    CHECK (course_id veya review_id'den tam biri dolu)
+  }
+}
+
+' ---------------------------------------------------------------
+' İlişkiler (|o = isteğe bağlı FK, || = zorunlu bir, o{ = sıfır veya çok)
+' ---------------------------------------------------------------
+users ||--o{ password_reset_tokens
+users ||--o{ courses
+users ||--o{ stored_files
+users ||--o{ enrollments
+users ||--o{ quiz_attempts
+users ||--o{ reviews
+users ||--o{ notifications
+users ||--o{ complaints
+users |o--o{ complaints
+
+categories ||--o{ courses
+stored_files |o--o{ courses
+stored_files |o--o{ lessons
+
+courses ||--o{ sections
+sections ||--o{ lessons
+courses ||--o{ enrollments
+courses ||--o{ questions
+courses ||--o{ reviews
+courses |o--o{ complaints
+reviews |o--o{ complaints
+
+lessons ||--o{ lesson_progress
+enrollments ||--o{ lesson_progress
+enrollments ||--o| course_progress
+enrollments ||--o| certificates
+lessons |o--o{ course_progress
+
+sections ||--o{ quizzes
+questions ||--o{ options
+quizzes ||--o{ quiz_questions
+questions ||--o{ quiz_questions
+quizzes ||--o{ quiz_attempts
+quiz_attempts ||--o{ attempt_answers
+questions ||--o{ attempt_answers
+options ||--o{ attempt_answers
+
+legend right
+  **Modüller (paket rengi)**
+  |<#DCEBFA> auth |
+  |<#E3F4DC> course |
+  |<#FFF59D> content |
+  |<#F8DCE8> enrollment |
+  |<#E6DDF5> progress |
+  |<#FFE0CC> quiz |
+  |<#D8F2F0> certificate |
+  |<#FFCDD2> review |
+  |<#B2DFDB> notification |
+  |<#EADCCB> admin |
+  <<PK>> birincil anahtar, <<FK>> yabancı anahtar, <<UK>> tekil
+  Bileşik tekil kısıtlar entity altında UK(a, b) olarak yazılı.
+  Kardinalite: crow's foot; zorunlu yalnız "||", isteğe bağlı FK "|o".
+endlegend
+
+note bottom of notifications
+  **Modül sınırı notu:** Modüller arası yabancı anahtarlar veritabanında vardır
+  (ör. enrollments.course_id -> courses.id), ancak kodda bir modül başka modülün
+  entity'sine bağlanmaz; yalnız id (Long) ya da DTO taşır (CLAUDE.md modül kuralı).
+  Örn. Enrollment sınıfında Course alanı yok, courseId alanı var.
+end note
+
+@enduml
