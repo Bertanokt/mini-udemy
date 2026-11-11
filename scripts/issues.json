@@ -1808,7 +1808,7 @@
       "labels": [
         "docs",
         "P1",
-        "rol:mimar"
+        "rol:kalite"
       ],
       "title": "Fonksiyonel olmayan gereksinimler (NFR-xx, §5 dahil)",
       "description": "Şablon 3.3.1–3.3.8 başlıkları; proje dokümanı §5 teknik beklentileri ölçülebilir NFR'lere çevrilir.",

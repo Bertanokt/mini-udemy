@@ -78,7 +78,7 @@ Dersin önerdiği rol dağılımı. **Her üye bir rol üstlenir ve rol etiketli
 | Yazılım Mimarı | Mimari yaklaşım, bileşen sınırları, mimari kararlar | Mimari diyagramlar (C4, bileşen, dağıtım), ADR'ler | Bertan (@Bertanokt) | `rol:mimar` |
 | Alan Tasarımcısı | Alan modeli, sınıflar, nesne yönelimli tasarım, tasarım desenleri | Sınıf ve sekans diyagramları, desen/SOLID açıklamaları | Sedat (@sedatisener) | `rol:alan` |
 | Veri ve Entegrasyon Sorumlusu | Veritabanı, API tasarımı, dış servis entegrasyonları | ER diyagramı, OpenAPI sözleşmesi | Eray (@eraygame113-beep) | `rol:veri` |
-| Kalite ve Süreç Sorumlusu | Testler, kod kalitesi, Git iş akışı, proje takibi | Test planı ve raporu, CI çıktıları, haftalık ilerleme raporları | Vlad (@vliashenko6) | `rol:kalite` |
+| Kalite ve Süreç Sorumlusu | Testler, kod kalitesi, Git iş akışı, proje takibi | Test planı ve raporu, CI çıktıları, haftalık ilerleme raporları | Veronika (@vliashenko6) | `rol:kalite` |
 
 ## Bireysel katkı
 
