@@ -8,7 +8,7 @@ Bu doküman Mini Udemy'nin fonksiyonel gereksinimlerini tanımlar (proje raporu 
 - **Kabul kriteri:** gereksinimin karşılandığını gösteren, test edilebilir ve ölçülebilir koşul.
 - **Öncelik:** **P1** = dokümandaki 5 temel senaryonun, Bölüm 6'daki test durumlarının ya da tasarım çıktılarının çalışması için gerekli; **P2** = senaryo dışı ayrıntı.
 
-Fonksiyonel olmayan gereksinimler (performans, güvenlik, mobil uyumluluk, dosya sınırları vb.) ayrı dokümandadır (#78).
+Fonksiyonel olmayan gereksinimler (performans, güvenlik, mobil uyumluluk, dosya sınırları vb.) ayrı dokümandadır: [non-functional-requirements.md](non-functional-requirements.md).
 
 ## A. Kullanıcı ve yetkilendirme
 
