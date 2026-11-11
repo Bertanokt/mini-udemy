@@ -185,7 +185,7 @@ paths:
           description: Parola değiştirildi.
         "400":
           $ref: "#/components/responses/BadRequest"
-  /api/users/me:
+  /api/me:
     get:
       tags: [Users]
       summary: Kendi profilimi getir
