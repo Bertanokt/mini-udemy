@@ -3,14 +3,32 @@ info:
   title: Mini Udemy API
   version: 0.1.0
   description: >
-    API sözleşmesi. Hafta 1'deki sözleşme issue'larında auth, kurs, kayıt, sınav ve admin uçları eklenecek.
+    API sözleşmesi. Hafta 1'deki sözleşme issue'larında kurs, kayıt, sınav ve admin uçları eklenecek.
     Kod bu sözleşmeye uyar; değişiklik önce burada PR ile yapılır.
+
+
+    Bu sürümde sağlık ucu ile auth modülü (kayıt, giriş, profil, parola yenileme) tanımlıdır.
+
+
+    Kimlik doğrulama: `POST /api/auth/login` ile alınan JWT, korumalı uçlarda
+    `Authorization: Bearer <accessToken>` başlığıyla gönderilir.
+
+
+    Hatalar her zaman `ErrorResponse` gövdesiyle döner (`status`, `message`, `errors`);
+    `message` kullanıcıya gösterilebilir Türkçe bir cümledir.
 servers:
   - url: http://localhost:8080
+tags:
+  - name: Auth
+    description: Kayıt, giriş ve parola yenileme. Bu uçlar herkese açıktır (token gerekmez).
+  - name: Users
+    description: Giriş yapmış kullanıcının kendi profili.
 paths:
   /api/health:
     get:
       summary: Backend ayakta mı
+      operationId: getHealth
+      security: []
       responses:
         "200":
           description: OK
@@ -25,3 +43,507 @@ paths:
                   service:
                     type: string
                     example: mini-udemy-backend
+  /api/auth/register:
+    post:
+      tags: [Auth]
+      summary: Öğrenci ya da eğitmen olarak kayıt ol
+      description: >
+        Yeni hesap oluşturur. `role` yalnızca `STUDENT` ya da `INSTRUCTOR` olabilir;
+        `ADMIN` kayıtla oluşturulamaz (admin hesabı seed ile gelir) ve `role=ADMIN`
+        gönderilirse istek 400 ile reddedilir. Parola BCrypt ile hash'lenerek saklanır.
+        Kayıt token döndürmez; kullanıcı ardından `POST /api/auth/login` ile giriş yapar.
+      operationId: register
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+            examples:
+              student:
+                summary: Öğrenci kaydı
+                value:
+                  fullName: Ayşe Yılmaz
+                  email: ayse.yilmaz@example.com
+                  password: GucluParola123
+                  role: STUDENT
+              instructor:
+                summary: Eğitmen kaydı
+                value:
+                  fullName: Mehmet Kaya
+                  email: mehmet.kaya@example.com
+                  password: GucluParola123
+                  role: INSTRUCTOR
+      responses:
+        "201":
+          description: Hesap oluşturuldu.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+              example:
+                id: 42
+                email: ayse.yilmaz@example.com
+                fullName: Ayşe Yılmaz
+                role: STUDENT
+                bio: null
+                createdAt: "2026-11-11T09:30:00Z"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: E-posta ve parola ile giriş yap
+      description: >
+        Bilgiler doğruysa JWT access token ve kullanıcı bilgisi döner. Yanlış e-posta
+        ile yanlış parola aynı 401 yanıtını verir; hangisinin yanlış olduğu söylenmez.
+        Hesap devre dışıysa (`active=false`) yalnızca parola doğrulandıktan sonra 403 döner.
+      operationId: login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+            example:
+              email: ayse.yilmaz@example.com
+              password: GucluParola123
+      responses:
+        "200":
+          description: Giriş başarılı.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+              example:
+                accessToken: eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI0MiIsInJvbGUiOiJTVFVERU5UIn0.c2lnbmF0dXJl
+                tokenType: Bearer
+                expiresIn: 3600
+                user:
+                  id: 42
+                  email: ayse.yilmaz@example.com
+                  fullName: Ayşe Yılmaz
+                  role: STUDENT
+                  bio: null
+                  createdAt: "2026-11-11T09:30:00Z"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/auth/password-reset/request:
+    post:
+      tags: [Auth]
+      summary: Parola yenileme bağlantısı iste
+      description: >
+        E-posta numaralandırmayı önlemek için kayıtlı olsun ya da olmasın her geçerli
+        e-posta biçimine aynı `202` yanıtı döner. Kayıtlı kullanıcı için tek kullanımlık,
+        süreli bir token üretilir ve `PasswordResetNotifier` arayüzüne verilir; dev
+        profilinde bağlantı log'a yazılır, e-posta gönderilmez.
+      operationId: requestPasswordReset
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordResetRequest"
+            example:
+              email: ayse.yilmaz@example.com
+      responses:
+        "202":
+          description: >
+            İstek alındı. E-posta kayıtlı olsa da olmasa da gövdesiz aynı yanıt döner.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /api/auth/password-reset/confirm:
+    post:
+      tags: [Auth]
+      summary: Token ile yeni parola belirle
+      description: >
+        Token geçerliyse parolayı değiştirir ve token'ı kullanılmış sayar. Geçersiz,
+        süresi dolmuş ya da daha önce kullanılmış token ile yeni parola kuralına uymayan
+        parola 400 döner.
+      operationId: confirmPasswordReset
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordResetConfirmRequest"
+            example:
+              token: 3f9a1c7e5b2d4a80b6c1e9d2f7a45b30
+              newPassword: YeniGucluParola456
+      responses:
+        "204":
+          description: Parola değiştirildi.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /api/me:
+    get:
+      tags: [Users]
+      summary: Kendi profilimi getir
+      description: Token'daki kullanıcının profilini döner.
+      operationId: getMyProfile
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Kullanıcı profili.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+              example:
+                id: 42
+                email: ayse.yilmaz@example.com
+                fullName: Ayşe Yılmaz
+                role: STUDENT
+                bio: Yazılım mühendisliği öğrencisiyim.
+                createdAt: "2026-11-11T09:30:00Z"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Users]
+      summary: Kendi profilimi güncelle
+      description: >
+        Yalnızca ad soyad ve kısa biyografi değiştirilebilir. E-posta ve rol bu uçla
+        değiştirilemez; istekte bu alanlar bulunursa yok sayılmaz, 400 ile reddedilir.
+      operationId: updateMyProfile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProfileRequest"
+            example:
+              fullName: Ayşe Yılmaz
+              bio: Yazılım mühendisliği öğrencisiyim.
+      responses:
+        "200":
+          description: Güncellenmiş profil.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+              example:
+                id: 42
+                email: ayse.yilmaz@example.com
+                fullName: Ayşe Yılmaz
+                role: STUDENT
+                bio: Yazılım mühendisliği öğrencisiyim.
+                createdAt: "2026-11-11T09:30:00Z"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >
+        `POST /api/auth/login` yanıtındaki `accessToken`. Başlık:
+        `Authorization: Bearer <accessToken>`. Token'da `sub` kullanıcı id'si,
+        `role` rol claim'idir.
+  schemas:
+    Role:
+      type: string
+      description: >
+        Kullanıcı rolü. `ADMIN` hesabı kayıtla oluşturulamaz; yalnızca seed ile gelir.
+      enum:
+        - STUDENT
+        - INSTRUCTOR
+        - ADMIN
+      example: STUDENT
+    RegisterRole:
+      type: string
+      description: Kayıtta seçilebilen roller. `ADMIN` seçilemez.
+      enum:
+        - STUDENT
+        - INSTRUCTOR
+      example: STUDENT
+    RegisterRequest:
+      type: object
+      required:
+        - fullName
+        - email
+        - password
+        - role
+      properties:
+        fullName:
+          type: string
+          minLength: 2
+          maxLength: 100
+          description: Ad soyad.
+          example: Ayşe Yılmaz
+        email:
+          type: string
+          format: email
+          maxLength: 254
+          description: Benzersiz e-posta adresi.
+          example: ayse.yilmaz@example.com
+        password:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 72
+          description: Parola (en az 8 karakter; üst sınır BCrypt'in 72 bayt sınırındandır).
+          example: GucluParola123
+        role:
+          $ref: "#/components/schemas/RegisterRole"
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+          example: ayse.yilmaz@example.com
+        password:
+          type: string
+          format: password
+          minLength: 1
+          maxLength: 72
+          example: GucluParola123
+    AuthResponse:
+      type: object
+      required:
+        - accessToken
+        - tokenType
+        - expiresIn
+        - user
+      properties:
+        accessToken:
+          type: string
+          description: İmzalı JWT.
+          example: eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI0MiIsInJvbGUiOiJTVFVERU5UIn0.c2lnbmF0dXJl
+        tokenType:
+          type: string
+          enum: [Bearer]
+          example: Bearer
+        expiresIn:
+          type: integer
+          format: int64
+          minimum: 1
+          description: Token'ın geçerlilik süresi (saniye).
+          example: 3600
+        user:
+          $ref: "#/components/schemas/UserResponse"
+    UserResponse:
+      type: object
+      required:
+        - id
+        - email
+        - fullName
+        - role
+        - createdAt
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 42
+        email:
+          type: string
+          format: email
+          example: ayse.yilmaz@example.com
+        fullName:
+          type: string
+          example: Ayşe Yılmaz
+        role:
+          $ref: "#/components/schemas/Role"
+        bio:
+          type: string
+          nullable: true
+          maxLength: 500
+          description: Kısa biyografi; girilmemişse null.
+          example: Yazılım mühendisliği öğrencisiyim.
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-11-11T09:30:00Z"
+    UpdateProfileRequest:
+      type: object
+      description: >
+        Yalnızca bu iki alan güncellenebilir; e-posta ve rol değiştirilemez.
+      additionalProperties: false
+      required:
+        - fullName
+      properties:
+        fullName:
+          type: string
+          minLength: 2
+          maxLength: 100
+          example: Ayşe Yılmaz
+        bio:
+          type: string
+          nullable: true
+          maxLength: 500
+          description: Kısa biyografi; null ya da boş gönderilirse temizlenir.
+          example: Yazılım mühendisliği öğrencisiyim.
+    PasswordResetRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+          example: ayse.yilmaz@example.com
+    PasswordResetConfirmRequest:
+      type: object
+      required:
+        - token
+        - newPassword
+      properties:
+        token:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Parola yenileme bağlantısındaki tek kullanımlık token.
+          example: 3f9a1c7e5b2d4a80b6c1e9d2f7a45b30
+        newPassword:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 72
+          example: YeniGucluParola456
+    ErrorResponse:
+      type: object
+      description: >
+        Tüm hataların ortak gövdesi (`common/exception` global handler'ı). `message`
+        kullanıcıya gösterilebilir Türkçe bir cümledir; stack trace ya da iç ayrıntı içermez.
+        `errors` alan adı - mesaj çiftleridir (doğrulama hatalarında dolu, diğerlerinde boş nesne).
+      required:
+        - status
+        - message
+        - errors
+      properties:
+        status:
+          type: integer
+          description: HTTP durum kodu.
+          example: 409
+        message:
+          type: string
+          description: Türkçe, kullanıcıya gösterilebilir hata cümlesi.
+          example: Bu e-posta adresi zaten kayıtlı.
+        errors:
+          type: object
+          description: Alan adı - hata mesajı çiftleri.
+          additionalProperties:
+            type: string
+          example:
+            email: Bu e-posta adresi zaten kayıtlı.
+  responses:
+    BadRequest:
+      description: >
+        İstek geçersiz (400): doğrulama hatası, eksik alan, yasak alan ya da geçersiz /
+        süresi dolmuş / kullanılmış parola yenileme token'ı.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          examples:
+            validation:
+              summary: Alan doğrulama hatası
+              value:
+                status: 400
+                message: Girilen bilgilerde hata var.
+                errors:
+                  email: Geçerli bir e-posta adresi girin.
+                  password: Parola en az 8 karakter olmalıdır.
+            adminRole:
+              summary: Kayıtta ADMIN rolü seçildi
+              value:
+                status: 400
+                message: Girilen bilgilerde hata var.
+                errors:
+                  role: Bu rol ile kayıt olunamaz.
+            invalidResetToken:
+              summary: Geçersiz ya da süresi dolmuş parola yenileme token'ı
+              value:
+                status: 400
+                message: Parola yenileme bağlantısı geçersiz ya da süresi dolmuş.
+                errors: {}
+    Unauthorized:
+      description: >
+        Kimlik doğrulanamadı (401): token yok, geçersiz ya da süresi dolmuş; girişte
+        e-posta veya parola yanlış.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          examples:
+            invalidCredentials:
+              summary: Girişte e-posta veya parola yanlış
+              value:
+                status: 401
+                message: E-posta veya parola hatalı.
+                errors: {}
+            missingToken:
+              summary: Token yok, geçersiz ya da süresi dolmuş
+              value:
+                status: 401
+                message: Oturumunuz geçersiz ya da süresi dolmuş. Lütfen tekrar giriş yapın.
+                errors: {}
+    Forbidden:
+      description: "Bu işlem için yetkiniz yok (403): rol yetersiz ya da hesap devre dışı."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          examples:
+            deactivated:
+              summary: Hesap devre dışı
+              value:
+                status: 403
+                message: Hesabınız devre dışı bırakılmış.
+                errors: {}
+            insufficientRole:
+              summary: Rol yetersiz
+              value:
+                status: 403
+                message: Bu işlem için yetkiniz yok.
+                errors: {}
+    NotFound:
+      description: Kaynak bulunamadı (404).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            status: 404
+            message: Kullanıcı bulunamadı.
+            errors: {}
+    Conflict:
+      description: "Çakışma (409): kaynak zaten var."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            status: 409
+            message: Bu e-posta adresi zaten kayıtlı.
+            errors:
+              email: Bu e-posta adresi zaten kayıtlı.
