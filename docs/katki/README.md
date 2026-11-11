@@ -8,11 +8,7 @@
 - Repo (herkese açık): https://github.com/Bertanokt/mini-udemy
 - Görev panosu — GitHub Project (herkese açık): https://github.com/users/Bertanokt/projects/1
 - Issue'lar: https://github.com/Bertanokt/mini-udemy/issues · Milestone'lar: https://github.com/Bertanokt/mini-udemy/milestones · Pull request'ler: https://github.com/Bertanokt/mini-udemy/pulls?q=is%3Apr
-- Bireysel teknik katkı açıklamaları (her üye kendi hesabından, kendi PR'ıyla ekler):
-  - Bertan: henüz eklenmedi
-  - Sedat: henüz eklenmedi
-  - Eray: [docs/katki/eray.md](https://github.com/Bertanokt/mini-udemy/blob/main/docs/katki/eray.md)
-  - Veronika: [docs/katki/veronika.md](https://github.com/Bertanokt/mini-udemy/blob/main/docs/katki/veronika.md)
+- Üyelerin kendi yazdığı katkı notları: [Eray](https://github.com/Bertanokt/mini-udemy/blob/main/docs/katki/eray.md), [Veronika](https://github.com/Bertanokt/mini-udemy/blob/main/docs/katki/veronika.md)
 
 ## 2. Rol dağılımı
 
