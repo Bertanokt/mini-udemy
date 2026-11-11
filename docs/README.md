@@ -5,7 +5,7 @@ Kapsamın tek kaynağı hocanın proje tanım dokümanıdır (modüller A–L, s
 | Doküman | Dosya | Milestone |
 |---|---|---|
 | Fonksiyonel / fonksiyonel olmayan gereksinimler | `requirements.md` | Hafta 1 |
-| Kullanım senaryoları + use-case diyagramı | `requirements.md`, `diagrams/use-case.*` | Hafta 1 |
+| Kullanım senaryoları + use-case diyagramı | `requirements.md`, [`diagrams/use-case.puml`](diagrams/use-case.puml) ([SVG](diagrams/use-case.svg), [PNG](diagrams/use-case.png)) | Hafta 1 |
 | ER diyagramı | `diagrams/er.*` | Hafta 1 |
 | API sözleşmesi | `api/openapi.yaml` | Hafta 1 |
 | Mimari kurallar (10 modül, 5 desen) | `architecture.md` | Hafta 1 |

@@ -1,0 +1,154 @@
+@startuml use-case
+title Mini Udemy - Kullanım durumu diyagramı (A–L)
+
+left to right direction
+skinparam shadowing false
+skinparam defaultFontSize 12
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #FFFFFF
+  BorderColor #444444
+}
+
+' ---------------------------------------------------------------- aktörler
+actor "Ziyaretçi\n(giriş yapmamış)" as Visitor
+actor "Kayıtlı Kullanıcı" as User
+actor "Kursiyer" as Student
+actor "Eğitmen" as Instructor
+actor "Yönetici" as Admin
+
+' Kayıtlı kullanıcı, ziyaretçinin yapabildiği her şeyi yapabilir;
+' kursiyer, eğitmen ve yönetici kayıtlı kullanıcının ortak işlerini devralır.
+User --|> Visitor
+Student --|> User
+Instructor --|> User
+Admin --|> User
+
+rectangle "Mini Udemy" {
+
+  package "A. Kullanıcı ve yetkilendirme" {
+    usecase "UC-01 Kayıt ol" as UC01
+    usecase "UC-02 Giriş yap" as UC02
+    usecase "UC-03 Parolayı yenile" as UC03
+    usecase "UC-07 Profili yönet" as UC07
+    usecase "UC-33 Erişim yetkisini doğrula" as UC33
+  }
+
+  package "B. Kurs oluşturma ve yönetimi" {
+    usecase "UC-19 Kurs oluştur / düzenle" as UC19
+    usecase "UC-20 Bölüm ve ders yönet" as UC20
+    usecase "UC-24 Kursu onaya gönder" as UC24
+    usecase "UC-25 Kursu yayından kaldır" as UC25
+  }
+
+  package "C. Video ve eğitim materyalleri" {
+    usecase "UC-21 Ders içeriği yükle" as UC21
+    usecase "UC-12 Ders izle" as UC12
+  }
+
+  package "D. Kurs kataloğu ve arama" {
+    usecase "UC-04 Kurs ara / filtrele" as UC04
+    usecase "UC-05 Kurs ayrıntısını görüntüle" as UC05
+  }
+
+  package "E. Kursa kayıt" {
+    usecase "UC-10 Kursa kayıt ol" as UC10
+    usecase "UC-11 Kayıtlı kursları görüntüle" as UC11
+  }
+
+  package "F. İzleme ve ilerleme" {
+    usecase "UC-13 Dersi tamamla" as UC13
+    usecase "UC-14 Kaldığı yerden devam et" as UC14
+  }
+
+  package "G. Sınav ve değerlendirme" {
+    usecase "UC-22 Soru bankası yönet" as UC22
+    usecase "UC-23 Bölüm sınavı oluştur" as UC23
+    usecase "UC-15 Sınava gir" as UC15
+    usecase "UC-16 Sınav sonuçlarını görüntüle" as UC16
+  }
+
+  package "H. Dijital sertifika" {
+    usecase "UC-17 Sertifikayı görüntüle" as UC17
+    usecase "UC-06 Sertifika doğrula" as UC06
+  }
+
+  package "I. Puanlama ve yorumlar" {
+    usecase "UC-18 Kursu değerlendir" as UC18
+    usecase "UC-31 Yorumları moderasyonla" as UC31
+  }
+
+  package "J. Eğitmen paneli" {
+    usecase "UC-26 Eğitmen istatistiklerini görüntüle" as UC26
+  }
+
+  package "K. Yönetici paneli" {
+    usecase "UC-27 Kursu onayla / reddet" as UC27
+    usecase "UC-34 Kurs içeriğini incele" as UC34
+    usecase "UC-28 Kullanıcıları yönet" as UC28
+    usecase "UC-29 Kategorileri yönet" as UC29
+    usecase "UC-09 Kurs / yorum şikâyet et" as UC09
+    usecase "UC-30 Şikâyetleri incele" as UC30
+    usecase "UC-32 Platform raporlarını görüntüle" as UC32
+  }
+
+  package "L. Bildirimler" {
+    usecase "UC-08 Bildirimleri görüntüle" as UC08
+  }
+}
+
+' ---------------------------------------------------------------- ilişkiler
+Visitor -- UC01
+Visitor -- UC02
+Visitor -- UC04
+Visitor -- UC05
+Visitor -- UC06
+
+User -- UC07
+User -- UC08
+User -- UC09
+
+Student -- UC10
+Student -- UC11
+Student -- UC12
+Student -- UC13
+Student -- UC14
+Student -- UC15
+Student -- UC16
+Student -- UC17
+Student -- UC18
+
+Instructor -- UC19
+Instructor -- UC20
+Instructor -- UC21
+Instructor -- UC22
+Instructor -- UC23
+Instructor -- UC24
+Instructor -- UC25
+Instructor -- UC26
+
+Admin -- UC27
+Admin -- UC25
+Admin -- UC28
+Admin -- UC29
+Admin -- UC30
+Admin -- UC31
+Admin -- UC32
+
+UC12 ..> UC33 : <<include>>
+UC27 ..> UC34 : <<include>>
+UC03 ..> UC02 : <<extend>>
+
+' ---------------------------------------------------------------- senaryolar
+legend right
+  **Temel senaryolar → kullanım durumları** (proje tanım dokümanı, bölüm 4)
+  1. Kurs yayımlama: UC-19, UC-20, UC-21, UC-22, UC-23, UC-24, UC-27
+  2. Kursa kayıt ve öğrenme: UC-04, UC-05, UC-10, UC-12, UC-13
+  3. Kaldığı yerden devam: UC-11, UC-14
+  4. Sınav ve sertifika: UC-15, UC-17, UC-06
+  5. Eğitmen analitiği: UC-26
+  ..
+  Gerçek ödeme kapsam dışıdır.
+endlegend
+
+@enduml
