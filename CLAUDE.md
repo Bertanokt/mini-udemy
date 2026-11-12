@@ -76,7 +76,10 @@ Tüm hatalar `common/exception`'daki global handler'dan aynı gövdeyle döner:
 { "status": 409, "message": "Bu kursa zaten kayıtlısınız.", "errors": { "alan": "mesaj" } }
 ```
 
-- Controller'da elle hata yanıtı kurma; service'ten tanımlı istisna fırlat (`NotFoundException` → 404, `ForbiddenException` → 403, `ConflictException` → 409, doğrulama → 400 + `errors`, dosya boyutu → 413, dosya türü → 415).
+- Controller'da elle hata yanıtı kurma; service'ten `common/exception`'daki istisnalardan birini fırlat: `BadRequestException` → 400 (alan doğrulamasıyla yakalanamayan iş kuralı), `ForbiddenException` → 403, `NotFoundException` → 404, `ConflictException` → 409, `PayloadTooLargeException` → 413 (dosya boyutu), `UnsupportedMediaTypeException` → 415 (dosya türü). `@Valid` ihlalleri kendiliğinden 400 + alan bazlı `errors` olur.
+- Hata belirli bir alanla ilgiliyse alan hatasını da ver ki frontend mesajı o alanın altında göstersin: `throw new ConflictException("Bu e-posta adresi zaten kayıtlı.", Map.of("email", "Bu e-posta adresi zaten kayıtlı."))`.
+- Bozuk JSON, yanlış tipte/eksik parametre (400), olmayan adres (404), yanlış HTTP yöntemi (405) ve beklenmeyen hatalar (500) handler'da zaten aynı gövdeye çevrilir; ayrıca bir şey yazma.
+- 401 (token yok/geçersiz) ve güvenlik katmanının erişim reddi istek controller'a ulaşmadan oluşur; bunlar Spring Security yapılandırmasında aynı `ErrorResponse` gövdesiyle döner (#10).
 - `message` kullanıcıya gösterilebilir Türkçe bir cümle; stack trace ya da iç ayrıntı içermez.
 - Yeni bir hata türü gerekiyorsa önce handler'a ve OpenAPI'deki `ErrorResponse` açıklamasına ekle.
 
