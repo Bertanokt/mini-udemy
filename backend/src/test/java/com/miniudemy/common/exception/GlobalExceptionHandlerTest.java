@@ -36,6 +36,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -53,6 +55,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 class GlobalExceptionHandlerTest {
 
     private static final String SECRET = "SELECT * FROM users -- iç ayrıntı";
+    private static final String INTERNAL_REASON = "enrollment row already exists for user 42";
 
     /** Service'in verdiği alan sırası; yanıtta da bu sırada dönmeli (form alanlarının sırası). */
     private static final List<String> FIELD_ORDER = List.of("title", "description", "category", "price", "level", "language");
@@ -211,6 +214,29 @@ class GlobalExceptionHandlerTest {
                 .andExpect(jsonPath("$.message").value("Desteklenmeyen içerik türü."));
     }
 
+    @Test
+    void notAcceptable_returns406InContractFormat() throws Exception {
+        // İstemci XML istiyor, uç yalnız JSON üretiyor. Gövde yine sözleşmedeki JSON olmalı.
+        mockMvc.perform(get("/test-errors/json-only").accept(MediaType.APPLICATION_XML))
+                .andExpect(status().isNotAcceptable())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value(406))
+                .andExpect(jsonPath("$.message").value("İstenen yanıt biçimi desteklenmiyor."))
+                .andExpect(jsonPath("$.errors", aMapWithSize(0)));
+    }
+
+    @Test
+    void responseStatusException_keepsItsStatusWithoutLeakingReason() throws Exception {
+        expectError(get("/test-errors/response-status-409"), 409, "İstek mevcut durumla çakışıyor.")
+                .andExpect(content().string(not(containsString(INTERNAL_REASON))));
+    }
+
+    @Test
+    void responseStatusException5xx_keepsItsStatusWithGenericMessage() throws Exception {
+        expectError(get("/test-errors/response-status-503"), 503, GlobalExceptionHandler.UNEXPECTED_MESSAGE)
+                .andExpect(content().string(not(containsString(INTERNAL_REASON))));
+    }
+
     // ---------------------------------------------------------------- yardımcılar
 
     /** Durum kodu, gövdedeki status, message ve boş errors nesnesini birlikte doğrular. */
@@ -297,6 +323,21 @@ class GlobalExceptionHandlerTest {
         @GetMapping("/typed")
         String typed(@RequestParam int page) {
             return "page " + page;
+        }
+
+        @GetMapping(value = "/json-only", produces = MediaType.APPLICATION_JSON_VALUE)
+        Map<String, String> jsonOnly() {
+            return Map.of("ok", "true");
+        }
+
+        @GetMapping("/response-status-409")
+        void responseStatus409() {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, INTERNAL_REASON);
+        }
+
+        @GetMapping("/response-status-503")
+        void responseStatus503() {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, INTERNAL_REASON);
         }
 
         @GetMapping("/spring-upload-limit")
