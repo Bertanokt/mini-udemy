@@ -463,7 +463,8 @@ paths:
       summary: Kursu sil
       description: >
         **Rol:** INSTRUCTOR (kursun sahibi). Yalnız `DRAFT` durumunda silinir; bölümler,
-        dersler ve yüklenen dosyalar da kaldırılır. Diğer durumlarda 409.
+        dersler, soru bankası, sınavlar ve yüklenen dosyalar da kaldırılır. Diğer durumlarda 409.
+        Daha önce yayımlanıp kursiyer almış (sonra taslağa dönmüş) kurs silinemez (409).
       operationId: deleteCourse
       x-roles: [INSTRUCTOR]
       security:
@@ -1184,7 +1185,7 @@ paths:
     put:
       tags: [Quizzes]
       summary: Soruyu güncelle
-      description: "**Rol:** INSTRUCTOR (kursun sahibi). Şıklar istekteki listeyle tamamen değiştirilir."
+      description: "**Rol:** INSTRUCTOR (kursun sahibi). Şıklar istekteki listeyle tamamen değiştirilir. Denemelerde cevaplanmış bir sorunun şıkları değiştirilemez (409), sonuç geçmişi bozulmasın diye."
       operationId: updateQuestion
       x-roles: [INSTRUCTOR]
       security:
