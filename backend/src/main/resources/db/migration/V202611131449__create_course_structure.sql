@@ -20,6 +20,7 @@ CREATE TABLE courses (
     learning_outcomes TEXT[],
     status            VARCHAR(20)  NOT NULL DEFAULT 'DRAFT',
     rejection_reason  TEXT,
+    unpublish_reason  TEXT,
     created_at        TIMESTAMPTZ  NOT NULL DEFAULT now(),
     updated_at        TIMESTAMPTZ  NOT NULL DEFAULT now(),
     CONSTRAINT ck_courses_level CHECK (level IN ('BEGINNER', 'INTERMEDIATE', 'ADVANCED')),
