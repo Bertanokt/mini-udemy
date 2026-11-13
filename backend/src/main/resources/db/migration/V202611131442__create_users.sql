@@ -9,6 +9,8 @@ CREATE TABLE users (
     active        BOOLEAN      NOT NULL DEFAULT TRUE,
     created_at    TIMESTAMPTZ  NOT NULL DEFAULT now(),
     updated_at    TIMESTAMPTZ  NOT NULL DEFAULT now(),
-    CONSTRAINT uk_users_email UNIQUE (email),
     CONSTRAINT ck_users_role CHECK (role IN ('STUDENT', 'INSTRUCTOR', 'ADMIN'))
 );
+
+-- Aynı e-posta büyük/küçük harf farkıyla ikinci kez kaydedilemesin (ali@x.com = ALI@x.com).
+CREATE UNIQUE INDEX uk_users_email ON users (lower(email));
