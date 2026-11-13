@@ -1,13 +1,23 @@
 openapi: 3.0.3
 info:
   title: Mini Udemy API
-  version: 0.1.0
+  version: 0.2.0
   description: >
-    API sözleşmesi. Hafta 1'deki sözleşme issue'larında kurs, kayıt, sınav ve admin uçları eklenecek.
-    Kod bu sözleşmeye uyar; değişiklik önce burada PR ile yapılır.
+    API sözleşmesi. Kod bu sözleşmeye uyar; değişiklik önce burada PR ile yapılır.
 
 
-    Bu sürümde sağlık ucu ile auth modülü (kayıt, giriş, profil, parola yenileme) tanımlıdır.
+    Bu sürümde tüm modüllerin uçları tanımlıdır: auth ve profil, kategori ve katalog, kurs/bölüm/ders
+    yönetimi, içerik yükleme ve sunma, kayıt, ilerleme, sınav, sertifika, yorum, şikâyet, bildirim,
+    eğitmen paneli ve yönetici uçları.
+
+
+    Roller: her uçta açıklamanın ilk satırında (**Rol:**) ve `x-roles` alanında yazılıdır.
+    `PUBLIC` token gerektirmez. Rol yetmiyorsa 403; kaynağın sahibi olma şartı (ör. "kursun sahibi")
+    sağlanmıyorsa da 403 döner. Yayımlanmamış kurs gibi varlığı gizlenmesi gereken kaynaklarda 404 döner.
+
+
+    Sayfalı uçlar `page` (0'dan) ve `size` (varsayılan 20, en çok 100) alır; yanıt `PageMeta`
+    alanlarını ve `content` listesini içerir.
 
 
     Kimlik doğrulama: `POST /api/auth/login` ile alınan JWT, korumalı uçlarda
@@ -23,6 +33,36 @@ tags:
     description: Kayıt, giriş ve parola yenileme. Bu uçlar herkese açıktır (token gerekmez).
   - name: Users
     description: Giriş yapmış kullanıcının kendi profili.
+  - name: Categories
+    description: Kurs kategorileri.
+  - name: Catalog
+    description: Herkese açık kurs kataloğu ve kurs detayı.
+  - name: Courses
+    description: Eğitmenin kurs yönetimi ve kurs durum geçişleri (State).
+  - name: Sections
+    description: Kurs bölümleri ve sıralaması.
+  - name: Lessons
+    description: Dersler, sıralama ve zorunlu ders işareti.
+  - name: Content
+    description: Ders içeriği ve kapak görseli yükleme/sunma (Factory Method, yetki kontrollü).
+  - name: Enrollments
+    description: Kursa kayıt ve kayıtlı kurslar.
+  - name: Progress
+    description: Ders tamamlama, ilerleme yüzdesi, kaldığı yerden devam.
+  - name: Quizzes
+    description: Soru bankası, bölüm sınavları, sınav çözme (Strategy) ve deneme geçmişi.
+  - name: Certificates
+    description: Sertifikalar ve herkese açık doğrulama.
+  - name: Reviews
+    description: Puan ve yorum.
+  - name: Complaints
+    description: Kurs ve yorum şikâyetleri.
+  - name: Notifications
+    description: Uygulama içi bildirimler.
+  - name: Instructor
+    description: Eğitmen paneli ve istatistikler.
+  - name: Admin
+    description: Yönetici uçları (onay/red/yayından kaldırma, kullanıcı, kategori, moderasyon, şikâyet, rapor).
 paths:
   /api/health:
     get:
@@ -253,6 +293,1965 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+  /api/categories:
+    get:
+      tags: [Categories]
+      summary: Kategorileri listele
+      description: "**Rol:** herkese açık. Ada göre alfabetik sıralı tüm kategoriler."
+      operationId: listCategories
+      x-roles: [PUBLIC]
+      security: []
+      responses:
+        "200":
+          description: Kategori listesi.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CategoryResponse"
+              example:
+                - id: 1
+                  name: Yazılım Geliştirme
+                - id: 2
+                  name: Veri Bilimi
+  /api/courses:
+    get:
+      tags: [Catalog]
+      summary: Katalogda kurs ara
+      description: >
+        **Rol:** herkese açık. Yalnız `PUBLISHED` durumundaki kurslar döner. Filtreler
+        birlikte kullanılabilir (VE ile birleşir). `q` başlık ve açıklamada büyük/küçük harf
+        duyarsız arar.
+      operationId: searchCatalog
+      x-roles: [PUBLIC]
+      security: []
+      parameters:
+        - name: q
+          in: query
+          description: Başlık ya da açıklamada aranacak anahtar kelime.
+          schema:
+            type: string
+            maxLength: 100
+        - name: categoryId
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: level
+          in: query
+          schema:
+            $ref: "#/components/schemas/CourseLevel"
+        - name: instructorId
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: minRating
+          in: query
+          description: En düşük ortalama puan (1–5). Değerlendirmesi olmayan kurslar bu filtrede elenir.
+          schema:
+            type: number
+            minimum: 1
+            maximum: 5
+        - name: sort
+          in: query
+          description: "Sıralama: `newest` (varsayılan), `title`, `rating`, `popular` (kayıt sayısı)."
+          schema:
+            type: string
+            enum: [newest, title, rating, popular]
+            default: newest
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+      responses:
+        "200":
+          description: Sayfalı kurs özeti listesi.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CourseSummaryPage"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+    post:
+      tags: [Courses]
+      summary: Kurs oluştur
+      description: >
+        **Rol:** INSTRUCTOR. Kurs `DRAFT` durumunda oluşur; eğitmen token'dan alınır.
+        Kapak görseli ayrı uçla yüklenir (`POST /api/courses/{id}/cover`).
+      operationId: createCourse
+      x-roles: [INSTRUCTOR]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCourseRequest"
+      responses:
+        "201":
+          description: Oluşturulan kurs.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CourseResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/courses/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [Catalog]
+      summary: Kurs detayı
+      description: >
+        **Rol:** herkese açık (yayımlanmış kurs). Yayımlanmamış kurs yalnız sahibi eğitmene
+        ve ADMIN'e görünür; diğerlerine 404 döner (kursun varlığı açığa çıkmaz). Bölüm ve
+        ders başlıkları `position` sırasıyla gelir; içerik dosyaları bu yanıtta yoktur.
+      operationId: getCourseDetail
+      x-roles: [PUBLIC]
+      security:
+        - {}
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Kurs detayı.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CourseDetailResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Courses]
+      summary: Kursu güncelle
+      description: >
+        **Rol:** INSTRUCTOR (kursun sahibi). Yalnız `DRAFT` ve `UNPUBLISHED` durumlarında
+        düzenlenebilir; diğer durumlarda 409.
+      operationId: updateCourse
+      x-roles: [INSTRUCTOR]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCourseRequest"
+      responses:
+        "200":
+          description: Güncellenmiş kurs.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CourseResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    delete:
+      tags: [Courses]
+      summary: Kursu sil
+      description: >
+        **Rol:** INSTRUCTOR (kursun sahibi). Yalnız `DRAFT` durumunda silinir; bölümler,
+        dersler, soru bankası, sınavlar ve yüklenen dosyalar da kaldırılır. Diğer durumlarda 409.
+        Daha önce yayımlanıp kursiyer almış (sonra taslağa dönmüş) kurs silinemez (409).
+      operationId: deleteCourse
+      x-roles: [INSTRUCTOR]
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: Kurs silindi.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/courses/{id}/submit:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    post:
+      tags: [Courses]
+      summary: Kursu onaya gönder
+      description: >
+        **Rol:** INSTRUCTOR (kursun sahibi). `DRAFT → IN_REVIEW` ya da
+        `UNPUBLISHED → IN_REVIEW`. Geçiş `CourseState` üzerinden yapılır; başka durumda 409.
+        Kursta en az bir bölüm, bir ders ve içeriği yüklenmiş en az bir ders yoksa 400.
+        Önceki red gerekçesi temizlenir.
+      operationId: submitCourse
+      x-roles: [INSTRUCTOR]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Yeni durumdaki kurs.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CourseResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/courses/{id}/unpublish:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    post:
+      tags: [Courses]
+      summary: Kendi kursumu yayından kaldır
+      description: >
+        **Rol:** INSTRUCTOR (kursun sahibi). `PUBLISHED → UNPUBLISHED`; gerekçe isteğe bağlı.
+        Yayından kaldırılan kurs katalogda görünmez ve yeni kayıt almaz; önceden kayıtlı
+        kursiyerler içeriğe erişmeye devam eder. Yönetici için: `POST /api/admin/courses/{id}/unpublish`.
+      operationId: unpublishOwnCourse
+      x-roles: [INSTRUCTOR]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UnpublishCourseRequest"
+      responses:
+        "200":
+          description: Yeni durumdaki kurs.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CourseResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/courses/{id}/cover:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [Content]
+      summary: Kapak görselini getir
+      description: "**Rol:** herkese açık. Kapak yoksa 404."
+      operationId: getCourseCover
+      x-roles: [PUBLIC]
+      security: []
+      responses:
+        "200":
+          description: Görsel dosyası.
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/webp:
+              schema:
+                type: string
+                format: binary
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      tags: [Content]
+      summary: Kapak görseli yükle
+      description: >
+        **Rol:** INSTRUCTOR (kursun sahibi). İzin verilen türler: jpg, png, webp; en fazla 2 MB.
+        Tür dosyanın içeriğinden denetlenir (uzantıdan değil). Eski kapak varsa diskten de silinir.
+        Düzenlenebilirlik `CourseState`'e göredir (yalnız `DRAFT` ve `UNPUBLISHED`).
+      operationId: uploadCourseCover
+      x-roles: [INSTRUCTOR]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/FileUpload"
+      responses:
+        "200":
+          description: Kapak bağlanmış kurs.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CourseResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
+        "415":
+          $ref: "#/components/responses/UnsupportedMediaType"
+  /api/courses/{id}/sections:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [Sections]
+      summary: Kursun bölümlerini listele
+      description: >
+        **Rol:** herkese açık (yayımlanmış kurs); yayımlanmamış kursta yalnız sahibi ve ADMIN.
+        `position` sırasıyla, her bölümün dersleriyle birlikte.
+      operationId: listSections
+      x-roles: [PUBLIC]
+      security:
+        - {}
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Bölümler.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SectionResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      tags: [Sections]
+      summary: Bölüm ekle
+      description: >
+        **Rol:** INSTRUCTOR (kursun sahibi). Yeni bölüm sona eklenir (`position` = mevcut bölüm sayısı).
+        Düzenlenebilirlik `CourseState`'e göredir.
+      operationId: createSection
+      x-roles: [INSTRUCTOR]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SectionRequest"
+      responses:
+        "201":
+          description: Oluşturulan bölüm.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SectionResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/sections/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    put:
+      tags: [Sections]
+      summary: Bölüm adını güncelle
+      description: "**Rol:** INSTRUCTOR (kursun sahibi). Düzenlenebilirlik `CourseState`'e göredir."
+      operationId: updateSection
+      x-roles: [INSTRUCTOR]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SectionRequest"
+      responses:
+        "200":
+          description: Güncellenmiş bölüm.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SectionResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    delete:
+      tags: [Sections]
+      summary: Bölümü sil
+      description: >
+        **Rol:** INSTRUCTOR (kursun sahibi). Bölümün dersleri de silinir; kalan bölümlerin
+        `position` değerleri boşluksuz yeniden sıralanır.
+      operationId: deleteSection
+      x-roles: [INSTRUCTOR]
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: Bölüm silindi.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/sections/{id}/position:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    put:
+      tags: [Sections]
+      summary: Bölümün sırasını değiştir
+      description: >
+        **Rol:** INSTRUCTOR (kursun sahibi). Bölüm verilen sıraya taşınır, aradaki bölümler
+        kaydırılır. Sıra 0'dan başlar; bölüm sayısından büyük değer 400.
+      operationId: moveSection
+      x-roles: [INSTRUCTOR]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PositionRequest"
+      responses:
+        "200":
+          description: Kursun yeni sıradaki bölümleri.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SectionResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/sections/{id}/lessons:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    post:
+      tags: [Lessons]
+      summary: Ders ekle
+      description: >
+        **Rol:** INSTRUCTOR (kursun sahibi). Yeni ders bölümün sonuna eklenir. İçerik dosyası
+        ayrı uçla yüklenir (`POST /api/lessons/{id}/content`). Bir derste tek içerik dosyası
+        vardır; videonun yanına ek doküman vermek için aynı bölüme `DOCUMENT` ya da `PDF`
+        türünde ayrı bir ders eklenir (gerekirse `mandatory: false`). Kurs yayımlanmışsa
+        `LessonPublished` olayı yayınlanır.
+      operationId: createLesson
+      x-roles: [INSTRUCTOR]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LessonRequest"
+      responses:
+        "201":
+          description: Oluşturulan ders.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LessonResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/lessons/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    put:
+      tags: [Lessons]
+      summary: Dersi güncelle
+      description: >
+        **Rol:** INSTRUCTOR (kursun sahibi). İçerik dosyası yüklenmiş derste `contentType`
+        değiştirilirse mevcut dosya kaldırılır.
+      operationId: updateLesson
+      x-roles: [INSTRUCTOR]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LessonRequest"
+      responses:
+        "200":
+          description: Güncellenmiş ders.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LessonResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    delete:
+      tags: [Lessons]
+      summary: Dersi sil
+      description: >
+        **Rol:** INSTRUCTOR (kursun sahibi). İçerik dosyası da silinir; kalan derslerin
+        `position` değerleri yeniden sıralanır ve kursiyerlerin ilerleme yüzdesi yeniden hesaplanır.
+      operationId: deleteLesson
+      x-roles: [INSTRUCTOR]
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: Ders silindi.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/lessons/{id}/position:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    put:
+      tags: [Lessons]
+      summary: Dersin sırasını değiştir
+      description: "**Rol:** INSTRUCTOR (kursun sahibi). Ders aynı bölüm içinde verilen sıraya taşınır."
+      operationId: moveLesson
+      x-roles: [INSTRUCTOR]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PositionRequest"
+      responses:
+        "200":
+          description: Bölümün yeni sıradaki dersleri.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LessonResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/lessons/{id}/content:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [Content]
+      summary: Ders içeriğini getir
+      description: >
+        **Rol:** kursa kayıtlı STUDENT, kursun eğitmeni ya da ADMIN; diğerleri 403, girişsiz 401.
+        Video için HTTP `Range` desteklenir (206). `Content-Disposition`: video ve PDF için
+        `inline`, doküman (docx, pptx) için `attachment`. Bu istek kursiyerin son izlenen
+        dersini günceller.
+      operationId: getLessonContent
+      x-roles: [STUDENT, INSTRUCTOR, ADMIN]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Range
+          in: header
+          required: false
+          description: "Örn. `bytes=0-1048575`."
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Dosyanın tamamı.
+          headers:
+            Accept-Ranges:
+              schema:
+                type: string
+                example: bytes
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "206":
+          description: İstenen bayt aralığı.
+          headers:
+            Content-Range:
+              schema:
+                type: string
+                example: bytes 0-1048575/52428800
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      tags: [Content]
+      summary: Ders içeriği yükle
+      description: >
+        **Rol:** INSTRUCTOR (kursun sahibi). Kurallar dersin `contentType`'ına göre
+        (Factory Method): VIDEO mp4/webm en fazla 200 MB; PDF pdf en fazla 20 MB;
+        DOCUMENT pdf/docx/pptx en fazla 20 MB. Tür dosyanın içeriğinden (magic bytes)
+        denetlenir. Sınırı aşan dosya 413, izin verilmeyen tür 415. Dosya adı sunucuda
+        UUID olarak üretilir; eski dosya diskten silinir.
+      operationId: uploadLessonContent
+      x-roles: [INSTRUCTOR]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/FileUpload"
+      responses:
+        "200":
+          description: İçeriği bağlanmış ders.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LessonResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
+        "415":
+          $ref: "#/components/responses/UnsupportedMediaType"
+  /api/courses/{id}/enroll:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    post:
+      tags: [Enrollments]
+      summary: Kursa kayıt ol
+      description: >
+        **Rol:** STUDENT. Yalnız `PUBLISHED` kursa kayıt olunur; yayımlanmamış ya da olmayan
+        kurs 404. Aynı kursa ikinci kayıt 409. Başarılı kayıtta `EnrollmentCreated` olayı yayınlanır.
+      operationId: enrollCourse
+      x-roles: [STUDENT]
+      security:
+        - bearerAuth: []
+      responses:
+        "201":
+          description: Oluşturulan kayıt.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnrollmentResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/me/enrollments:
+    get:
+      tags: [Enrollments]
+      summary: Kayıtlı kurslarım
+      description: "**Rol:** STUDENT. En son kaydolunan önce; her kursun ilerleme yüzdesi ve son izlenen dersiyle."
+      operationId: listMyEnrollments
+      x-roles: [STUDENT]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Kayıtlar.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EnrollmentResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/lessons/{id}/complete:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    post:
+      tags: [Progress]
+      summary: Dersi tamamlandı işaretle
+      description: >
+        **Rol:** kursa kayıtlı STUDENT; kayıtsız 403. İdempotent: zaten tamamlanmış derste
+        tekrar çağrı hata vermez, ilerleme değişmez. İlk tamamlamada `LessonCompleted`
+        olayı yayınlanır ve yüzdeler yeniden hesaplanır.
+      operationId: completeLesson
+      x-roles: [STUDENT]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Kursun güncel ilerlemesi.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CourseProgressResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/me/courses/{id}/progress:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [Progress]
+      summary: Kurstaki ilerlemem
+      description: >
+        **Rol:** kursa kayıtlı STUDENT; kayıtsız 403. Kurs yüzdesi = tamamlanan ders / toplam
+        ders × 100 (örn. 20 dersin 15'i → 75.00); bölüm yüzdesi aynı kuralla. Dersi olmayan
+        kurs ya da bölümde yüzde 0.
+      operationId: getMyCourseProgress
+      x-roles: [STUDENT]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: İlerleme.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CourseProgressResponse"
+              example:
+                courseId: 7
+                progressPercent: 75.0
+                completedLessonIds: [11, 12, 13]
+                sections:
+                  - sectionId: 3
+                    progressPercent: 100.0
+                  - sectionId: 4
+                    progressPercent: 50.0
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/me/courses/{id}/resume:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [Progress]
+      summary: Kaldığım yerden devam et
+      description: >
+        **Rol:** kursa kayıtlı STUDENT; kayıtsız 403. Son izlenen dersi döner; hiç ders
+        açılmamışsa ilk tamamlanmamış dersi döner. Kursta ders yoksa `lessonId` null.
+      operationId: getMyResumePoint
+      x-roles: [STUDENT]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Devam noktası.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResumeResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/courses/{id}/questions:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [Quizzes]
+      summary: Kursun soru bankası
+      description: "**Rol:** INSTRUCTOR (kursun sahibi). Sorular doğru şık bilgisiyle döner."
+      operationId: listQuestions
+      x-roles: [INSTRUCTOR]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Sorular.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/QuestionResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      tags: [Quizzes]
+      summary: Soru bankasına soru ekle
+      description: "**Rol:** INSTRUCTOR (kursun sahibi). En az 2 şık ve en az 1 doğru şık; aksi 400."
+      operationId: createQuestion
+      x-roles: [INSTRUCTOR]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuestionRequest"
+      responses:
+        "201":
+          description: Oluşturulan soru.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuestionResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/questions/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    put:
+      tags: [Quizzes]
+      summary: Soruyu güncelle
+      description: "**Rol:** INSTRUCTOR (kursun sahibi). Şıklar istekteki listeyle tamamen değiştirilir. Denemelerde cevaplanmış bir sorunun şıkları değiştirilemez (409), sonuç geçmişi bozulmasın diye."
+      operationId: updateQuestion
+      x-roles: [INSTRUCTOR]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuestionRequest"
+      responses:
+        "200":
+          description: Güncellenmiş soru.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuestionResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    delete:
+      tags: [Quizzes]
+      summary: Soruyu sil
+      description: "**Rol:** INSTRUCTOR (kursun sahibi). Bir sınavda kullanılan soru silinemez (409)."
+      operationId: deleteQuestion
+      x-roles: [INSTRUCTOR]
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: Soru silindi.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/sections/{id}/quizzes:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [Quizzes]
+      summary: Bölümün sınavlarını listele
+      description: "**Rol:** kursa kayıtlı STUDENT, kursun eğitmeni ya da ADMIN."
+      operationId: listSectionQuizzes
+      x-roles: [STUDENT, INSTRUCTOR, ADMIN]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Sınav özetleri.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/QuizSummaryResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      tags: [Quizzes]
+      summary: Bölüm sonu sınavı oluştur
+      description: >
+        **Rol:** INSTRUCTOR (kursun sahibi). Yalnız aynı kursun soru bankasındaki sorular
+        seçilebilir; başka kursun sorusu 400. Düzenlenebilirlik `CourseState`'e göredir.
+      operationId: createQuiz
+      x-roles: [INSTRUCTOR]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuizRequest"
+      responses:
+        "201":
+          description: Oluşturulan sınav (eğitmen görünümü).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstructorQuizResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/quizzes/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [Quizzes]
+      summary: Sınavı çözmek için getir
+      description: >
+        **Rol:** kursa kayıtlı STUDENT; kayıtsız 403. Öğrenci görünümüdür: şıklarda doğru
+        cevap bilgisi (`isCorrect`) bulunmaz. Eğitmen doğru cevaplarla görmek için
+        `GET /api/instructor/quizzes/{id}` kullanır.
+      operationId: getQuizForStudent
+      x-roles: [STUDENT]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Öğrenci görünümünde sınav.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentQuizResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Quizzes]
+      summary: Sınavı güncelle
+      description: "**Rol:** INSTRUCTOR (kursun sahibi). Düzenlenebilirlik `CourseState`'e göredir."
+      operationId: updateQuiz
+      x-roles: [INSTRUCTOR]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuizRequest"
+      responses:
+        "200":
+          description: Güncellenmiş sınav.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstructorQuizResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    delete:
+      tags: [Quizzes]
+      summary: Sınavı sil
+      description: "**Rol:** INSTRUCTOR (kursun sahibi). Denemesi olan sınav silinemez (409)."
+      operationId: deleteQuiz
+      x-roles: [INSTRUCTOR]
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: Sınav silindi.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/instructor/quizzes/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [Quizzes]
+      summary: Sınavı doğru cevaplarla getir
+      description: "**Rol:** INSTRUCTOR (kursun sahibi)."
+      operationId: getQuizForInstructor
+      x-roles: [INSTRUCTOR]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Eğitmen görünümünde sınav.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstructorQuizResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/quizzes/{id}/attempts:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    post:
+      tags: [Quizzes]
+      summary: Sınavı gönder
+      description: >
+        **Rol:** kursa kayıtlı STUDENT; kayıtsız 403. Puanlama sınavın `scoringType`'ına göre
+        seçilen stratejiyle yapılır. Sınava ait olmayan soru ya da şık 400. Deneme ve cevaplar
+        kaydedilir, `QuizCompleted` olayı yayınlanır. Deneme sayısı sınırsızdır.
+      operationId: submitQuizAttempt
+      x-roles: [STUDENT]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitAttemptRequest"
+            example:
+              answers:
+                - questionId: 21
+                  optionIds: [84]
+                - questionId: 22
+                  optionIds: [88, 90]
+      responses:
+        "201":
+          description: Deneme sonucu.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AttemptResultResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/me/quizzes/{id}/attempts:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [Quizzes]
+      summary: Sınav deneme geçmişim
+      description: "**Rol:** STUDENT. Yalnız kendi denemeleri, en yeni önce."
+      operationId: listMyQuizAttempts
+      x-roles: [STUDENT]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Denemeler.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AttemptSummaryResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/me/certificates:
+    get:
+      tags: [Certificates]
+      summary: Sertifikalarım
+      description: "**Rol:** STUDENT. En yeni önce."
+      operationId: listMyCertificates
+      x-roles: [STUDENT]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Sertifikalar.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CertificateResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/me/certificates/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [Certificates]
+      summary: Sertifikamı görüntüle
+      description: "**Rol:** STUDENT. Başkasının sertifikası 404."
+      operationId: getMyCertificate
+      x-roles: [STUDENT]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Sertifika.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CertificateResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/certificates/verify/{code}:
+    parameters:
+      - name: code
+        in: path
+        required: true
+        description: Sertifikadaki doğrulama kodu.
+        schema:
+          type: string
+          maxLength: 20
+          example: K7Q2-M9XA-4T
+    get:
+      tags: [Certificates]
+      summary: Sertifikayı doğrula
+      description: >
+        **Rol:** herkese açık. Kod geçerliyse kursiyer adı, kurs adı ve veriliş tarihi döner;
+        e-posta gibi kişisel bilgiler dönmez. Geçersiz kod 404.
+      operationId: verifyCertificate
+      x-roles: [PUBLIC]
+      security: []
+      responses:
+        "200":
+          description: Doğrulanmış sertifika.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CertificateVerificationResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/courses/{id}/reviews:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [Reviews]
+      summary: Kursun değerlendirmeleri
+      description: >
+        **Rol:** herkese açık. Gizlenmiş yorumlar listede görünmez ve ortalamaya katılmaz.
+        Yanıtta sayfalı yorumların yanında ortalama puan ve 1–5 dağılımı bulunur.
+      operationId: listCourseReviews
+      x-roles: [PUBLIC]
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+      responses:
+        "200":
+          description: Değerlendirmeler ve özet.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CourseReviewsResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      tags: [Reviews]
+      summary: Kursu değerlendir
+      description: >
+        **Rol:** kursa kayıtlı STUDENT; kayıtsız 403. Kullanıcı başına kurs başına tek
+        değerlendirme; ikincisi 409 (düzenlemek için `PUT /api/reviews/{id}`).
+      operationId: createReview
+      x-roles: [STUDENT]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewRequest"
+      responses:
+        "201":
+          description: Oluşturulan değerlendirme.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/reviews/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    put:
+      tags: [Reviews]
+      summary: Kendi değerlendirmemi güncelle
+      description: "**Rol:** STUDENT (değerlendirmenin sahibi). Başkasının değerlendirmesi 403."
+      operationId: updateReview
+      x-roles: [STUDENT]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewRequest"
+      responses:
+        "200":
+          description: Güncellenmiş değerlendirme.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/complaints:
+    post:
+      tags: [Complaints]
+      summary: Kurs ya da yorum şikâyet et
+      description: >
+        **Rol:** giriş yapmış her kullanıcı. `courseId` ya da `reviewId`'den tam biri dolu
+        olmalıdır; ikisi birden ya da hiçbiri 400. Şikâyet `OPEN` durumunda oluşur.
+      operationId: createComplaint
+      x-roles: [STUDENT, INSTRUCTOR, ADMIN]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateComplaintRequest"
+      responses:
+        "201":
+          description: Oluşturulan şikâyet.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ComplaintResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/me/notifications:
+    get:
+      tags: [Notifications]
+      summary: Bildirimlerim
+      description: "**Rol:** giriş yapmış her kullanıcı. Sayfalı, en yeni önce."
+      operationId: listMyNotifications
+      x-roles: [STUDENT, INSTRUCTOR, ADMIN]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: unreadOnly
+          in: query
+          schema:
+            type: boolean
+            default: false
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+      responses:
+        "200":
+          description: Bildirimler.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationPage"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /api/me/notifications/unread-count:
+    get:
+      tags: [Notifications]
+      summary: Okunmamış bildirim sayısı
+      description: "**Rol:** giriş yapmış her kullanıcı."
+      operationId: countMyUnreadNotifications
+      x-roles: [STUDENT, INSTRUCTOR, ADMIN]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Sayaç.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnreadCountResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /api/me/notifications/{id}/read:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    post:
+      tags: [Notifications]
+      summary: Bildirimi okundu işaretle
+      description: "**Rol:** bildirimin sahibi. Başkasının bildirimi 404. İdempotenttir."
+      operationId: markNotificationRead
+      x-roles: [STUDENT, INSTRUCTOR, ADMIN]
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: Okundu işaretlendi.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/me/notifications/read-all:
+    post:
+      tags: [Notifications]
+      summary: Tüm bildirimlerimi okundu işaretle
+      description: "**Rol:** giriş yapmış her kullanıcı."
+      operationId: markAllNotificationsRead
+      x-roles: [STUDENT, INSTRUCTOR, ADMIN]
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: Hepsi okundu işaretlendi.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /api/instructor/courses:
+    get:
+      tags: [Instructor]
+      summary: Kurslarım (eğitmen)
+      description: >
+        **Rol:** INSTRUCTOR. Eğitmenin tüm kursları, her durumda; reddedilen kursta red
+        gerekçesi de döner. `status` ile süzülebilir.
+      operationId: listMyInstructorCourses
+      x-roles: [INSTRUCTOR]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/CourseStatus"
+      responses:
+        "200":
+          description: Kurslar.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CourseResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/instructor/courses/{id}/stats:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [Instructor]
+      summary: Kurs istatistikleri
+      description: >
+        **Rol:** INSTRUCTOR (kursun sahibi). Veriler ilgili modüllerin service arayüzlerinden
+        toplanır.
+      operationId: getInstructorCourseStats
+      x-roles: [INSTRUCTOR]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: İstatistikler.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CourseStatsResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/instructor/courses/{id}/students:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [Instructor]
+      summary: Kursiyerlerin ilerleme listesi
+      description: "**Rol:** INSTRUCTOR (kursun sahibi). Sayfalı; e-posta dönmez."
+      operationId: listInstructorCourseStudents
+      x-roles: [INSTRUCTOR]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+      responses:
+        "200":
+          description: Kursiyerler.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CourseStudentPage"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/admin/courses:
+    get:
+      tags: [Admin]
+      summary: Kursları duruma göre listele
+      description: "**Rol:** ADMIN. Onay kuyruğu için `status=IN_REVIEW`. Kurs içeriği `GET /api/courses/{id}` ile incelenir."
+      operationId: adminListCourses
+      x-roles: [ADMIN]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/CourseStatus"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+      responses:
+        "200":
+          description: Kurslar.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CourseSummaryPage"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/admin/courses/{id}/approve:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    post:
+      tags: [Admin]
+      summary: Kursu onayla
+      description: >
+        **Rol:** ADMIN. `IN_REVIEW → PUBLISHED` (`CourseState`); başka durumda 409.
+        `CourseApproved` olayı yayınlanır.
+      operationId: adminApproveCourse
+      x-roles: [ADMIN]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Yayımlanan kurs.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CourseResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/admin/courses/{id}/reject:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    post:
+      tags: [Admin]
+      summary: Kursu reddet
+      description: >
+        **Rol:** ADMIN. `IN_REVIEW → DRAFT`; gerekçe zorunlu ve kursta (`rejectionReason`)
+        saklanır. Başka durumda 409. `CourseRejected` olayı gerekçeyle yayınlanır.
+      operationId: adminRejectCourse
+      x-roles: [ADMIN]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReasonRequest"
+      responses:
+        "200":
+          description: Taslağa dönen kurs.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CourseResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/admin/courses/{id}/unpublish:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    post:
+      tags: [Admin]
+      summary: Kursu yayından kaldır (yönetici)
+      description: >
+        **Rol:** ADMIN. `PUBLISHED → UNPUBLISHED`; gerekçe zorunlu ve kursta
+        (`unpublishReason`) saklanır. Başka durumda 409.
+      operationId: adminUnpublishCourse
+      x-roles: [ADMIN]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReasonRequest"
+      responses:
+        "200":
+          description: Yayından kaldırılan kurs.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CourseResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/admin/users:
+    get:
+      tags: [Admin]
+      summary: Kullanıcıları listele
+      description: "**Rol:** ADMIN. Sayfalı; `q` ad ya da e-postada arar. `passwordHash` hiçbir yanıtta yoktur."
+      operationId: adminListUsers
+      x-roles: [ADMIN]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: role
+          in: query
+          schema:
+            $ref: "#/components/schemas/Role"
+        - name: active
+          in: query
+          schema:
+            type: boolean
+        - name: q
+          in: query
+          schema:
+            type: string
+            maxLength: 100
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+      responses:
+        "200":
+          description: Kullanıcılar.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUserPage"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/admin/users/{id}/status:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    put:
+      tags: [Admin]
+      summary: Hesabı aktifleştir / pasifleştir
+      description: "**Rol:** ADMIN. Pasif kullanıcı giriş yapamaz. Yönetici kendi hesabını pasifleştiremez (409)."
+      operationId: adminSetUserStatus
+      x-roles: [ADMIN]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserStatusRequest"
+      responses:
+        "200":
+          description: Güncellenmiş kullanıcı.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUserResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/admin/categories:
+    post:
+      tags: [Admin]
+      summary: Kategori ekle
+      description: "**Rol:** ADMIN. Ad tekildir (büyük/küçük harf duyarsız); aynı ad 409."
+      operationId: adminCreateCategory
+      x-roles: [ADMIN]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryRequest"
+      responses:
+        "201":
+          description: Oluşturulan kategori.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoryResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/admin/categories/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    put:
+      tags: [Admin]
+      summary: Kategori adını güncelle
+      description: "**Rol:** ADMIN. Aynı ad başka kategoride varsa 409."
+      operationId: adminUpdateCategory
+      x-roles: [ADMIN]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryRequest"
+      responses:
+        "200":
+          description: Güncellenmiş kategori.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoryResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    delete:
+      tags: [Admin]
+      summary: Kategoriyi sil
+      description: "**Rol:** ADMIN. Bir kursta kullanılan kategori silinemez (409)."
+      operationId: adminDeleteCategory
+      x-roles: [ADMIN]
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: Kategori silindi.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/admin/reviews:
+    get:
+      tags: [Admin]
+      summary: Yorumları moderasyon için listele
+      description: "**Rol:** ADMIN. Gizli yorumlar da döner; `hidden` ile süzülebilir."
+      operationId: adminListReviews
+      x-roles: [ADMIN]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: courseId
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: hidden
+          in: query
+          schema:
+            type: boolean
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+      responses:
+        "200":
+          description: Yorumlar.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewPage"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/admin/reviews/{id}/visibility:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    put:
+      tags: [Admin]
+      summary: Yorumu gizle / geri aç
+      description: >
+        **Rol:** ADMIN. Gizlerken gerekçe zorunludur ve saklanır. Gizli yorum herkese açık
+        listede görünmez, ortalamaya katılmaz.
+      operationId: adminSetReviewVisibility
+      x-roles: [ADMIN]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewVisibilityRequest"
+      responses:
+        "200":
+          description: Güncellenmiş yorum.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/admin/complaints:
+    get:
+      tags: [Admin]
+      summary: Şikâyetleri listele
+      description: "**Rol:** ADMIN. Sayfalı, en yeni önce."
+      operationId: adminListComplaints
+      x-roles: [ADMIN]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/ComplaintStatus"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+      responses:
+        "200":
+          description: Şikâyetler.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ComplaintPage"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/admin/complaints/{id}/status:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    put:
+      tags: [Admin]
+      summary: Şikâyetin durumunu değiştir
+      description: >
+        **Rol:** ADMIN. `REVIEWED` ya da `REJECTED`; çözen yönetici ve zaman kaydedilir.
+        Yorumu gizlemek ya da kursu yayından kaldırmak için ilgili yönetici uçları kullanılır.
+      operationId: adminSetComplaintStatus
+      x-roles: [ADMIN]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ComplaintStatusRequest"
+      responses:
+        "200":
+          description: Güncellenmiş şikâyet.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ComplaintResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/admin/reports:
+    get:
+      tags: [Admin]
+      summary: Platform raporu
+      description: >
+        **Rol:** ADMIN. Tarih aralığı verilmezse tüm zamanlar. Aralık kayıt, tamamlanma ve
+        sertifika sayılarına uygulanır; kullanıcı ve kurs sayıları anlık durumdur.
+      operationId: adminGetPlatformReport
+      x-roles: [ADMIN]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Rapor.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlatformReportResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 components:
   securitySchemes:
     bearerAuth:
@@ -263,6 +2262,33 @@ components:
         `POST /api/auth/login` yanıtındaki `accessToken`. Başlık:
         `Authorization: Bearer <accessToken>`. Token'da `sub` kullanıcı id'si,
         `role` rol claim'idir.
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      description: Yoldaki kaynağın id'si (ör. `/api/courses/{id}/sections`'da kursun id'si).
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+    Page:
+      name: page
+      in: query
+      description: Sayfa numarası (0'dan başlar).
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+    Size:
+      name: size
+      in: query
+      description: Sayfa boyutu.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
   schemas:
     Role:
       type: string
@@ -455,6 +2481,985 @@ components:
             type: string
           example:
             email: Bu e-posta adresi zaten kayıtlı.
+    CourseLevel:
+      type: string
+      enum: [BEGINNER, INTERMEDIATE, ADVANCED]
+    CourseStatus:
+      type: string
+      description: >
+        Kurs yaşam döngüsü (State deseni). Geçişler: DRAFT → IN_REVIEW (eğitmen),
+        IN_REVIEW → PUBLISHED (yönetici onayı), IN_REVIEW → DRAFT (yönetici reddi, gerekçeli),
+        PUBLISHED → UNPUBLISHED (eğitmen ya da yönetici), UNPUBLISHED → IN_REVIEW (eğitmen).
+        Diğer geçişler 409.
+      enum: [DRAFT, IN_REVIEW, PUBLISHED, UNPUBLISHED]
+    ContentType:
+      type: string
+      description: >
+        Ders içerik türü (Factory Method). VIDEO: mp4/webm ≤ 200 MB, tarayıcıda oynatılır.
+        PDF: pdf ≤ 20 MB, tarayıcıda açılır. DOCUMENT: pdf/docx/pptx ≤ 20 MB, indirilir.
+      enum: [VIDEO, PDF, DOCUMENT]
+    ScoringType:
+      type: string
+      description: >
+        Puanlama stratejisi. SINGLE_ANSWER: tek doğru şık, doğruysa sorunun puanı.
+        MULTI_ALL_OR_NOTHING: tüm doğru şıklar ve yalnız onlar seçildiyse tam puan.
+        MULTI_PARTIAL: doğru seçilen şık oranında puan, yanlış seçim puanı düşürür (en az 0).
+      enum: [SINGLE_ANSWER, MULTI_ALL_OR_NOTHING, MULTI_PARTIAL]
+    ComplaintStatus:
+      type: string
+      enum: [OPEN, REVIEWED, REJECTED]
+    NotificationType:
+      type: string
+      enum: [ENROLLMENT_CREATED, LESSON_PUBLISHED, COURSE_APPROVED, COURSE_REJECTED, QUIZ_COMPLETED, CERTIFICATE_ISSUED]
+    PageMeta:
+      type: object
+      description: Sayfalı yanıtların ortak alanları. `page` 0'dan başlar.
+      required: [page, size, totalElements, totalPages]
+      properties:
+        page:
+          type: integer
+          example: 0
+        size:
+          type: integer
+          example: 20
+        totalElements:
+          type: integer
+          format: int64
+          example: 57
+        totalPages:
+          type: integer
+          example: 3
+    UserSummary:
+      type: object
+      description: Başka bir kullanıcının herkese gösterilebilen bilgisi (e-posta yok).
+      required: [id, fullName]
+      properties:
+        id:
+          type: integer
+          format: int64
+        fullName:
+          type: string
+          example: Mehmet Demir
+    CategoryRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 100
+          example: Yazılım Geliştirme
+    CategoryResponse:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+    CreateCourseRequest:
+      type: object
+      required: [title, description, categoryId, level]
+      properties:
+        title:
+          type: string
+          minLength: 3
+          maxLength: 200
+          example: Sıfırdan Java
+        description:
+          type: string
+          minLength: 10
+          maxLength: 5000
+        categoryId:
+          type: integer
+          format: int64
+          description: Var olan bir kategori; yoksa 400 (`errors.categoryId`).
+        level:
+          $ref: "#/components/schemas/CourseLevel"
+        learningOutcomes:
+          type: array
+          maxItems: 20
+          items:
+            type: string
+            minLength: 1
+            maxLength: 300
+          example: ["Nesne yönelimli programlamanın temelleri", "Koleksiyonlarla çalışma"]
+    UpdateCourseRequest:
+      $ref: "#/components/schemas/CreateCourseRequest"
+    CourseResponse:
+      type: object
+      description: Kursun yönetim görünümü (eğitmen ve yönetici).
+      required: [id, title, description, category, level, status, instructor, learningOutcomes, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+          format: int64
+        title:
+          type: string
+        description:
+          type: string
+        category:
+          $ref: "#/components/schemas/CategoryResponse"
+        level:
+          $ref: "#/components/schemas/CourseLevel"
+        status:
+          $ref: "#/components/schemas/CourseStatus"
+        instructor:
+          $ref: "#/components/schemas/UserSummary"
+        coverUrl:
+          type: string
+          nullable: true
+          description: Kapak yüklenmişse `/api/courses/{id}/cover`.
+        learningOutcomes:
+          type: array
+          items:
+            type: string
+        rejectionReason:
+          type: string
+          nullable: true
+          description: Son red gerekçesi; onaya yeniden gönderilince temizlenir.
+        unpublishReason:
+          type: string
+          nullable: true
+          description: Yayından kaldırma gerekçesi.
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    CourseSummaryResponse:
+      type: object
+      description: Katalog kartı.
+      required: [id, title, category, level, status, instructor, lessonCount, totalDurationSeconds, enrollmentCount, reviewCount]
+      properties:
+        id:
+          type: integer
+          format: int64
+        title:
+          type: string
+        category:
+          $ref: "#/components/schemas/CategoryResponse"
+        level:
+          $ref: "#/components/schemas/CourseLevel"
+        status:
+          $ref: "#/components/schemas/CourseStatus"
+        instructor:
+          $ref: "#/components/schemas/UserSummary"
+        coverUrl:
+          type: string
+          nullable: true
+        lessonCount:
+          type: integer
+        totalDurationSeconds:
+          type: integer
+        enrollmentCount:
+          type: integer
+        averageRating:
+          type: number
+          nullable: true
+          description: Gizli olmayan değerlendirmelerin ortalaması; değerlendirme yoksa null.
+          example: 4.6
+        reviewCount:
+          type: integer
+    CourseSummaryPage:
+      allOf:
+        - $ref: "#/components/schemas/PageMeta"
+        - type: object
+          required: [content]
+          properties:
+            content:
+              type: array
+              items:
+                $ref: "#/components/schemas/CourseSummaryResponse"
+    CourseDetailResponse:
+      allOf:
+        - $ref: "#/components/schemas/CourseSummaryResponse"
+        - type: object
+          required: [description, learningOutcomes, sections]
+          properties:
+            description:
+              type: string
+            learningOutcomes:
+              type: array
+              items:
+                type: string
+            sections:
+              type: array
+              description: "`position` sırasıyla."
+              items:
+                $ref: "#/components/schemas/SectionResponse"
+    UnpublishCourseRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+          maxLength: 1000
+    ReasonRequest:
+      type: object
+      required: [reason]
+      properties:
+        reason:
+          type: string
+          minLength: 5
+          maxLength: 1000
+          example: Ders içerikleri kurs açıklamasıyla uyuşmuyor.
+    FileUpload:
+      type: object
+      required: [file]
+      properties:
+        file:
+          type: string
+          format: binary
+    PositionRequest:
+      type: object
+      required: [position]
+      properties:
+        position:
+          type: integer
+          minimum: 0
+          description: Yeni sıra (0'dan başlar).
+    SectionRequest:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+          example: Giriş
+    SectionResponse:
+      type: object
+      required: [id, courseId, title, position, lessons]
+      properties:
+        id:
+          type: integer
+          format: int64
+        courseId:
+          type: integer
+          format: int64
+        title:
+          type: string
+        position:
+          type: integer
+        lessons:
+          type: array
+          description: "`position` sırasıyla."
+          items:
+            $ref: "#/components/schemas/LessonResponse"
+    LessonRequest:
+      type: object
+      required: [title, contentType, mandatory, durationSeconds]
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+          example: Değişkenler ve tipler
+        contentType:
+          $ref: "#/components/schemas/ContentType"
+        mandatory:
+          type: boolean
+          description: Sertifika için tamamlanması zorunlu mu.
+        durationSeconds:
+          type: integer
+          minimum: 0
+          example: 540
+    LessonResponse:
+      type: object
+      required: [id, sectionId, title, contentType, mandatory, durationSeconds, position, hasContent]
+      properties:
+        id:
+          type: integer
+          format: int64
+        sectionId:
+          type: integer
+          format: int64
+        title:
+          type: string
+        contentType:
+          $ref: "#/components/schemas/ContentType"
+        mandatory:
+          type: boolean
+        durationSeconds:
+          type: integer
+        position:
+          type: integer
+        hasContent:
+          type: boolean
+          description: İçerik dosyası yüklenmiş mi. Dosyanın kendisi `GET /api/lessons/{id}/content`.
+    EnrollmentResponse:
+      type: object
+      required: [id, course, enrolledAt, progressPercent]
+      properties:
+        id:
+          type: integer
+          format: int64
+        course:
+          $ref: "#/components/schemas/CourseSummaryResponse"
+        enrolledAt:
+          type: string
+          format: date-time
+        progressPercent:
+          type: number
+          example: 75.0
+        lastLessonId:
+          type: integer
+          format: int64
+          nullable: true
+        lastAccessedAt:
+          type: string
+          format: date-time
+          nullable: true
+    CourseProgressResponse:
+      type: object
+      required: [courseId, progressPercent, completedLessonIds, sections]
+      properties:
+        courseId:
+          type: integer
+          format: int64
+        progressPercent:
+          type: number
+          minimum: 0
+          maximum: 100
+        completedLessonIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+        sections:
+          type: array
+          items:
+            type: object
+            required: [sectionId, progressPercent]
+            properties:
+              sectionId:
+                type: integer
+                format: int64
+              progressPercent:
+                type: number
+                minimum: 0
+                maximum: 100
+    ResumeResponse:
+      type: object
+      required: [courseId, progressPercent]
+      properties:
+        courseId:
+          type: integer
+          format: int64
+        lessonId:
+          type: integer
+          format: int64
+          nullable: true
+        lessonTitle:
+          type: string
+          nullable: true
+        sectionId:
+          type: integer
+          format: int64
+          nullable: true
+        progressPercent:
+          type: number
+        lastAccessedAt:
+          type: string
+          format: date-time
+          nullable: true
+    OptionRequest:
+      type: object
+      required: [text, correct]
+      properties:
+        text:
+          type: string
+          minLength: 1
+          maxLength: 500
+        correct:
+          type: boolean
+    QuestionRequest:
+      type: object
+      required: [text, points, options]
+      properties:
+        text:
+          type: string
+          minLength: 3
+          maxLength: 2000
+        points:
+          type: integer
+          minimum: 1
+          maximum: 100
+          example: 10
+        options:
+          type: array
+          minItems: 2
+          maxItems: 10
+          description: "En az biri `correct: true` olmalı."
+          items:
+            $ref: "#/components/schemas/OptionRequest"
+    OptionResponse:
+      type: object
+      required: [id, text, correct]
+      properties:
+        id:
+          type: integer
+          format: int64
+        text:
+          type: string
+        correct:
+          type: boolean
+    QuestionResponse:
+      type: object
+      description: Eğitmen görünümü; doğru şık bilgisi içerir.
+      required: [id, courseId, text, points, options]
+      properties:
+        id:
+          type: integer
+          format: int64
+        courseId:
+          type: integer
+          format: int64
+        text:
+          type: string
+        points:
+          type: integer
+        options:
+          type: array
+          items:
+            $ref: "#/components/schemas/OptionResponse"
+    QuizRequest:
+      type: object
+      required: [title, scoringType, passThreshold, required, questionIds]
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        scoringType:
+          $ref: "#/components/schemas/ScoringType"
+        passThreshold:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Geçme eşiği (yüzde).
+          example: 70
+        required:
+          type: boolean
+          description: Sertifika için geçilmesi zorunlu mu.
+        questionIds:
+          type: array
+          minItems: 1
+          description: Aynı kursun soru bankasından; verilen sıra sınavdaki sıradır.
+          items:
+            type: integer
+            format: int64
+    QuizSummaryResponse:
+      type: object
+      required: [id, sectionId, title, scoringType, passThreshold, required, questionCount]
+      properties:
+        id:
+          type: integer
+          format: int64
+        sectionId:
+          type: integer
+          format: int64
+        title:
+          type: string
+        scoringType:
+          $ref: "#/components/schemas/ScoringType"
+        passThreshold:
+          type: integer
+        required:
+          type: boolean
+        questionCount:
+          type: integer
+    StudentQuizResponse:
+      allOf:
+        - $ref: "#/components/schemas/QuizSummaryResponse"
+        - type: object
+          description: Doğru cevap bilgisi bu şemada bilerek yoktur.
+          required: [questions]
+          properties:
+            questions:
+              type: array
+              items:
+                type: object
+                required: [id, text, points, options]
+                properties:
+                  id:
+                    type: integer
+                    format: int64
+                  text:
+                    type: string
+                  points:
+                    type: integer
+                  options:
+                    type: array
+                    items:
+                      type: object
+                      required: [id, text]
+                      properties:
+                        id:
+                          type: integer
+                          format: int64
+                        text:
+                          type: string
+    InstructorQuizResponse:
+      allOf:
+        - $ref: "#/components/schemas/QuizSummaryResponse"
+        - type: object
+          required: [questions]
+          properties:
+            questions:
+              type: array
+              items:
+                $ref: "#/components/schemas/QuestionResponse"
+    SubmitAttemptRequest:
+      type: object
+      required: [answers]
+      properties:
+        answers:
+          type: array
+          description: Cevapsız bırakılan soru listeye konmaz ve 0 puan alır.
+          items:
+            type: object
+            required: [questionId, optionIds]
+            properties:
+              questionId:
+                type: integer
+                format: int64
+              optionIds:
+                type: array
+                minItems: 1
+                items:
+                  type: integer
+                  format: int64
+    AttemptSummaryResponse:
+      type: object
+      required: [id, quizId, score, maxScore, percent, passed, submittedAt]
+      properties:
+        id:
+          type: integer
+          format: int64
+        quizId:
+          type: integer
+          format: int64
+        score:
+          type: number
+          example: 35
+        maxScore:
+          type: number
+          example: 50
+        percent:
+          type: number
+          example: 70.0
+        passed:
+          type: boolean
+        submittedAt:
+          type: string
+          format: date-time
+    AttemptResultResponse:
+      allOf:
+        - $ref: "#/components/schemas/AttemptSummaryResponse"
+        - type: object
+          required: [questions]
+          properties:
+            questions:
+              type: array
+              items:
+                type: object
+                required: [questionId, correct, earnedPoints, maxPoints]
+                properties:
+                  questionId:
+                    type: integer
+                    format: int64
+                  correct:
+                    type: boolean
+                  earnedPoints:
+                    type: number
+                  maxPoints:
+                    type: number
+    CertificateResponse:
+      type: object
+      required: [id, courseId, courseTitle, studentName, verificationCode, issuedAt]
+      properties:
+        id:
+          type: integer
+          format: int64
+        courseId:
+          type: integer
+          format: int64
+        courseTitle:
+          type: string
+        studentName:
+          type: string
+        instructorName:
+          type: string
+        verificationCode:
+          type: string
+          example: K7Q2-M9XA-4T
+        issuedAt:
+          type: string
+          format: date-time
+    CertificateVerificationResponse:
+      type: object
+      required: [valid, courseTitle, studentName, issuedAt]
+      properties:
+        valid:
+          type: boolean
+          example: true
+        courseTitle:
+          type: string
+        studentName:
+          type: string
+        issuedAt:
+          type: string
+          format: date-time
+    ReviewRequest:
+      type: object
+      required: [rating]
+      properties:
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+          maxLength: 2000
+    ReviewResponse:
+      type: object
+      required: [id, courseId, author, rating, hidden, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+          format: int64
+        courseId:
+          type: integer
+          format: int64
+        author:
+          $ref: "#/components/schemas/UserSummary"
+        rating:
+          type: integer
+        comment:
+          type: string
+          nullable: true
+        hidden:
+          type: boolean
+          description: Herkese açık listede her zaman false (gizliler listelenmez).
+        moderationReason:
+          type: string
+          nullable: true
+          description: Yalnız yönetici yanıtlarında dolu.
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ReviewPage:
+      allOf:
+        - $ref: "#/components/schemas/PageMeta"
+        - type: object
+          required: [content]
+          properties:
+            content:
+              type: array
+              items:
+                $ref: "#/components/schemas/ReviewResponse"
+    RatingSummary:
+      type: object
+      required: [reviewCount, distribution]
+      properties:
+        averageRating:
+          type: number
+          nullable: true
+          example: 4.3
+        reviewCount:
+          type: integer
+          example: 12
+        distribution:
+          type: object
+          description: Puan başına değerlendirme sayısı (anahtar "1"–"5").
+          additionalProperties:
+            type: integer
+          example: {"1": 0, "2": 1, "3": 1, "4": 3, "5": 7}
+    CourseReviewsResponse:
+      allOf:
+        - $ref: "#/components/schemas/ReviewPage"
+        - type: object
+          required: [summary]
+          properties:
+            summary:
+              $ref: "#/components/schemas/RatingSummary"
+    ReviewVisibilityRequest:
+      type: object
+      required: [hidden]
+      properties:
+        hidden:
+          type: boolean
+        reason:
+          type: string
+          maxLength: 1000
+          description: "`hidden: true` iken zorunlu."
+    CreateComplaintRequest:
+      type: object
+      required: [reason]
+      description: "`courseId` ya da `reviewId`'den tam biri verilir."
+      properties:
+        courseId:
+          type: integer
+          format: int64
+        reviewId:
+          type: integer
+          format: int64
+        reason:
+          type: string
+          minLength: 5
+          maxLength: 1000
+    ComplaintResponse:
+      type: object
+      required: [id, reporter, reason, status, createdAt]
+      properties:
+        id:
+          type: integer
+          format: int64
+        reporter:
+          $ref: "#/components/schemas/UserSummary"
+        courseId:
+          type: integer
+          format: int64
+          nullable: true
+        reviewId:
+          type: integer
+          format: int64
+          nullable: true
+        reason:
+          type: string
+        status:
+          $ref: "#/components/schemas/ComplaintStatus"
+        createdAt:
+          type: string
+          format: date-time
+        resolvedAt:
+          type: string
+          format: date-time
+          nullable: true
+    ComplaintPage:
+      allOf:
+        - $ref: "#/components/schemas/PageMeta"
+        - type: object
+          required: [content]
+          properties:
+            content:
+              type: array
+              items:
+                $ref: "#/components/schemas/ComplaintResponse"
+    ComplaintStatusRequest:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [REVIEWED, REJECTED]
+    NotificationResponse:
+      type: object
+      required: [id, type, title, body, read, createdAt]
+      properties:
+        id:
+          type: integer
+          format: int64
+        type:
+          $ref: "#/components/schemas/NotificationType"
+        title:
+          type: string
+          example: Kursunuz onaylandı
+        body:
+          type: string
+        link:
+          type: string
+          nullable: true
+          description: Ön yüzde açılacak yol, örn. `/courses/7`.
+        read:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+    NotificationPage:
+      allOf:
+        - $ref: "#/components/schemas/PageMeta"
+        - type: object
+          required: [content]
+          properties:
+            content:
+              type: array
+              items:
+                $ref: "#/components/schemas/NotificationResponse"
+    UnreadCountResponse:
+      type: object
+      required: [count]
+      properties:
+        count:
+          type: integer
+          example: 3
+    CourseStatsResponse:
+      type: object
+      required: [courseId, enrollmentCount, averageProgressPercent, completionRate, quizzes, rating]
+      properties:
+        courseId:
+          type: integer
+          format: int64
+        enrollmentCount:
+          type: integer
+        averageProgressPercent:
+          type: number
+        completionRate:
+          type: number
+          description: "%100 ilerlemeye ulaşan kursiyerlerin oranı (yüzde)."
+        quizzes:
+          type: array
+          items:
+            type: object
+            required: [quizId, title, attemptCount, passRate]
+            properties:
+              quizId:
+                type: integer
+                format: int64
+              title:
+                type: string
+              attemptCount:
+                type: integer
+              passRate:
+                type: number
+                description: Geçen denemelerin oranı (yüzde).
+        rating:
+          $ref: "#/components/schemas/RatingSummary"
+    CourseStudentResponse:
+      type: object
+      required: [student, enrolledAt, progressPercent, quizResults]
+      properties:
+        student:
+          $ref: "#/components/schemas/UserSummary"
+        enrolledAt:
+          type: string
+          format: date-time
+        progressPercent:
+          type: number
+        lastAccessedAt:
+          type: string
+          format: date-time
+          nullable: true
+        quizResults:
+          type: array
+          description: Her sınav için en iyi deneme.
+          items:
+            type: object
+            required: [quizId, bestPercent, passed]
+            properties:
+              quizId:
+                type: integer
+                format: int64
+              bestPercent:
+                type: number
+              passed:
+                type: boolean
+    CourseStudentPage:
+      allOf:
+        - $ref: "#/components/schemas/PageMeta"
+        - type: object
+          required: [content]
+          properties:
+            content:
+              type: array
+              items:
+                $ref: "#/components/schemas/CourseStudentResponse"
+    AdminUserResponse:
+      type: object
+      required: [id, email, fullName, role, active, createdAt]
+      properties:
+        id:
+          type: integer
+          format: int64
+        email:
+          type: string
+          format: email
+        fullName:
+          type: string
+        role:
+          $ref: "#/components/schemas/Role"
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+    AdminUserPage:
+      allOf:
+        - $ref: "#/components/schemas/PageMeta"
+        - type: object
+          required: [content]
+          properties:
+            content:
+              type: array
+              items:
+                $ref: "#/components/schemas/AdminUserResponse"
+    UserStatusRequest:
+      type: object
+      required: [active]
+      properties:
+        active:
+          type: boolean
+    PlatformReportResponse:
+      type: object
+      required: [usersByRole, coursesByStatus, enrollmentCount, completionCount, certificateCount, topCourses, categoryDistribution]
+      properties:
+        from:
+          type: string
+          format: date
+          nullable: true
+        to:
+          type: string
+          format: date
+          nullable: true
+        usersByRole:
+          type: object
+          additionalProperties:
+            type: integer
+          example: {"STUDENT": 120, "INSTRUCTOR": 8, "ADMIN": 2}
+        coursesByStatus:
+          type: object
+          additionalProperties:
+            type: integer
+          example: {"DRAFT": 4, "IN_REVIEW": 2, "PUBLISHED": 15, "UNPUBLISHED": 1}
+        enrollmentCount:
+          type: integer
+        completionCount:
+          type: integer
+        certificateCount:
+          type: integer
+        topCourses:
+          type: array
+          description: En çok kayıt alan ilk 10 kurs.
+          items:
+            type: object
+            required: [courseId, title, enrollmentCount]
+            properties:
+              courseId:
+                type: integer
+                format: int64
+              title:
+                type: string
+              enrollmentCount:
+                type: integer
+        categoryDistribution:
+          type: array
+          items:
+            type: object
+            required: [categoryId, name, courseCount]
+            properties:
+              categoryId:
+                type: integer
+                format: int64
+              name:
+                type: string
+              courseCount:
+                type: integer
   responses:
     BadRequest:
       description: >
