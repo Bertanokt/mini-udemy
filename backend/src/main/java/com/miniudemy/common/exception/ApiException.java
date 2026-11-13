@@ -1,5 +1,7 @@
 package com.miniudemy.common.exception;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
@@ -29,7 +31,9 @@ public abstract class ApiException extends RuntimeException {
     protected ApiException(HttpStatus status, String message, Map<String, String> errors) {
         super(message);
         this.status = status;
-        this.errors = (errors == null) ? Map.of() : Map.copyOf(errors);
+        // Map.copyOf kullanılmaz: sırayı karıştırır (alanlar formdaki sırayla dönmeli) ve null değerde
+        // NullPointerException atıp 4xx hatayı 500'e çevirir. Sırayı koruyan, salt okunur kopya.
+        this.errors = (errors == null) ? Map.of() : Collections.unmodifiableMap(new LinkedHashMap<>(errors));
     }
 
     public HttpStatus getStatus() {

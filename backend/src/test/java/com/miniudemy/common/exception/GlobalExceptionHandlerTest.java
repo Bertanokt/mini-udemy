@@ -15,6 +15,11 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -22,6 +27,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -30,6 +36,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * GlobalExceptionHandler'ın her hata türünü sözleşmedeki ErrorResponse gövdesine çevirdiğini doğrular.
@@ -45,8 +54,14 @@ class GlobalExceptionHandlerTest {
 
     private static final String SECRET = "SELECT * FROM users -- iç ayrıntı";
 
+    /** Service'in verdiği alan sırası; yanıtta da bu sırada dönmeli (form alanlarının sırası). */
+    private static final List<String> FIELD_ORDER = List.of("title", "description", "category", "price", "level", "language");
+
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     // ---------------------------------------------------------------- kabul kriteri 1: doğrulama
 
@@ -100,6 +115,26 @@ class GlobalExceptionHandlerTest {
                 .andExpect(jsonPath("$.message").value("Bu e-posta adresi zaten kayıtlı."))
                 .andExpect(jsonPath("$.errors", aMapWithSize(1)))
                 .andExpect(jsonPath("$.errors.email").value("Bu e-posta adresi zaten kayıtlı."));
+    }
+
+    @Test
+    void multipleFieldErrors_keepOrder() throws Exception {
+        MvcResult result = mockMvc.perform(get("/test-errors/many-fields"))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+        Map<String, Object> body = objectMapper.readValue(
+                result.getResponse().getContentAsByteArray(), new TypeReference<LinkedHashMap<String, Object>>() {});
+        @SuppressWarnings("unchecked")
+        Map<String, String> errors = (Map<String, String>) body.get("errors");
+        org.assertj.core.api.Assertions.assertThat(new ArrayList<>(errors.keySet())).isEqualTo(FIELD_ORDER);
+    }
+
+    @Test
+    void nullFieldMessage_doesNotTurnInto500() throws Exception {
+        mockMvc.perform(get("/test-errors/null-field-message"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message").value("Kurs bilgilerinde hata var."));
     }
 
     @Test
@@ -222,7 +257,21 @@ class GlobalExceptionHandlerTest {
         @GetMapping("/conflict-email")
         void conflictEmail() {
             throw new ConflictException("Bu e-posta adresi zaten kayıtlı.",
-                    java.util.Map.of("email", "Bu e-posta adresi zaten kayıtlı."));
+                    Map.of("email", "Bu e-posta adresi zaten kayıtlı."));
+        }
+
+        @GetMapping("/many-fields")
+        void manyFields() {
+            Map<String, String> errors = new LinkedHashMap<>();
+            FIELD_ORDER.forEach(field -> errors.put(field, "Bu alan geçersiz."));
+            throw new BadRequestException("Kurs bilgilerinde hata var.", errors);
+        }
+
+        @GetMapping("/null-field-message")
+        void nullFieldMessage() {
+            Map<String, String> errors = new LinkedHashMap<>();
+            errors.put("title", null);
+            throw new BadRequestException("Kurs bilgilerinde hata var.", errors);
         }
 
         @GetMapping("/bad-request")

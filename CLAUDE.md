@@ -81,7 +81,7 @@ Tüm hatalar `common/exception`'daki global handler'dan aynı gövdeyle döner:
 - Bozuk JSON, yanlış tipte/eksik parametre (400), olmayan adres (404), yanlış HTTP yöntemi (405) ve beklenmeyen hatalar (500) handler'da zaten aynı gövdeye çevrilir; ayrıca bir şey yazma.
 - 401 (token yok/geçersiz) ve güvenlik katmanının erişim reddi istek controller'a ulaşmadan oluşur; bunlar Spring Security yapılandırmasında aynı `ErrorResponse` gövdesiyle döner (#10).
 - `message` kullanıcıya gösterilebilir Türkçe bir cümle; stack trace ya da iç ayrıntı içermez.
-- Yeni bir hata türü gerekiyorsa önce handler'a ve OpenAPI'deki `ErrorResponse` açıklamasına ekle.
+- Yeni bir hata türü gerekiyorsa `ApiException`'dan türeyen yeni bir sınıf yaz; handler değişmez. O durum kodu için `docs/api/openapi.yaml` › `components.responses`'a da bir yanıt ekle. Handler'a yalnız Spring'in yakalanmamış bir istisnası (şu an 500'e düşen) için yeni metot eklenir.
 
 ## Veritabanı ve Flyway
 
