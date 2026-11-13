@@ -67,12 +67,14 @@ package "course" #E3F4DC {
     learning_outcomes : text[]
     * status : varchar(20)
     rejection_reason : text
+    unpublish_reason : text
     * created_at : timestamptz
     * updated_at : timestamptz
     --
     level: BEGINNER | INTERMEDIATE | ADVANCED
     status: DRAFT | IN_REVIEW | PUBLISHED | UNPUBLISHED
     rejection_reason: red gerekçesi (IN_REVIEW -> DRAFT)
+    unpublish_reason: yayından kaldırma gerekçesi (PUBLISHED -> UNPUBLISHED)
   }
 
   entity sections {
