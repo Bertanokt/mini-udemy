@@ -11,7 +11,7 @@
 | Backlog | Henüz planlanmamış işler | – |
 | Bu Hafta | Pazartesi planlamasında bu sprint'e alınanlar | Ekip, planlamada |
 | In Progress | Biri issue'yu kendine atadı ve çalışıyor | İşi alan kişi |
-| Review | PR açıldı, onay bekliyor | PR'ı açan kişi |
+| Review | PR açıldı, kontrol bekliyor | PR'ı açan kişi |
 | Done | PR merge edildi, issue kapandı | Otomatik / PR'ı açan kişi |
 
 ## Sprint
@@ -63,8 +63,7 @@
 Bir issue ancak şunların hepsi sağlandığında "Done"dır:
 
 - [ ] PR açık ve issue'ya bağlı (`Closes #<no>`)
-- [ ] En az 1 review onayı (modül sorumlusundan)
-- [ ] CI yeşil (backend build + test, frontend lint + build)
+- [ ] CI yeşil (backend build + test, frontend lint + build) + Kalite ve Süreç sorumlusunun hızlı kontrolü
 - [ ] Issue'daki kabul kriterlerinin tamamı işaretli
 - [ ] Kod değiştiyse ilgili diyagram (ER, sınıf, sekans, bileşen) ve OpenAPI aynı PR'da güncellendi
 - [ ] Yeni mimari karar varsa ADR yazıldı
