@@ -547,3 +547,51 @@ components:
             message: Bu e-posta adresi zaten kayıtlı.
             errors:
               email: Bu e-posta adresi zaten kayıtlı.
+    MethodNotAllowed:
+      description: >
+        Adres var ama HTTP yöntemi desteklenmiyor (405). Desteklenen yöntemler `Allow`
+        başlığında döner.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            status: 405
+            message: Bu adres için GET yöntemi desteklenmiyor.
+            errors: {}
+    PayloadTooLarge:
+      description: >
+        Yüklenen dosya izin verilen boyutu aşıyor (413): video en fazla 200 MB,
+        PDF/doküman en fazla 20 MB, kapak görseli en fazla 2 MB.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            status: 413
+            message: Video en fazla 200 MB olabilir.
+            errors: {}
+    UnsupportedMediaType:
+      description: >
+        Dosya türüne ya da isteğin Content-Type'ına izin verilmiyor (415). Dosya türü
+        uzantıdan değil içerikten tespit edilir.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            status: 415
+            message: Yalnız mp4 ve webm videolar yüklenebilir.
+            errors: {}
+    InternalServerError:
+      description: >
+        Beklenmeyen sunucu hatası (500). Yanıtta iç ayrıntı (stack trace, SQL vb.) yer
+        almaz; ayrıntı yalnız sunucu loguna yazılır.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            status: 500
+            message: Beklenmeyen bir hata oluştu. Lütfen daha sonra tekrar deneyin.
+            errors: {}
