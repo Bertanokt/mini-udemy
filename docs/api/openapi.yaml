@@ -559,6 +559,18 @@ components:
             status: 405
             message: Bu adres için GET yöntemi desteklenmiyor.
             errors: {}
+    NotAcceptable:
+      description: >
+        İstemcinin `Accept` başlığında istediği biçim üretilemiyor (406). API yalnız JSON
+        üretir; hata gövdesi her durumda JSON'dur.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            status: 406
+            message: İstenen yanıt biçimi desteklenmiyor.
+            errors: {}
     PayloadTooLarge:
       description: >
         Yüklenen dosya izin verilen boyutu aşıyor (413): video en fazla 200 MB,

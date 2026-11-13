@@ -7,6 +7,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
@@ -106,9 +108,8 @@ public class GlobalExceptionHandler {
         if (ex.getSupportedHttpMethods() != null) {
             headers.setAllow(ex.getSupportedHttpMethods());
         }
-        HttpStatus status = HttpStatus.METHOD_NOT_ALLOWED;
-        return ResponseEntity.status(status).headers(headers)
-                .body(ErrorResponse.of(status.value(), "Bu adres için " + ex.getMethod() + " yöntemi desteklenmiyor."));
+        return respond(HttpStatus.METHOD_NOT_ALLOWED, "Bu adres için " + ex.getMethod() + " yöntemi desteklenmiyor.",
+                Map.of(), headers);
     }
 
     /** Spring'in genel yükleme sınırı aşıldı (spring.servlet.multipart.max-file-size): 413. */
@@ -123,14 +124,55 @@ public class GlobalExceptionHandler {
         return respond(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Desteklenmeyen içerik türü.", Map.of());
     }
 
-    /** Yukarıdakilerin dışındaki her şey: 500. Ayrıntı yanıta değil, loga yazılır. */
+    /**
+     * Yukarıdakilerin dışındaki her şey.
+     *
+     * Spring'in durum kodunu kendisi taşıyan istisnaları ({@link org.springframework.web.ErrorResponse} uygulayanlar:
+     * {@code ResponseStatusException}, 406 {@code HttpMediaTypeNotAcceptableException} vb.) o kodla döner. Mesaj
+     * koda göre genel bir Türkçe cümledir; istisnanın kendi gerekçe metni geliştiricinin yazdığı iç ayrıntı
+     * olabileceği için yanıta konmaz, yalnız loga yazılır. Geri kalan her şey 500'dür.
+     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUnexpected(Exception ex) {
+        if (ex instanceof org.springframework.web.ErrorResponse springError
+                && !springError.getStatusCode().is5xxServerError()) {
+            HttpStatusCode status = springError.getStatusCode();
+            log.warn("İstek {} koduyla reddedildi: {}", status.value(), ex.toString());
+            return respond(status, messageFor(status), Map.of(), springError.getHeaders());
+        }
+        if (ex instanceof org.springframework.web.ErrorResponse springError) {
+            log.error("Sunucu hatası ({})", springError.getStatusCode().value(), ex);
+            return respond(springError.getStatusCode(), UNEXPECTED_MESSAGE, Map.of(), springError.getHeaders());
+        }
         log.error("Beklenmeyen hata", ex);
         return respond(HttpStatus.INTERNAL_SERVER_ERROR, UNEXPECTED_MESSAGE, Map.of());
     }
 
-    private static ResponseEntity<ErrorResponse> respond(HttpStatus status, String message, Map<String, String> errors) {
-        return ResponseEntity.status(status).body(ErrorResponse.of(status.value(), message, errors));
+    /** Spring istisnalarında yanıta konacak genel mesaj; 5xx için {@link #UNEXPECTED_MESSAGE} kullanılır. */
+    private static String messageFor(HttpStatusCode status) {
+        return switch (status.value()) {
+            case 400 -> "İstek işlenemedi; gönderilen bilgileri kontrol edin.";
+            case 403 -> "Bu işlem için yetkiniz yok.";
+            case 404 -> "Aradığınız kaynak bulunamadı.";
+            case 406 -> "İstenen yanıt biçimi desteklenmiyor.";
+            case 409 -> "İstek mevcut durumla çakışıyor.";
+            default -> "İstek işlenemedi.";
+        };
+    }
+
+    private static ResponseEntity<ErrorResponse> respond(HttpStatusCode status, String message, Map<String, String> errors) {
+        return respond(status, message, errors, HttpHeaders.EMPTY);
+    }
+
+    /**
+     * Hata gövdesi her zaman JSON'dur: Content-Type açıkça verildiği için Spring istemcinin Accept başlığına göre
+     * biçim aramaz. Verilmeseydi XML isteyen bir istemciye hiçbir hata gövdesi yazılamazdı (406 testi).
+     */
+    private static ResponseEntity<ErrorResponse> respond(
+            HttpStatusCode status, String message, Map<String, String> errors, HttpHeaders headers) {
+        return ResponseEntity.status(status)
+                .headers(headers)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(ErrorResponse.of(status.value(), message, errors));
     }
 }
