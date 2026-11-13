@@ -19,9 +19,9 @@ package "auth" #DCEBFA {
   entity users {
     * id : bigserial <<PK>>
     --
-    * email : varchar(255) <<UK>>
+    * email : varchar(254) <<UK lower>>
     * password_hash : varchar(255)
-    * full_name : varchar(150)
+    * full_name : varchar(100)
     bio : text
     * role : varchar(20)
     * active : boolean
