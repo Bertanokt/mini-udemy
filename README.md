@@ -64,6 +64,13 @@ cd backend && ./mvnw verify
 cd frontend && npm run lint && npm run build
 ```
 
+### Coverage raporu (JaCoCo)
+
+`./mvnw verify` testlerden sonra JaCoCo coverage raporunu üretir:
+
+- **Yerelde:** `backend/target/site/jacoco/index.html` dosyasını tarayıcıda aç.
+- **CI'da:** GitHub'da PR'ın ya da commit'in **Checks** sekmesinden CI çalışmasını aç (ya da **Actions** › ilgili çalışma). Sayfanın altındaki **Artifacts** bölümünden `jacoco-report` dosyasını indir, zip'i aç ve `index.html`'i tarayıcıda aç.
+
 ## Profiller
 
 | Profil | Ne zaman | Not |
