@@ -33,7 +33,7 @@ DTO'lar Java `record` olarak `<modül>/dto` paketinde, mapper'lar `<modül>/mapp
 Her modülde dönüşümü yapan sıradan bir sınıf (`new UserResponse(user.getId(), user.getEmail(), ...)`).
 
 - **Artıları:** ek bağımlılık ve derleme adımı yok; kod açık, okuması ve hata ayıklaması kolay; karmaşık dönüşümlerde tam kontrol.
-- **Neden seçilmedi:** onlarca DTO için tekrar eden kod yazılır ve testi gerekir. En önemlisi, DTO'ya yeni bir alan eklendiğinde mapper'ı güncellemeyi unutmak **sessiz bir hata** üretir: record'larda derleyici yakalar, ama sınıf tabanlı ya da `null` geçilen alanlarda istemciye boş değer gider. MapStruct'ın ERROR politikası bu hatayı derlemede yakalıyor. Elle yazmanın kontrol avantajı MapStruct'ta da var: karmaşık bir alan için mapper arayüzüne `default` metot ya da `@Mapping(expression = ...)` yazılabilir.
+- **Neden seçilmedi:** onlarca DTO için tekrar eden kod yazılır ve testi gerekir. En önemlisi, elle yazılan mapper'da yeni alan için ne geçileceğine geliştirici karar veriyor ve kolayca `null` yazıp geçebiliyor: record'a alan eklenince kurucu çağrısı derlenmez, ama düzeltmek için `null` eklemek de derlenir ve istemciye boş değer gider. MapStruct ise kaynağı olmayan alanı derlemede reddediyor (ERROR politikası); boş bırakmak ancak `ignore = true` ile açıkça yazılırsa mümkün. Elle yazmanın kontrol avantajı MapStruct'ta da var: karmaşık bir alan için mapper arayüzüne `default` metot ya da `@Mapping(expression = ...)` yazılabilir.
 
 ### ModelMapper (çalışma anında yansıma ile eşleme)
 
