@@ -1,0 +1,12 @@
+# gitleaks yok sayma listesi.
+# docs/api/openapi.yaml'daki örnek değerler (örnek JWT, örnek parola yenileme token'ı ve parola) gerçek sır değildir.
+# Biçim: <commit>:<dosya>:<kural>:<satır>. 3610172 main'de; c4ba2c4 yalnız eski feature/#3-openapi-auth branch'inde.
+# Yeni bir alarm buraya eklenmeden önce değerin gerçekten örnek olduğu doğrulanmalı.
+3610172b3ea736252f92b03166ccaf39eb6155b6:docs/api/openapi.yaml:jwt:123
+3610172b3ea736252f92b03166ccaf39eb6155b6:docs/api/openapi.yaml:generic-api-key:181
+3610172b3ea736252f92b03166ccaf39eb6155b6:docs/api/openapi.yaml:generic-api-key:182
+3610172b3ea736252f92b03166ccaf39eb6155b6:docs/api/openapi.yaml:jwt:340
+c4ba2c43092d205b92465df94de1de5173e528de:docs/api/openapi.yaml:jwt:123
+c4ba2c43092d205b92465df94de1de5173e528de:docs/api/openapi.yaml:generic-api-key:181
+c4ba2c43092d205b92465df94de1de5173e528de:docs/api/openapi.yaml:generic-api-key:182
+c4ba2c43092d205b92465df94de1de5173e528de:docs/api/openapi.yaml:jwt:340

@@ -20,8 +20,7 @@ Closes #
 - [ ] Branch adı kurala uygun (`feature/#<no>-kisa-ad` / `fix/#<no>-kisa-ad`)
 - [ ] Commit ve PR açıklamasında `Closes #<no>` var
 - [ ] Issue'daki tüm kabul kriterleri karşılandı ve yukarıdaki tabloda kanıtı var
-- [ ] CI yeşil (backend build + test, frontend lint + build)
-- [ ] En az 1 onay alındı (modül sorumlusundan)
+- [ ] CI yeşil (backend build + test, frontend lint + build) + Kalite ve Süreç sorumlusunun hızlı kontrolü
 - [ ] Kod değiştiyse ilgili diyagram ve OpenAPI aynı PR'da güncellendi; yeni mimari karar varsa ADR yazıldı
 - [ ] Yeni migration zaman damgalı (`V<yyyyMMddHHmm>__aciklama.sql`); merge edilmiş migration'lar değiştirilmedi
 - [ ] "Ne / Neden" bölümünü kendim yazdım
