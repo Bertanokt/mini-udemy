@@ -95,7 +95,7 @@ Desenler gerçek bir ihtiyaç için ve bilinçli olarak kullanılır. Her birini
 | **Observer** | yayınlayan: `enrollment`, `course`, `progress`, `quiz`, `certificate`; dinleyen: `progress`, `certificate`, `notification` | Bir olaya birden fazla modül tepki verir; yayınlayan modül dinleyenleri bilmez. Spring `ApplicationEventPublisher` ve `@TransactionalEventListener` ile uygulanır. | #42, #124 |
 | **Strategy** | `quiz` | Puanlama kuralı sınavın türüne göre değişir; her kural ayrı bir `ScoringStrategy` sınıfıdır, yeni kural yeni sınıftır. | #52 |
 | **Factory Method** | `content` | Ders içerik türleri (VIDEO, PDF, DOCUMENT) farklı biçim, boyut ve sunuluş kurallarına sahiptir; içeriği oluşturan kod türün fabrikasındadır, yükleme servisi yalnız ortak arayüzü bilir. | #110 |
-| **DTO + Mapper** | tüm modüller | Entity'nin API'ye sızmasını önler; API sözleşmesini veritabanı şemasından ayırır. | #9 |
+| **DTO + Mapper** | tüm modüller | Entity'nin API'ye sızmasını önler; API sözleşmesini veritabanı şemasından ayırır. DTO'lar `record`, mapper'lar **MapStruct** arayüzleri: `@Mapper(config = MapStructConfig.class)` (`common/mapper`), `unmappedTargetPolicy = ERROR` ile sözleşmeye eklenip eşlenmeyen alan derlemeyi durdurur. Elle yazılmış mapper yerine MapStruct'ın seçilme gerekçesi: [ADR-006](adr/0006-dto-mapper-mapstruct.md). | #9 |
 
 ### Domain olayları
 

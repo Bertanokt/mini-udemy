@@ -54,7 +54,7 @@ Desenler bilinçli kullanılıyor; her birinin ADR'si `docs/adr/` altında. Dese
 | Observer | olaylar ilgili modülün `domain` paketinde; dinleyiciler `progress`, `certificate`, `notification` | Bir modülün işi başka modülü tetikleyecekse olay yayınla (`EnrollmentCreated`, `LessonPublished`, `LessonCompleted`, `CourseApproved`, `CourseRejected`, `QuizCompleted`, `CertificateIssued`); dinleyiciyi doğrudan çağırma. |
 | Strategy | `quiz` — `ScoringStrategy` ve uygulamaları | Puanlama kuralı sınavın `scoringType`'ına göre seçilen stratejidedir; yeni kural = yeni strateji sınıfı. |
 | Factory Method | `content` — `LessonContentFactory` ve tür fabrikaları (VIDEO, PDF, DOCUMENT) | Türe özgü biçim, boyut ve sunuluş kuralları türün fabrikası/ürünündedir; yükleme servisi yalnız ortak arayüzü bilir. |
-| DTO + Mapper | her modülün `dto` ve `mapper` paketi | Entity API'ye çıkmaz; dönüşüm yalnız mapper'da. |
+| DTO + Mapper | her modülün `dto` ve `mapper` paketi | Entity API'ye çıkmaz; dönüşüm yalnız mapper'da. Mapper bir MapStruct arayüzüdür: `@Mapper(config = MapStructConfig.class)`; eşlenmemiş alan derleme hatasıdır (ADR-006), alanı bilerek boş bırakacaksan `@Mapping(target = "…", ignore = true)` yaz. Dönüşümü controller ya da service'te elle yazma. |
 
 Desen sınıflarına dokunan bir değişiklikte sınıf diyagramını ve ilgili ADR'yi de güncelle.
 
