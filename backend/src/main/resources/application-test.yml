@@ -2,3 +2,8 @@
 logging:
   level:
     com.miniudemy: DEBUG
+
+app:
+  jwt:
+    # YALNIZ TESTLER İÇİN.
+    secret: test-only-mini-udemy-jwt-anahtari-yalniz-testler-icin

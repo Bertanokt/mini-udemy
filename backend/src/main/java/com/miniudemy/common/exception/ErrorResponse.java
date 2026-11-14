@@ -13,7 +13,7 @@ import java.util.Map;
  *   <li>{@code errors}: alan adı → hata mesajı; doğrulama dışındaki hatalarda boş nesne, hiçbir zaman null değil</li>
  * </ul>
  *
- * Spring Security'nin 401/403 yanıtları da (#10) bu gövdeyi kullanmalıdır.
+ * Spring Security'nin 401/403 yanıtları da bu gövdeyi kullanır ({@code common/security/JsonSecurityErrorHandler}, #10).
  */
 public record ErrorResponse(int status, String message, Map<String, String> errors) {
 
