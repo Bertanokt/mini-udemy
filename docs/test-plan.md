@@ -25,7 +25,7 @@ Notlar:
 | Kim | Sorumluluk |
 |---|---|
 | Özelliği geliştiren (her üye) | Kendi PR'ındaki service public metotları için unit test: başarılı yol + en az bir hata yolu (yetki, bulunamadı, çakışma). Issue'nun her kabul kriteri bir teste ya da yazılı bir manuel kontrole karşılık gelir; PR'da kriter → kanıt tablosu verilir. |
-| Kalite ve Süreç Sorumlusu (Veronika) | Bu plan; servis test issue'ları (#15, #31, #32, #44, #56, #61, #114, #128, #132, #137); Bölüm 6 kritik testleri ve API erişim matrisi (#139); entegrasyon testleri (#65, #138); bug bash (#68); test raporu (#99); her PR'da hızlı kontrol (CI yeşil, `Closes #…`, kriter → kanıt tablosu, "Ne / Neden" PR sahibinin kendi cümleleri, kod değiştiyse OpenAPI/diyagram güncel). |
+| Kalite ve Süreç Sorumlusu (Veronika) | Bu plan; servis test issue'ları (#15, #31, #32, #44, #56, #61, #114, #128, #132, #137); Bölüm 6 kritik testleri ve API erişim matrisi (#139); entegrasyon testleri (#65, #138); bug bash (#68); test raporu (#99); her PR'da hızlı kontrol (CI yeşil, `Closes #…`, kriter → kanıt tablosu, "Ne / Neden"deki teknik iddiaların kodla karşılaştırılmış olması, PR açıklamasında Claude atıf satırı olmaması, kod değiştiyse OpenAPI/diyagram güncel). |
 | Yazılım Mimarı (Bertan) | ArchUnit kuralları (#86) ve mimari kuralların inceleme ile denetimi. |
 | Veri ve Entegrasyon Sorumlusu (Eray) | OpenAPI'nin kodla eşitlenmesi (#66), Flyway migration'larının entegrasyon testlerinde temiz kurulması. |
 | Alan Tasarımcısı (Sedat) | Diyagram–kod tutarlılık kontrolüne (#97) destek; senaryoların demo provasında doğrulanması. |
