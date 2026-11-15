@@ -55,7 +55,7 @@
   - hata: `fix/#<issue-no>-kisa-ad` → `fix/#71-login-redirect`
 - Commit mesajında ve PR açıklamasında `Closes #<no>` bulunur; merge edildiğinde issue otomatik kapanır.
 - **Aynı modülde birbirine bağlı küçük issue'lar tek PR'da kapatılabilir:** `Closes #a #b #c` (her biri ayrı `Closes` ile de yazılabilir: `Closes #a, closes #b`). Branch adı ilk issue'nun numarasını taşır. Farklı modüllere dokunan işler ayrı PR olur.
-- PR açıklamasındaki **"Ne / Neden" bölümünü PR sahibi kendi cümleleriyle yazar** (Claude Code ya da başka bir araç bu bölümü yazmaz). Sunumda kodunu anlatabilmen buna bağlı.
+- **Claude, PR açıklamasındaki "Ne / Neden" bölümünü kendisi yazar.** Metindeki her teknik iddia kodla karşılaştırılır; tutmayan cümle düzeltilir.
 - Branch'i güncel tutmak için `main`'i rebase ya da merge et; PR "Squash and merge" ile birleştirilir.
 
 ## Definition of Done
