@@ -75,9 +75,9 @@ cd frontend && npm run lint && npm run build
 
 | Profil | Ne zaman | Not |
 |---|---|---|
-| `dev` | Yerel geliştirme (varsayılan) | SQL loglanır, varsayılan DB bilgileri `miniudemy` |
+| `dev` | Yerel geliştirme (varsayılan) | SQL loglanır, varsayılan DB bilgileri `miniudemy`; JWT anahtarı `application-dev.yml`'daki "dev-only" değer (yalnız yerel) |
 | `test` | Testler | DB gerektiren testler Testcontainers ile |
-| `prod` | Demo | `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` ortamdan zorunlu |
+| `prod` | Demo | `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` ve `JWT_SECRET` (en az 32 bayt, örn. `openssl rand -base64 48`) ortamdan zorunlu; `JWT_SECRET` yoksa ya da kısaysa uygulama açılmaz |
 
 ## Çalışma şekli
 

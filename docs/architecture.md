@@ -26,7 +26,7 @@ Paket yapısı: `com.miniudemy.<modül>.<katman>`
 | `review` | 1–5 puan ve yorum, mükerrer değerlendirme engeli | Review | I |
 | `notification` | Uygulama içi bildirimler; domain olaylarını dinler | Notification | L |
 | `admin` | Kurs onay/red/yayından kaldırma, kullanıcı ve kategori yönetimi, şikâyetler, platform raporları | Complaint | K |
-| `common` | Config, güvenlik altyapısı (JWT filtresi, oturumdaki kullanıcı), global hata yönetimi | – | – |
+| `common` | Config, güvenlik altyapısı (`common/security`: JWT doğrulama, herkese açık uçlar, 401/403 gövdeleri), global hata yönetimi, MapStruct ortak ayarı | – | – |
 
 `common` iş kuralı içermez ve hiçbir modüle bağımlı değildir.
 
@@ -84,6 +84,8 @@ Bir modül başka bir modülle **yalnız iki yoldan** konuşur:
 Tabloda olmayan bir bağımlılık gerekiyorsa önce bu doküman güncellenir.
 
 **Eğitmen istatistikleri (J) döngü oluşturmasın diye bağımlılık tersine çevrilir.** Eğitmen paneli `course` modülündedir ama kayıt, ilerleme, sınav ve puan verisi başka modüllerdedir; `course` bu modülleri doğrudan çağırsaydı onlar da `course`'a bağlı olduğu için döngü oluşurdu. Bunun yerine `course`, istatistik için ihtiyaç duyduğu sorgu arayüzlerini kendi `service` paketinde tanımlar; `enrollment`, `progress`, `quiz` ve `review` bu arayüzleri uygular. Böylece bağımlılık yönü hep "diğer modül → `course`" kalır (Dependency Inversion).
+
+**Güvenlik altyapısı da aynı yolla `auth`'a bağımlı olmaz.** `common/security` her kimlikli istekte kullanıcının hâlâ var olup olmadığını, aktifliğini ve güncel rolünü bilmek zorunda (pasif kullanıcının ya da rolü düşürülmüş kullanıcının eski token'ı çalışmamalı). Bu bilgi `auth`'taki `users` tablosunda; `common` doğrudan `auth`'u çağırsaydı "`common` hiçbir modüle bağımlı değildir" kuralı bozulurdu. Bunun yerine `common` `AccountLookup` arayüzünü tanımlar, `auth/service/AccountLookupService` uygular (#10).
 
 ## 5. Tasarım desenleri
 

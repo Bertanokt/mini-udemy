@@ -22,6 +22,7 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
@@ -50,6 +51,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * uygulamaya karışmaz; teste @Import ile eklenir.
  */
 @WebMvcTest(controllers = GlobalExceptionHandlerTest.TestEndpoints.class)
+// Bu sınıf yalnız hata gövdelerini test eder; güvenlik filtresi devre dışı. Güvenlik (401/403) SecurityConfigTest'te.
+@AutoConfigureMockMvc(addFilters = false)
 @Import(GlobalExceptionHandlerTest.TestEndpoints.class)
 @ActiveProfiles("test")
 class GlobalExceptionHandlerTest {

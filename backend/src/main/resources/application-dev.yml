@@ -19,3 +19,9 @@ management:
   endpoint:
     health:
       show-details: always
+
+app:
+  jwt:
+    # YALNIZ YEREL GELİŞTİRME İÇİN. Herkese açık repoda duruyor; gerçek bir ortamda asla kullanılmaz.
+    # Prod profilinde bu değer yok, JWT_SECRET zorunlu (application.yml).
+    secret: dev-only-mini-udemy-jwt-anahtari-yalniz-yerel-gelistirme
