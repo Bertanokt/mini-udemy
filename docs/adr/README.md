@@ -33,6 +33,8 @@ ADR, kararın alındığı iş ile **aynı PR'da** yazılır.
 | No | Başlık | Durum | Issue |
 |---|---|---|---|
 | [ADR-001](0001-moduler-monolit.md) | Katmanlı modüler monolit ve modül bazlı paketleme | Kabul edildi | #80 |
+| [ADR-002](0002-jwt-stateless-kimlik-dogrulama.md) | JWT ile stateless kimlik doğrulama | Kabul edildi | #81 |
+| [ADR-003](0003-flyway-sema-yonetimi.md) | Flyway ile şema yönetimi | Kabul edildi | #81 |
 | [ADR-004](0004-yerel-dosya-depolama.md) | Yerel dosya depolama (Docker volume) ve yetki kontrollü servis | Kabul edildi | #84 |
 | [ADR-005](0005-ayri-frontend-rest-openapi.md) | Ayrı frontend, REST API ve önce OpenAPI sözleşmesi | Kabul edildi | #84 |
 | [ADR-006](0006-dto-mapper-mapstruct.md) | DTO + Mapper deseni, MapStruct ile ve eşlenmemiş alan derleme hatası | Kabul edildi | #9 |
@@ -41,8 +43,6 @@ ADR, kararın alındığı iş ile **aynı PR'da** yazılır.
 
 | No | Konu | Issue |
 |---|---|---|
-| ADR-002 | JWT ile stateless kimlik doğrulama | #81 |
-| ADR-003 | Flyway ile şema yönetimi | #81 |
 | sonraki numaralar | Desen kararları: State (#85), Factory Method (#110), Observer (#42), Strategy (#52) | ilgili issue'lar |
 
 Genel mimari kurallar: [`docs/architecture.md`](../architecture.md).
