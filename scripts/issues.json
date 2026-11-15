@@ -370,7 +370,7 @@
       "description": "spring-boot-starter-security ve bir JWT kütüphanesi eklenir. Stateless security config, JWT üretme/doğrulama servisi ve istek başına token'ı okuyan filtre.",
       "criteria": [
         "JwtService: token üretir (sub=userId, role claim, süre config'ten), doğrular",
-        "JwtAuthenticationFilter Authorization: Bearer başlığını okuyup SecurityContext'i dolduruyor",
+        "Authorization: Bearer başlığı Spring Security'nin hazır filtresiyle (oauth2-resource-server) okunuyor; JwtAuthenticationConverter token'dan kimliği kurup SecurityContext'i dolduruyor",
         "/api/health, /actuator/health ve /api/auth/** herkese açık; diğerleri kimlik ister",
         "JWT secret application.yml'da ortam değişkeninden okunuyor, koda gömülü değil",
         "Parola BCrypt ile hash'leniyor (PasswordEncoder bean)",

@@ -26,7 +26,7 @@ Paket yapısı: `com.miniudemy.<modül>.<katman>`
 | `review` | 1–5 puan ve yorum, mükerrer değerlendirme engeli | Review | I |
 | `notification` | Uygulama içi bildirimler; domain olaylarını dinler | Notification | L |
 | `admin` | Kurs onay/red/yayından kaldırma, kullanıcı ve kategori yönetimi, şikâyetler, platform raporları | Complaint | K |
-| `common` | Config, güvenlik altyapısı (JWT filtresi, oturumdaki kullanıcı), global hata yönetimi | – | – |
+| `common` | Config, güvenlik altyapısı (`common/security`: JWT doğrulama, herkese açık uçlar, 401/403 gövdeleri), global hata yönetimi, MapStruct ortak ayarı | – | – |
 
 `common` iş kuralı içermez ve hiçbir modüle bağımlı değildir.
 
@@ -85,6 +85,8 @@ Tabloda olmayan bir bağımlılık gerekiyorsa önce bu doküman güncellenir.
 
 **Eğitmen istatistikleri (J) döngü oluşturmasın diye bağımlılık tersine çevrilir.** Eğitmen paneli `course` modülündedir ama kayıt, ilerleme, sınav ve puan verisi başka modüllerdedir; `course` bu modülleri doğrudan çağırsaydı onlar da `course`'a bağlı olduğu için döngü oluşurdu. Bunun yerine `course`, istatistik için ihtiyaç duyduğu sorgu arayüzlerini kendi `service` paketinde tanımlar; `enrollment`, `progress`, `quiz` ve `review` bu arayüzleri uygular. Böylece bağımlılık yönü hep "diğer modül → `course`" kalır (Dependency Inversion).
 
+**Güvenlik altyapısı da aynı yolla `auth`'a bağımlı olmaz.** `common/security` her kimlikli istekte kullanıcının hâlâ var olup olmadığını, aktifliğini ve güncel rolünü bilmek zorunda (pasif kullanıcının ya da rolü düşürülmüş kullanıcının eski token'ı çalışmamalı). Bu bilgi `auth`'taki `users` tablosunda; `common` doğrudan `auth`'u çağırsaydı "`common` hiçbir modüle bağımlı değildir" kuralı bozulurdu. Bunun yerine `common` `AccountLookup` arayüzünü tanımlar, `auth/service/AccountLookupService` uygular (#10).
+
 ## 5. Tasarım desenleri
 
 Desenler gerçek bir ihtiyaç için ve bilinçli olarak kullanılır. Her birinin gerekçesi kendi issue'sunda, kararı `docs/adr/` altında bir ADR'dedir.
@@ -95,7 +97,7 @@ Desenler gerçek bir ihtiyaç için ve bilinçli olarak kullanılır. Her birini
 | **Observer** | yayınlayan: `enrollment`, `course`, `progress`, `quiz`, `certificate`; dinleyen: `progress`, `certificate`, `notification` | Bir olaya birden fazla modül tepki verir; yayınlayan modül dinleyenleri bilmez. Spring `ApplicationEventPublisher` ve `@TransactionalEventListener` ile uygulanır. | #42, #124 |
 | **Strategy** | `quiz` | Puanlama kuralı sınavın türüne göre değişir; her kural ayrı bir `ScoringStrategy` sınıfıdır, yeni kural yeni sınıftır. | #52 |
 | **Factory Method** | `content` | Ders içerik türleri (VIDEO, PDF, DOCUMENT) farklı biçim, boyut ve sunuluş kurallarına sahiptir; içeriği oluşturan kod türün fabrikasındadır, yükleme servisi yalnız ortak arayüzü bilir. | #110 |
-| **DTO + Mapper** | tüm modüller | Entity'nin API'ye sızmasını önler; API sözleşmesini veritabanı şemasından ayırır. | #9 |
+| **DTO + Mapper** | tüm modüller | Entity'nin API'ye sızmasını önler; API sözleşmesini veritabanı şemasından ayırır. DTO'lar `record`, mapper'lar **MapStruct** arayüzleri: `@Mapper(config = MapStructConfig.class)` (`common/mapper`), `unmappedTargetPolicy = ERROR` ile sözleşmeye eklenip eşlenmeyen alan derlemeyi durdurur. Elle yazılmış mapper yerine MapStruct'ın seçilme gerekçesi: [ADR-006](adr/0006-dto-mapper-mapstruct.md). | #9 |
 
 ### Domain olayları
 

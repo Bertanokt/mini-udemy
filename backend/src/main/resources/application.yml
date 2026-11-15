@@ -28,3 +28,8 @@ management:
 app:
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+  jwt:
+    # Yedek değeri bilerek yok: JWT_SECRET tanımlı değilse ya da 32 bayttan kısaysa uygulama açılmaz (#10, O2).
+    # Yalnız dev ve test profilleri kendi "dev-only" / "test-only" anahtarlarıyla bunu geçersiz kılar.
+    secret: ${JWT_SECRET}
+    expiration: 1h

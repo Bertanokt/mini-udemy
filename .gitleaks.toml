@@ -1,0 +1,20 @@
+# gitleaks yapılandırması: varsayılan kurallar + docs/api/openapi.yaml'daki örnek değerlerin istisnası.
+# İstisna satır numarasına ya da dosya yoluna değil, değerin kendisine bakar: openapi.yaml'da satırlar
+# kaysa da çalışır, dosyaya gerçek görünümlü yeni bir değer girerse yine yakalanır.
+# Not (gitleaks 8.30): istisnaya "paths" eklemek dosyanın tamamını atlatıyor; bu yüzden yalnız "regexes".
+title = "mini-udemy"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "OpenAPI sözleşmesindeki örnek değerler (gerçek sır değil)"
+regexTarget = "secret"
+regexes = [
+  # Örnek JWT: imza kısmı düz "signature" kelimesi (base64: c2lnbmF0dXJl)
+  '''^eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.c2lnbmF0dXJl$''',
+  # PasswordResetConfirmRequest › token örneği
+  '''^3f9a1c7e5b2d4a80b6c1e9d2f7a45b30$''',
+  # PasswordResetConfirmRequest › newPassword örneği
+  '''^YeniGucluParola456$''',
+]

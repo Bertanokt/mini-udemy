@@ -21,7 +21,9 @@ info:
 
 
     Kimlik doğrulama: `POST /api/auth/login` ile alınan JWT, korumalı uçlarda
-    `Authorization: Bearer <accessToken>` başlığıyla gönderilir.
+    `Authorization: Bearer <accessToken>` başlığıyla gönderilir. `PUBLIC` uçlar token'sız çağrılabilir;
+    ancak istekte geçersiz ya da süresi dolmuş bir token varsa bu uçlar da 401 döner. İstemci bu
+    durumda token'ı silip isteği token'sız tekrarlamalıdır.
 
 
     Hatalar her zaman `ErrorResponse` gövdesiyle döner (`status`, `message`, `errors`);
@@ -83,6 +85,8 @@ paths:
                   service:
                     type: string
                     example: mini-udemy-backend
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /api/auth/register:
     post:
       tags: [Auth]
@@ -131,6 +135,8 @@ paths:
                 createdAt: "2026-11-11T09:30:00Z"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "409":
           $ref: "#/components/responses/Conflict"
   /api/auth/login:
@@ -201,6 +207,8 @@ paths:
             İstek alındı. E-posta kayıtlı olsa da olmasa da gövdesiz aynı yanıt döner.
         "400":
           $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /api/auth/password-reset/confirm:
     post:
       tags: [Auth]
@@ -225,6 +233,8 @@ paths:
           description: Parola değiştirildi.
         "400":
           $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /api/me:
     get:
       tags: [Users]
@@ -315,6 +325,8 @@ paths:
                   name: Yazılım Geliştirme
                 - id: 2
                   name: Veri Bilimi
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /api/courses:
     get:
       tags: [Catalog]
@@ -372,6 +384,8 @@ paths:
                 $ref: "#/components/schemas/CourseSummaryPage"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
     post:
       tags: [Courses]
       summary: Kurs oluştur
@@ -423,6 +437,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CourseDetailResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
     put:
@@ -573,6 +589,8 @@ paths:
               schema:
                 type: string
                 format: binary
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
     post:
@@ -634,6 +652,8 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/SectionResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
     post:
@@ -1531,6 +1551,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CertificateVerificationResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
   /api/courses/{id}/reviews:
@@ -1555,6 +1577,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CourseReviewsResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
     post:
@@ -3494,7 +3518,8 @@ components:
     Unauthorized:
       description: >
         Kimlik doğrulanamadı (401): token yok, geçersiz ya da süresi dolmuş; girişte
-        e-posta veya parola yanlış.
+        e-posta veya parola yanlış. Herkese açık uçlar da istekte geçersiz ya da süresi dolmuş
+        bir token varsa 401 döner.
       content:
         application/json:
           schema:

@@ -11,6 +11,9 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -24,6 +27,8 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+import com.miniudemy.common.security.SecurityMessages;
+
 /**
  * Controller'lardan fırlayan tüm istisnaları {@link ErrorResponse} gövdesine çevirir.
  *
@@ -34,8 +39,13 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
  *       yanıta değil yalnız sunucu loguna yazılır.</li>
  * </ul>
  *
- * Kapsam dışı: kimlik doğrulama (401) ve Spring Security'nin erişim reddi, istek controller'a ulaşmadan
- * filtrede oluşur ve bu sınıfa gelmez. Onlar #10'da aynı {@link ErrorResponse} gövdesiyle yazılacak.
+ * Güvenlik hataları iki yerde oluşur ve ikisi de aynı gövdeyi ve aynı mesajları ({@link SecurityMessages}) kullanır:
+ * <ul>
+ *   <li>İstek controller'a ulaşmadan güvenlik filtresinde (token yok/geçersiz, adres kuralıyla rol yetersiz):
+ *       {@code common/security/JsonSecurityErrorHandler} yazar, bu sınıfa hiç gelmez.</li>
+ *   <li>Controller ya da service içinde ({@code @PreAuthorize} reddi): {@link AccessDeniedException} ve
+ *       {@link AuthenticationException} aşağıda yakalanır; genel {@code Exception} yakalayıcısına düşüp 500 olmaz.</li>
+ * </ul>
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -122,6 +132,21 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
     public ResponseEntity<ErrorResponse> handleMediaType(HttpMediaTypeNotSupportedException ex) {
         return respond(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Desteklenmeyen içerik türü.", Map.of());
+    }
+
+    /** Controller/service içindeki yetki reddi ({@code @PreAuthorize}): 403. Filtredeki karşılığıyla aynı mesaj. */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex) {
+        return respond(HttpStatus.FORBIDDEN, SecurityMessages.FORBIDDEN, Map.of());
+    }
+
+    /** Controller/service içinde oluşan kimlik hatası: 401; hesap pasifse 403. Filtredeki karşılığıyla aynı. */
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErrorResponse> handleAuthentication(AuthenticationException ex) {
+        if (ex instanceof DisabledException) {
+            return respond(HttpStatus.FORBIDDEN, SecurityMessages.ACCOUNT_DISABLED, Map.of());
+        }
+        return respond(HttpStatus.UNAUTHORIZED, SecurityMessages.UNAUTHORIZED, Map.of());
     }
 
     /**

@@ -2,8 +2,8 @@ Closes #
 <!-- Aynı modülde birbirine bağlı birden fazla issue: Closes #a #b #c -->
 
 ## Ne / Neden
-<!-- Bu bölümü PR sahibi KENDİ cümleleriyle yazar (Claude Code ya da başka bir araç yazmaz).
-     Ne değişti, neden bu şekilde yapıldı, hangi seçeneği neden seçmedin? 3–6 cümle yeterli. -->
+<!-- Bu bölümü Claude yazar; metindeki her teknik iddia kodla karşılaştırılır, tutmayan cümle düzeltilir.
+     Ne değişti, neden bu şekilde yapıldı, hangi seçenek neden seçilmedi? 3–6 cümle yeterli. -->
 
 ## Kabul kriteri → kanıt
 | Kabul kriteri | Kanıt (test adı / manuel kontrol) |
@@ -23,4 +23,4 @@ Closes #
 - [ ] CI yeşil (backend build + test, frontend lint + build) + Kalite ve Süreç sorumlusunun hızlı kontrolü
 - [ ] Kod değiştiyse ilgili diyagram ve OpenAPI aynı PR'da güncellendi; yeni mimari karar varsa ADR yazıldı
 - [ ] Yeni migration zaman damgalı (`V<yyyyMMddHHmm>__aciklama.sql`); merge edilmiş migration'lar değiştirilmedi
-- [ ] "Ne / Neden" bölümünü kendim yazdım
+- [ ] "Ne / Neden" bölümündeki her teknik iddia kodla karşılaştırıldı

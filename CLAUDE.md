@@ -54,7 +54,7 @@ Desenler bilinçli kullanılıyor; her birinin ADR'si `docs/adr/` altında. Dese
 | Observer | olaylar ilgili modülün `domain` paketinde; dinleyiciler `progress`, `certificate`, `notification` | Bir modülün işi başka modülü tetikleyecekse olay yayınla (`EnrollmentCreated`, `LessonPublished`, `LessonCompleted`, `CourseApproved`, `CourseRejected`, `QuizCompleted`, `CertificateIssued`); dinleyiciyi doğrudan çağırma. |
 | Strategy | `quiz` — `ScoringStrategy` ve uygulamaları | Puanlama kuralı sınavın `scoringType`'ına göre seçilen stratejidedir; yeni kural = yeni strateji sınıfı. |
 | Factory Method | `content` — `LessonContentFactory` ve tür fabrikaları (VIDEO, PDF, DOCUMENT) | Türe özgü biçim, boyut ve sunuluş kuralları türün fabrikası/ürünündedir; yükleme servisi yalnız ortak arayüzü bilir. |
-| DTO + Mapper | her modülün `dto` ve `mapper` paketi | Entity API'ye çıkmaz; dönüşüm yalnız mapper'da. |
+| DTO + Mapper | her modülün `dto` ve `mapper` paketi | Entity API'ye çıkmaz; dönüşüm yalnız mapper'da. Mapper bir MapStruct arayüzüdür: `@Mapper(config = MapStructConfig.class)`; eşlenmemiş alan derleme hatasıdır (ADR-006), alanı bilerek boş bırakacaksan `@Mapping(target = "…", ignore = true)` yaz. Dönüşümü controller ya da service'te elle yazma. |
 
 Desen sınıflarına dokunan bir değişiklikte sınıf diyagramını ve ilgili ADR'yi de güncelle.
 
@@ -79,7 +79,8 @@ Tüm hatalar `common/exception`'daki global handler'dan aynı gövdeyle döner:
 - Controller'da elle hata yanıtı kurma; service'ten `common/exception`'daki istisnalardan birini fırlat: `BadRequestException` → 400 (alan doğrulamasıyla yakalanamayan iş kuralı), `ForbiddenException` → 403, `NotFoundException` → 404, `ConflictException` → 409, `PayloadTooLargeException` → 413 (dosya boyutu), `UnsupportedMediaTypeException` → 415 (dosya türü). `@Valid` ihlalleri kendiliğinden 400 + alan bazlı `errors` olur.
 - Hata belirli bir alanla ilgiliyse alan hatasını da ver ki frontend mesajı o alanın altında göstersin: `throw new ConflictException("Bu e-posta adresi zaten kayıtlı.", Map.of("email", "Bu e-posta adresi zaten kayıtlı."))`. Birden fazla alan varsa formdaki sırayla dönmeleri için `LinkedHashMap` kullan (`Map.of` sırasızdır).
 - Bozuk JSON, yanlış tipte/eksik parametre (400), olmayan adres (404), yanlış HTTP yöntemi (405), desteklenmeyen yanıt biçimi (406) ve beklenmeyen hatalar (500) handler'da zaten aynı gövdeye çevrilir; ayrıca bir şey yazma. Spring'in kodunu kendisi taşıyan istisnaları (`ResponseStatusException` dahil) kendi koduyla ve genel bir Türkçe mesajla döner; yine de kendi kodunda `ResponseStatusException` değil `ApiException` alt sınıflarını kullan, yoksa mesajın kullanıcıya ulaşmaz. Hata gövdesi istemcinin `Accept` başlığından bağımsız olarak her zaman JSON'dur.
-- 401 (token yok/geçersiz) ve güvenlik katmanının erişim reddi istek controller'a ulaşmadan oluşur; bunlar Spring Security yapılandırmasında aynı `ErrorResponse` gövdesiyle döner (#10).
+- Güvenlik hataları (#10) da aynı gövdeyle ve `common/security/SecurityMessages`'taki sözleşme mesajlarıyla döner: token yok/geçersiz/süresi dolmuş → 401; rol yetersiz → 403; hesap pasif → 403 "Hesabınız devre dışı bırakılmış.". Filtrede oluşanları `JsonSecurityErrorHandler`, controller/service içinde oluşanları (`@PreAuthorize` reddi) `GlobalExceptionHandler` yazar; ikisine de elle yanıt ekleme.
+- Yetki: `/api/admin/**` ve `/api/instructor/**` adres kuralıyla korunur; diğer rol kuralları ucun kendisinde `@PreAuthorize("hasRole('…')")` ile yazılır. Rol token'dan değil, her istekte veritabanından (`AccountLookup`) gelir. Yeni bir herkese açık uç ekliyorsan hem sözleşmede `security: []` yap hem `SecurityConfig`'teki `PUBLIC_GET`/`PUBLIC_POST` listesine ekle.
 - `message` kullanıcıya gösterilebilir Türkçe bir cümle; stack trace ya da iç ayrıntı içermez.
 - Yeni bir hata türü gerekiyorsa `ApiException`'dan türeyen yeni bir sınıf yaz; handler değişmez. O durum kodu için `docs/api/openapi.yaml` › `components.responses`'a da bir yanıt ekle. Handler'a yalnız Spring'in yakalanmamış bir istisnası (şu an 500'e düşen) için yeni metot eklenir.
 
@@ -120,7 +121,8 @@ Diyagramlar metin tabanlıdır (PlantUML/Mermaid) ve yanında render edilmiş g�
 - Bir issue (ya da aynı modülde birbirine bağlı küçük issue'lar) = bir branch = bir PR. Branch: `feature/#<no>-kisa-ad` ya da `fix/#<no>-kisa-ad`. zsh'ta adı tırnakla yaz: `git switch -c 'feature/#12-auth-register'`.
 - Commit ve PR açıklamasında `Closes #<no>` (birden fazla için `Closes #a #b #c`).
 - Commit'ler geliştiricinin kendi git kimliğiyle atılır; `git config user.email`'i değiştirme.
-- **PR açıklamasındaki "Ne / Neden" bölümünü yazma.** Şablonu doldururken bu bölümü boş bırak ve kullanıcıdan kendi cümleleriyle yazmasını iste; kullanıcı yazmadan PR'ı açma. Diğer bölümleri (değişen dosyalar, test çıktısı, kriter → test tablosu, DoD) sen hazırlayabilirsin.
+- **Claude, PR açıklamasındaki "Ne / Neden" bölümünü kendisi yazar.** Metindeki her teknik iddia kodla karşılaştırılır; tutmayan cümle düzeltilir.
+- PR açıklamasına Claude atıf satırı eklenmez.
 - `main`'e doğrudan push yok. Push ve `gh pr create` öncesi kullanıcıdan onay al.
 
 ## Yapma
