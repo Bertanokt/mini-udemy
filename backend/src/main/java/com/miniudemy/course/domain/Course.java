@@ -1,0 +1,183 @@
+package com.miniudemy.course.domain;
+
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
+import jakarta.persistence.Table;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
+
+/**
+ * Eğitmenin oluşturduğu kurs; bölümlerin (ve onların derslerinin) kök nesnesi.
+ *
+ * Tablo: `courses` (migration `V202611131449__create_course_structure.sql`, ER diyagramı › course). Şema
+ * yalnız Flyway ile değişir; bu sınıf `ddl-auto=validate` ile tabloya karşı doğrulanır.
+ *
+ * Modüller arası kural: eğitmen (auth modülü) ve kapak dosyası (content modülü) entity olarak değil, yalnız
+ * id olarak tutulur; course modülü başka modülün entity'sine bağımlı olmaz.
+ *
+ * Durum geçişleri bu sınıfta değil, State deseninin durum nesnelerindedir (#85). Entity API'ye çıkmaz;
+ * dışarıya DTO ile verilir.
+ */
+@Entity
+@Table(name = "courses")
+public class Course {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    /** `users.id`; auth modülünün entity'sine bağlanmamak için yalnız id. */
+    @Column(name = "instructor_id", nullable = false)
+    private Long instructorId;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "category_id", nullable = false)
+    private Category category;
+
+    /** content modülündeki kapak dosyasının id'si; dosya tablosu gelince yabancı anahtar eklenecek. */
+    @Column(name = "cover_file_id")
+    private Long coverFileId;
+
+    @Column(nullable = false, length = 200)
+    private String title;
+
+    @Column(nullable = false, columnDefinition = "text")
+    private String description;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private CourseLevel level;
+
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "learning_outcomes", columnDefinition = "text[]")
+    private List<String> learningOutcomes = new ArrayList<>();
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private CourseStatus status = CourseStatus.DRAFT;
+
+    /** Yönetici reddettiğinde gerekçe (İncelemede → Taslak). */
+    @Column(name = "rejection_reason", columnDefinition = "text")
+    private String rejectionReason;
+
+    /** Yönetici yayından kaldırdığında gerekçe. */
+    @Column(name = "unpublish_reason", columnDefinition = "text")
+    private String unpublishReason;
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
+
+    /** Bölümler `position` sırasıyla yüklenir; kursla birlikte kaydedilir ve silinir. */
+    @OneToMany(mappedBy = "course", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("position ASC")
+    private List<Section> sections = new ArrayList<>();
+
+    /** JPA için. */
+    protected Course() {
+    }
+
+    public Course(Long instructorId, Category category, String title, String description, CourseLevel level,
+            List<String> learningOutcomes) {
+        this.instructorId = instructorId;
+        this.category = category;
+        this.title = title;
+        this.description = description;
+        this.level = level;
+        this.learningOutcomes = learningOutcomes == null ? new ArrayList<>() : new ArrayList<>(learningOutcomes);
+    }
+
+    /** Bölümü bu kursa bağlar; iki yönlü ilişkinin iki ucu da güncellenir. */
+    public void addSection(Section section) {
+        section.assignTo(this);
+        sections.add(section);
+    }
+
+    /**
+     * Kursun toplam süresi (saniye): tüm bölümlerdeki derslerin `duration_seconds` toplamı. Bölümleri ve
+     * dersleri yükler; yalnız toplam gereken listelerde bu yerine veritabanında toplanan bir sorgu tercih
+     * edilir.
+     */
+    public int getTotalDurationSeconds() {
+        return sections.stream().mapToInt(Section::getTotalDurationSeconds).sum();
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public Long getInstructorId() {
+        return instructorId;
+    }
+
+    public Category getCategory() {
+        return category;
+    }
+
+    public Long getCoverFileId() {
+        return coverFileId;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public CourseLevel getLevel() {
+        return level;
+    }
+
+    public List<String> getLearningOutcomes() {
+        return Collections.unmodifiableList(learningOutcomes);
+    }
+
+    public CourseStatus getStatus() {
+        return status;
+    }
+
+    public String getRejectionReason() {
+        return rejectionReason;
+    }
+
+    public String getUnpublishReason() {
+        return unpublishReason;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public List<Section> getSections() {
+        return Collections.unmodifiableList(sections);
+    }
+}
