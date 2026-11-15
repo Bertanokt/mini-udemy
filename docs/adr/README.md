@@ -37,11 +37,12 @@ ADR, kararın alındığı iş ile **aynı PR'da** yazılır.
 | [ADR-003](0003-flyway-sema-yonetimi.md) | Flyway ile şema yönetimi | Kabul edildi | #81 |
 | [ADR-004](0004-yerel-dosya-depolama.md) | Yerel dosya depolama (Docker volume) ve yetki kontrollü servis | Kabul edildi | #84 |
 | [ADR-005](0005-ayri-frontend-rest-openapi.md) | Ayrı frontend, REST API ve önce OpenAPI sözleşmesi | Kabul edildi | #84 |
+| [ADR-006](0006-dto-mapper-mapstruct.md) | DTO + Mapper deseni, MapStruct ile ve eşlenmemiş alan derleme hatası | Kabul edildi | #9 |
 
 ### Planlanan
 
 | No | Konu | Issue |
 |---|---|---|
-| sonraki numaralar | Desen kararları: DTO+Mapper (#9), State (#85), Factory Method (#110), Observer (#42), Strategy (#52) | ilgili issue'lar |
+| sonraki numaralar | Desen kararları: State (#85), Factory Method (#110), Observer (#42), Strategy (#52) | ilgili issue'lar |
 
 Genel mimari kurallar: [`docs/architecture.md`](../architecture.md).
