@@ -101,3 +101,165 @@ a {
 .status-down {
   color: var(--err);
 }
+
+/* Katalog */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.catalog button,
+.catalog input,
+.catalog select {
+  font: inherit;
+  color: inherit;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+
+.catalog button {
+  cursor: pointer;
+}
+
+.catalog button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.catalog-search {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.catalog-search input {
+  flex: 1;
+  min-width: 0;
+}
+
+.catalog-search button[type="submit"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.catalog-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.catalog-filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.catalog .chip {
+  border-radius: 999px;
+  font-size: 0.875rem;
+}
+
+.catalog-status,
+.catalog-count {
+  color: var(--muted);
+  margin: 16px 0;
+}
+
+.catalog-status button {
+  margin-top: 8px;
+}
+
+.course-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.course-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.course-cover {
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background-color: var(--border);
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 6px;
+}
+
+.course-cover-placeholder {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.course-title {
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+.course-card-link:hover .course-title {
+  color: var(--accent);
+}
+
+.course-instructor {
+  font-size: 0.875rem;
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.course-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tag {
+  font-size: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.course-meta {
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+@media (max-width: 600px) {
+  .course-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .catalog-filters label,
+  .catalog-filters select {
+    width: 100%;
+  }
+}
