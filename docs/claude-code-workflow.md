@@ -2,7 +2,7 @@
 
 Ekipteki herkes her issue için aynı akışı izler: **issue'yu oku → plan → onay → uygula → test → PR**. Claude Code repo kökündeki `CLAUDE.md`'yi kendiliğinden okur; aşağıdaki şablon onun üstüne issue'ya özgü adımları ekler.
 
-Amaç yalnız kodu yazdırmak değil: sunumda hoca her üyeye kendi kodu hakkında teknik soru soracak ve bireysel katkı katsayısını buna göre verecek. Planı okuyup onaylayan, testleri yorumlayan ve PR'ın "Ne / Neden" bölümünü yazan **sensin**.
+Amaç yalnız kodu yazdırmak değil: sunumda hoca her üyeye kendi kodu hakkında teknik soru soracak ve bireysel katkı katsayısını buna göre verecek. Planı okuyup onaylayan ve testleri yorumlayan **sensin**.
 
 ## Başlamadan önce (bir kez)
 
@@ -44,8 +44,9 @@ Board'da "Bu Hafta" kolonundan kendi rol etiketli issue'nu seç. **Kendini assig
 
 5. PR
    - Commit mesajı: kısa özet + `Closes #<no>`.
-   - .github/pull_request_template.md'ye göre PR açıklaması taslağı hazırla. "Ne / Neden" bölümünü BOŞ bırak; onu ben kendi cümlelerimle yazacağım.
-   DUR: "Ne / Neden" metnimi ve push onayımı bekle.
+   - .github/pull_request_template.md'ye göre PR açıklamasını hazırla. "Ne / Neden" bölümünü de sen yaz; metindeki her teknik iddiayı kodla karşılaştır, tutmayan cümleyi düzelt.
+   - PR açıklamasına Claude atıf satırı ekleme.
+   DUR: PR açıklamasını incelememi ve push onayımı bekle.
    - Onaydan sonra push et ve `gh pr create` ile PR'ı aç; PR linkini ver.
 ```
 
@@ -76,4 +77,6 @@ Sonra bana hocanın sorabileceği 5 teknik soru sor ve cevaplarımı değerlendi
 
 - Birbirine bağlı küçük issue'ları aynı modülde tek PR'da kapatabilirsin (`Closes #a #b #c`); şablonda `<no>` yerine hepsini yaz.
 - Claude Code bir kuralı çiğnemeyi önerirse (test kapatmak, ArchUnit kuralını gevşetmek, merge edilmiş migration'ı değiştirmek) reddet; CLAUDE.md'deki "Yapma" listesine bak.
+- Claude, PR açıklamasındaki "Ne / Neden" bölümünü kendisi yazar. Metindeki her teknik iddia kodla karşılaştırılır; tutmayan cümle düzeltilir.
+- PR açıklamasına Claude atıf satırı eklenmez. Repodaki `.claude/settings.json` bunu `attribution.pr` ayarıyla da kapatır; commit'lerdeki `Co-Authored-By` satırı yerinde kalır.
 - Oturum uzadıysa ya da başka bir issue'ya geçiyorsan yeni bir Claude Code oturumu aç; bir oturum = bir issue.
