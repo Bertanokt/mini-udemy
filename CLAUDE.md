@@ -121,7 +121,8 @@ Diyagramlar metin tabanlıdır (PlantUML/Mermaid) ve yanında render edilmiş g�
 - Bir issue (ya da aynı modülde birbirine bağlı küçük issue'lar) = bir branch = bir PR. Branch: `feature/#<no>-kisa-ad` ya da `fix/#<no>-kisa-ad`. zsh'ta adı tırnakla yaz: `git switch -c 'feature/#12-auth-register'`.
 - Commit ve PR açıklamasında `Closes #<no>` (birden fazla için `Closes #a #b #c`).
 - Commit'ler geliştiricinin kendi git kimliğiyle atılır; `git config user.email`'i değiştirme.
-- **PR açıklamasındaki "Ne / Neden" bölümünü yazma.** Şablonu doldururken bu bölümü boş bırak ve kullanıcıdan kendi cümleleriyle yazmasını iste; kullanıcı yazmadan PR'ı açma. Diğer bölümleri (değişen dosyalar, test çıktısı, kriter → test tablosu, DoD) sen hazırlayabilirsin.
+- **Claude, PR açıklamasındaki "Ne / Neden" bölümünü kendisi yazar.** Metindeki her teknik iddia kodla karşılaştırılır; tutmayan cümle düzeltilir.
+- PR açıklamasına Claude atıf satırı eklenmez.
 - `main`'e doğrudan push yok. Push ve `gh pr create` öncesi kullanıcıdan onay al.
 
 ## Yapma
