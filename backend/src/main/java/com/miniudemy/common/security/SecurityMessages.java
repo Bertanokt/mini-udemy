@@ -19,6 +19,12 @@ public final class SecurityMessages {
     /** 403: hesap pasifleştirilmiş. */
     public static final String ACCOUNT_DISABLED = "Hesabınız devre dışı bırakılmış.";
 
+    /**
+     * 401: girişte e-posta ya da parola yanlış. İkisi için aynı mesaj; hangisinin yanlış olduğu söylenmez
+     * (FR-02).
+     */
+    public static final String INVALID_CREDENTIALS = "E-posta veya parola hatalı.";
+
     private SecurityMessages() {
     }
 }
