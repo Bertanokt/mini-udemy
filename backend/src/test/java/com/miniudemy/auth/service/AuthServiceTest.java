@@ -2,6 +2,7 @@ package com.miniudemy.auth.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -15,6 +16,8 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.mapstruct.factory.Mappers;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -24,6 +27,7 @@ import com.miniudemy.auth.domain.Role;
 import com.miniudemy.auth.domain.User;
 import com.miniudemy.auth.dto.AuthResponse;
 import com.miniudemy.auth.dto.LoginRequest;
+import com.miniudemy.auth.dto.RegisterRequest;
 import com.miniudemy.auth.dto.UserResponse;
 import com.miniudemy.auth.mapper.UserMapper;
 import com.miniudemy.auth.repository.UserRepository;
@@ -117,6 +121,86 @@ class AuthServiceTest {
 
         // 72 karakter ama 144 bayt (UTF-8): @Size(max = 72) geçer, BCrypt'in 72 bayt sınırını aşar.
         assertInvalidCredentials(new LoginRequest(EMAIL, "ş".repeat(72)));
+    }
+
+    // --- Kayıt (#12) ---
+
+    @Test
+    void register_storesBcryptHashNotPlainPassword_andReturnsUser() {
+        given(userRepository.existsByEmail("mehmet.kaya@example.com")).willReturn(false);
+        given(userRepository.saveAndFlush(any(User.class))).willAnswer(inv -> {
+            User saved = inv.getArgument(0);
+            ReflectionTestUtils.setField(saved, "id", 7L);
+            return saved;
+        });
+
+        UserResponse response = authService.register(
+                new RegisterRequest("Mehmet Kaya", "mehmet.kaya@example.com", PASSWORD, Role.INSTRUCTOR));
+
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).saveAndFlush(captor.capture());
+        User saved = captor.getValue();
+        assertThat(saved.getPasswordHash()).isNotEqualTo(PASSWORD).startsWith("$2a$");
+        assertThat(new BCryptPasswordEncoder().matches(PASSWORD, saved.getPasswordHash())).isTrue();
+        assertThat(saved.getRole()).isEqualTo(Role.INSTRUCTOR);
+        assertThat(saved.isActive()).isTrue();
+        assertThat(response.id()).isEqualTo(7L);
+        assertThat(response.email()).isEqualTo("mehmet.kaya@example.com");
+        assertThat(response.role()).isEqualTo(Role.INSTRUCTOR);
+    }
+
+    @Test
+    void register_asAdmin_returns400OnRoleField_andSavesNothing() {
+        assertThatThrownBy(() -> authService.register(
+                new RegisterRequest("Admin Olmak", "admin@example.com", PASSWORD, Role.ADMIN)))
+                .isInstanceOf(ApiException.class)
+                .satisfies(ex -> {
+                    ApiException api = (ApiException) ex;
+                    assertThat(api.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+                    assertThat(api.getErrors()).containsEntry("role", "Bu rol ile kayıt olunamaz.");
+                });
+        verify(userRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void register_withExistingEmail_returns409OnEmailField() {
+        given(userRepository.existsByEmail(EMAIL)).willReturn(true);
+
+        assertThatThrownBy(() -> authService.register(new RegisterRequest("Ayşe Yılmaz", EMAIL, PASSWORD, Role.STUDENT)))
+                .isInstanceOf(ApiException.class)
+                .hasMessage("Bu e-posta adresi zaten kayıtlı.")
+                .satisfies(ex -> {
+                    ApiException api = (ApiException) ex;
+                    assertThat(api.getStatus()).isEqualTo(HttpStatus.CONFLICT);
+                    assertThat(api.getErrors()).containsEntry("email", "Bu e-posta adresi zaten kayıtlı.");
+                });
+        verify(userRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void register_whenSameEmailIsSavedConcurrently_returns409NotServerError() {
+        given(userRepository.existsByEmail(EMAIL)).willReturn(false);
+        given(userRepository.saveAndFlush(any(User.class)))
+                .willThrow(new DataIntegrityViolationException("uk_users_email"));
+
+        assertThatThrownBy(() -> authService.register(new RegisterRequest("Ayşe Yılmaz", EMAIL, PASSWORD, Role.STUDENT)))
+                .isInstanceOf(ApiException.class)
+                .extracting(ex -> ((ApiException) ex).getStatus()).isEqualTo(HttpStatus.CONFLICT);
+    }
+
+    @Test
+    void register_withPasswordLongerThan72Bytes_returns400OnPasswordField_andDoesNotHash() {
+        // 72 karakter ama 144 bayt (UTF-8): @Size(max = 72) geçer; BCrypt.encode 72 baytı aşınca istisna fırlatır.
+        assertThatThrownBy(() -> authService.register(
+                new RegisterRequest("Ayşe Yılmaz", EMAIL, "ş".repeat(72), Role.STUDENT)))
+                .isInstanceOf(ApiException.class)
+                .satisfies(ex -> {
+                    ApiException api = (ApiException) ex;
+                    assertThat(api.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+                    assertThat(api.getErrors()).containsKey("password");
+                });
+        verify(passwordEncoder, never()).encode("ş".repeat(72));
+        verify(userRepository, never()).saveAndFlush(any());
     }
 
     private void assertInvalidCredentials(LoginRequest request) {
