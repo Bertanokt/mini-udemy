@@ -161,10 +161,10 @@ AFTER_COMMIT dinleyicisi, işlem bittiği için veritabanı yazması gerekiyorsa
 | `CourseApproved` | `course` | `CourseLifecycleService.approve` (#59) | `notification` (eğitmene) | Yayıncı var; dinleyici #124 |
 | `CourseRejected` (gerekçeli) | `course` | `CourseLifecycleService.reject` (#59) | `notification` (eğitmene) | Yayıncı var; dinleyici #124 |
 | `LessonCompleted` | `progress` | `LessonCompletionService.complete` (#41), yalnız ilk tamamlamada | `progress` (`ProgressListener`, kurs yüzdesi), `certificate` (uygunluk) | Yayıncı ve `progress` dinleyicisi (#43) var; `certificate` dinleyicisi sonra |
-| `QuizCompleted` | `quiz` | sınav çözme | `certificate` (uygunluk), `notification` (kursiyere) | Yalnız tip; yayıncı ve dinleyici sonra |
+| `QuizCompleted` | `quiz` | `QuizAttemptService.submit` (#54) | `certificate` (uygunluk), `notification` (kursiyere) | Yayıncı var; dinleyiciler sonra |
 | `CertificateIssued` | `certificate` | sertifika verme | `notification` (kursiyere) | Yalnız tip; yayıncı ve dinleyici sonra |
 
-Bugün `EnrollmentCreated`, `CourseApproved`, `CourseRejected` ve `LessonCompleted` gerçekten yayınlanıyor. İlk üçünün henüz üretim dinleyicisi yok; teslim kuralı `EnrollmentCreatedDeliveryTest` ile gösterilir. `LessonCompleted`'ı ders tamamlama ucu (`POST /api/lessons/{id}/complete`, #41) yayınlar; `ProgressListener` commit'ten sonra kurs yüzdesini günceller (`LessonCompletedDeliveryTest`). Diğer olayların yayıncıları ilgili issue'larda eklenir; tipleri şimdiden tanımlıdır ve alanları o issue'larda gerekirse genişletilir.
+Bugün `EnrollmentCreated`, `CourseApproved`, `CourseRejected`, `LessonCompleted` ve `QuizCompleted` gerçekten yayınlanıyor. `QuizCompleted`'ı sınav çözme ucu (`POST /api/quizzes/{id}/attempts`, #54) yayınlar. `EnrollmentCreated`, `CourseApproved` ve `CourseRejected`'ın henüz üretim dinleyicisi yok; teslim kuralı `EnrollmentCreatedDeliveryTest` ile gösterilir. `LessonCompleted`'ı ders tamamlama ucu (`POST /api/lessons/{id}/complete`, #41) yayınlar; `ProgressListener` commit'ten sonra kurs yüzdesini günceller (`LessonCompletedDeliveryTest`). Diğer olayların yayıncıları ilgili issue'larda eklenir; tipleri şimdiden tanımlıdır ve alanları o issue'larda gerekirse genişletilir.
 
 ## 6. Diyagramlar
 
