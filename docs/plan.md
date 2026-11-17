@@ -1,7 +1,7 @@
 # Proje planı: Gantt, görev dağılımı, risk analizi
 
 Proje raporu şablonunun 6. bölümü (#82). Planlanan takvim `CONTRIBUTING.md` › Sprint'teki milestone'lardan, görev sayıları GitHub'daki issue'lardan alındı.
-**Veri tarihi:** 16.11.2026 11:10 (İstanbul saati). Hafta 5'te gerçekleşenle güncellenecek.
+**Veri tarihi:** 16.11.2026 14:10 (İstanbul saati); risk tablosu ve freeze kararı (bölüm 6) 17.11.2026'da güncellendi. Hafta 5'te gerçekleşenle güncellenecek.
 
 ## 1. Takvim özeti
 
@@ -97,19 +97,32 @@ Rol etiketli 146 issue'nun 125'i P1, 21'i P2. Kapanan sayıları rol etiketine g
 
 ## 6. Risk analizi
 
-Olasılık ve etki: Düşük / Orta / Yüksek. "Durum" sütunu 16.11.2026 itibarıyladır.
+Olasılık ve etki: Düşük / Orta / Yüksek. "Durum" sütunu 17.11.2026 itibarıyladır.
 
 | # | Risk | Olasılık | Etki | Önlem | Durum |
 |---|---|---|---|---|---|
-| R1 | **Takvim kayması:** işler milestone'unda bitmez, feature freeze'e (17.11) yetişmez | Yüksek | Yüksek | Haftalık ilerleme raporlarıyla takip; P2 kesme kuralı (Hafta 3'ün P1'leri bitmezse Hafta 4'ün P2'leri kapatılır); freeze sonrası yalnız bug fix | **Gerçekleşti.** Hafta 1–3'ten 65 issue açık; ilk PR'lar 11.11'de geldi. Hafta 4'ün 10 P2'si henüz kapatılmadı |
-| R2 | **Kritik yol bağımlılığı:** kurs, kayıt ve test işleri auth zincirini (#8 → #10 → #12/#13 → #14) ve kurs entity'lerini (#21) bekler | Yüksek | Yüksek | Issue'larda "Blocked by" satırı; bağımlılığı kapanmayan işe başlanmaz; zincirdeki işler öncelikli | Kısmen giderildi: #8, #9, #10, #13, #21 kapandı; #12 ve #14 açık |
+| R1 | **Takvim kayması:** işler milestone'unda bitmez, feature freeze'e (17.11) yetişmez | Yüksek | Yüksek | Haftalık ilerleme raporlarıyla takip; P2 kesme kuralı (Hafta 3'ün P1'leri bitmezse Hafta 4'ün P2'leri kapatılır); freeze sonrası yalnız bug fix | **Gerçekleşti.** İlk PR'lar 11.11'de geldi. P2 kesme kuralı 11.11'de uygulanmadı; 17.11'de freeze kararıyla kapsam yeniden belirlendi (bölüm 6.1). Kararla birlikte 111 issue açık |
+| R2 | **Kritik yol bağımlılığı:** kurs, kayıt ve test işleri auth zincirini (#8 → #10 → #12/#13 → #14) ve kurs entity'lerini (#21) bekler | Yüksek | Yüksek | Issue'larda "Blocked by" satırı; bağımlılığı kapanmayan işe başlanmaz; zincirdeki işler öncelikli | Büyük ölçüde giderildi: #8, #9, #10, #12, #13, #21 kapandı; #14 açık |
 | R3 | **Ekip üyesinin müsait olmaması** | Orta | Yüksek | Rolün işi takılırsa başka üye etiketi değiştirerek devralır; assignee kuralı kimin çalıştığını gösterir | Gerçekleşti: Sedat 11.11'den itibaren müsait değildi, #8 ve #9'u Bertan devraldı; Sedat 15.11'de #21 ile döndü |
-| R4 | **Sahipsiz ya da iki kişinin aynı anda yaptığı işler** | Yüksek | Orta | İşe başlarken assignee + "In Progress" zorunlu; kişi başı en fazla 2 iş (WIP) | Açık: Hafta 2–3'ün açık 56 issue'sunun büyük kısmının sahibi yok |
-| R5 | **Testlerin yetişmemesi:** test issue'ları test edeceği kodu bekler, kod gecikince test de gecikir | Orta | Yüksek | Test planı (#92); her FR/NFR'ye test yöntemi; JaCoCo ile coverage takibi (#89, hedef servis katmanında ≥ %70); PR'larda test kanıtı | İzleniyor: `main`'de 70 test; giriş testleri #13 ile geldi |
+| R4 | **Sahipsiz ya da iki kişinin aynı anda yaptığı işler** | Yüksek | Orta | İşe başlarken assignee + "In Progress" zorunlu; kişi başı en fazla 2 iş (WIP) | Açık: 111 açık issue'nun 109'unun sahibi yok |
+| R5 | **Testlerin yetişmemesi:** test issue'ları test edeceği kodu bekler, kod gecikince test de gecikir | Orta | Yüksek | Test planı (#92); her FR/NFR'ye test yöntemi; JaCoCo ile coverage takibi (#89, hedef servis katmanında ≥ %70); PR'larda test kanıtı | İzleniyor: `main`'de 80 test; kayıt ve giriş testleri #12 ve #13 ile geldi |
 | R6 | **Review'sız merge ve doküman–kod tutarsızlığı** | Orta | Orta | Her PR'da CI + Kalite ve Süreç sorumlusunun hızlı kontrolü (#84); kod değişirse OpenAPI/diyagram aynı PR'da; OpenAPI–kod eşitleme (#66), diyagram–kod kontrolü (#97) | Gerçekleşti ve önlem alındı: ilk 4 PR onaysız birleşti; `fullName` uzunluğu sözleşmede 100, ER'de 150'ydi, review'da yakalanıp düzeltildi |
 | R7 | **Giriş denemelerinde sınır yok** (güvenlik denetimi O4): kaba kuvvet ya da sızmış parola listeleriyle hesap ele geçirme. Parola yenileme isteği (#115) için de geçerli | Düşük (yerel demo) | Yüksek | Kapsam kararı (15.11.2026, Bertan): sınır konmadı. Mevcut önlemler: BCrypt (her deneme yavaş), yanlış e-posta ve yanlış parola için aynı 401, kullanıcı yokken de parola karşılaştırması. Gerçek kullanımda IP + e-posta başına deneme sınırı ve 429 yanıtı | Kabul edildi (kapsam dışı) |
-| R8 | **Demo günü ortamın çalışmaması** (kurulum, veri, ağ) | Orta | Yüksek | Tek komutla kurulum (`docker compose up --build`, NFR-16); seed data (#67); süre tutularak demo provası ve yedek demo kaydı (#106) | Planlandı (Hafta 5 – Sunum) |
+| R8 | **Demo günü ortamın çalışmaması** (kurulum, veri, ağ) | Orta | Yüksek | Tek komutla kurulum (`docker compose up --build`, NFR-16); seed data (#67); süre tutularak demo provası ve yedek demo kaydı (#106) | Planlandı (Hafta 5 – Sunum). Ayrı demo profili (#73) kesildi; demo mevcut `docker compose up --build` ile yapılacak |
 | R9 | **Üyenin kendi PR'ındaki kararları sunumda anlatamaması** (bireysel katkı katsayısı 0,5–1,1) | Orta | Yüksek | PR açılmadan önce "Ne / Neden" bölümü PR sahibi tarafından okunur; katkı notları (`docs/katki/`); review'lar modüller arasında dönüşümlü | İzleniyor |
+| R10 | **Alan rolünde iş yükü:** `rol:alan`'da 33 açık iş var (en yüksek), Sedat'ın kapasitesi düşük. State, Strategy, Factory Method ve Observer desenleri ile sınıf ve sekans diyagramları bu rolde | Yüksek | Yüksek | İşlerin diğer rollere dağıtımına Bertan karar verecek; devralma kuralı (`CONTRIBUTING.md` › İş seçme) | Açık (17.11.2026): 33 işin hiçbiri birine atanmamış |
+
+### 6.1 Feature freeze kararı (17.11.2026, Bertan)
+
+İlke: proje tanım dokümanının §3'ünde adıyla geçen hiçbir iş kesilmedi. Senaryo dışındakiler "İnce" (minimum çalışan hal) yapılacak; her birinin gövdesinde "İnce kapsam (17.11.2026 kararı)" notu neyin yapılıp neyin yapılmayacağını yazıyor.
+
+| Karar | Issue'lar | Not |
+|---|---|---|
+| İnce | #115, #116, #117 (parola yenileme, profil), #118 (kategori yönetimi), #142 (yorum moderasyonu), #143 (puan filtresi), #144 (şikâyet), #145, #147 (platform raporları), #146 (şikâyet ve yorum moderasyonu ekranları) | #146 bölündü: kategori ekranı #118'e taşındı |
+| Kesin | #87, #91, #94 (C4, bileşen, dağıtım diyagramları), #72 (README) | Diyagramları rapor şablonu istiyor; README kullanım kılavuzunun kaynağı |
+| Kesildi (not planned) | #73 (compose demo profili), #88 (UI taslakları), #185 (kurs süresinde N+1 sorgu) | #88 yerine raporda gerçek ekran görüntüleri; #185 raporda "bilinen performans sınırı" (#69) |
+
+Karar sonrası açık iş: 111 (mimar 25, alan 33, veri 24, kalite 29). "Not planned" kapatılan issue'lar board'da "Done" sütununa düşse de tamamlanan iş olarak sayılmaz; tamamlanan iş GitHub'daki kapanma nedeninden (completed) alınır.
 
 ## 7. Bütçe
 
