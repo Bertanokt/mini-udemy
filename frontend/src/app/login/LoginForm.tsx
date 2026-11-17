@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/AuthProvider";
@@ -18,7 +19,10 @@ type FieldErrors = Partial<Record<"email" | "password", string>>;
 export function LoginForm() {
   const router = useRouter();
   const { status, login } = useAuth();
-  const next = safeNextPath(useSearchParams().get("next"));
+  const searchParams = useSearchParams();
+  const next = safeNextPath(searchParams.get("next"));
+  // Kayıt sayfasından gelindiyse (#17) bilgi mesajı.
+  const justRegistered = searchParams.get("kayit") === "tamam";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -63,6 +67,11 @@ export function LoginForm() {
 
   return (
     <form className="auth-form" onSubmit={onSubmit} noValidate>
+      {justRegistered && !error && (
+        <p className="auth-notice" role="status">
+          Kaydınız oluşturuldu. Şimdi giriş yapabilirsiniz.
+        </p>
+      )}
       {error && (
         <p className="auth-error" role="alert">
           {error}
@@ -97,6 +106,9 @@ export function LoginForm() {
       <button type="submit" disabled={submitting}>
         {submitting ? "Giriş yapılıyor…" : "Giriş yap"}
       </button>
+      <p className="auth-switch">
+        Hesabın yok mu? <Link href="/register">Kayıt ol</Link>
+      </p>
     </form>
   );
 }
