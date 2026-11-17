@@ -68,9 +68,81 @@ a {
   color: var(--accent);
 }
 
+.site-header {
+  position: relative;
+}
+
 .nav {
   display: flex;
+  align-items: center;
   gap: 16px;
+}
+
+.nav-user {
+  color: var(--muted);
+  max-width: 16ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav-logout,
+.nav-toggle {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.nav-toggle {
+  display: none;
+}
+
+.nav-notifications:empty {
+  display: none;
+}
+
+/* Dar ekranda menü düğmeyle açılır; açıkken başlığın altında tam genişlikte liste (#19). */
+@media (max-width: 600px) {
+  .nav-toggle {
+    display: block;
+  }
+
+  .nav {
+    display: none;
+  }
+
+  .nav.open {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    position: absolute;
+    top: 64px;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 16px 16px;
+  }
+
+  .nav.open > a,
+  .nav.open > .nav-user,
+  .nav.open > .nav-logout {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    max-width: none;
+  }
+
+  .nav.open > .nav-logout {
+    border: none;
+    text-align: left;
+    padding-left: 0;
+  }
 }
 
 .site-main {

@@ -1,22 +1,24 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/AuthProvider";
-import { homeForRole } from "@/lib/auth/routes";
+import { homeForRole, safeNextPath } from "@/lib/auth/routes";
 
 type FieldErrors = Partial<Record<"email" | "password", string>>;
 
 /**
  * Giriş formu (#18).
- * - Başarılı girişte token AuthProvider'da saklanır, kullanıcı rolünün sayfasına gider (routes.ts).
+ * - Başarılı girişte token AuthProvider'da saklanır. `?next=` geçerli bir site içi adresse oraya (#19), değilse
+ *   kullanıcının rolünün sayfasına gidilir (routes.ts).
  * - 401 (yanlış e-posta/parola) ve 403 (pasif hesap) sunucunun mesajıyla, 400 alan hatası ilgili alanın altında gösterilir.
- * - Zaten giriş yapmış kullanıcı ana sayfaya yönlendirilir.
+ * - Zaten giriş yapmış kullanıcı `?next=` adresine ya da ana sayfaya yönlendirilir.
  */
 export function LoginForm() {
   const router = useRouter();
   const { status, login } = useAuth();
+  const next = safeNextPath(useSearchParams().get("next"));
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -27,9 +29,9 @@ export function LoginForm() {
 
   useEffect(() => {
     if (status === "authenticated" && !loggingIn.current) {
-      router.replace("/");
+      router.replace(next ?? "/");
     }
-  }, [status, router]);
+  }, [status, router, next]);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -39,7 +41,7 @@ export function LoginForm() {
     loggingIn.current = true;
     try {
       const user = await login({ email, password });
-      router.replace(homeForRole(user.role));
+      router.replace(next ?? homeForRole(user.role));
     } catch (e) {
       loggingIn.current = false;
       setSubmitting(false);
