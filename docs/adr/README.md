@@ -39,11 +39,12 @@ ADR, kararın alındığı iş ile **aynı PR'da** yazılır.
 | [ADR-005](0005-ayri-frontend-rest-openapi.md) | Ayrı frontend, REST API ve önce OpenAPI sözleşmesi | Kabul edildi | #84 |
 | [ADR-006](0006-dto-mapper-mapstruct.md) | DTO + Mapper deseni, MapStruct ile ve eşlenmemiş alan derleme hatası | Kabul edildi | #9 |
 | [ADR-007](0007-csp-nonce-suz.md) | Next.js'te nonce'suz Content-Security-Policy (`'unsafe-inline'`) | Kabul edildi | #16 |
+| [ADR-008](0008-strategy-puanlama.md) | Strategy deseni ile sınav puanlama | Kabul edildi | #52 |
 
 ### Planlanan
 
 | No | Konu | Issue |
 |---|---|---|
-| sonraki numaralar | Desen kararları: State (#85), Factory Method (#110), Observer (#42), Strategy (#52) | ilgili issue'lar |
+| sonraki numaralar | Desen kararları: State (#85), Factory Method (#110), Observer (#42) | ilgili issue'lar |
 
 Genel mimari kurallar: [`docs/architecture.md`](../architecture.md).
