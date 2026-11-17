@@ -690,3 +690,41 @@ a {
     flex-basis: calc(100% - 80px);
   }
 }
+
+/* Kategori yönetimi (#118); soru bankasının qb-* sınıflarını kullanır */
+.cat-add-row {
+  display: flex;
+  gap: 8px;
+}
+
+.cat-add-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.cat-item {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cat-name {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.cat-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.cat-edit input {
+  width: 100%;
+}
+
+.cat-edit label {
+  display: block;
+}

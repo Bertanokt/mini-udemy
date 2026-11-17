@@ -51,7 +51,7 @@ package "course" #E3F4DC {
   entity categories {
     * id : bigserial <<PK>>
     --
-    * name : varchar(100) <<UK>>
+    * name : varchar(100) <<UK lower>>
     * created_at : timestamptz
   }
 

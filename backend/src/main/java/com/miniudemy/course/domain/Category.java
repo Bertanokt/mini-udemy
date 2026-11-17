@@ -15,7 +15,7 @@ import org.hibernate.annotations.CreationTimestamp;
  * Kurs kategorisi (Yazılım, Tasarım …).
  *
  * Tablo: `categories` (migration `V202611131449__create_course_structure.sql`, ER diyagramı › course). Ad
- * tekildir ({@code uk_categories_name}).
+ * tekildir: tam eşleşme {@code uk_categories_name}, büyük/küçük harf duyarsız {@code uk_categories_name_lower}.
  */
 @Entity
 @Table(name = "categories")
@@ -37,6 +37,10 @@ public class Category {
     }
 
     public Category(String name) {
+        this.name = name;
+    }
+
+    public void rename(String name) {
         this.name = name;
     }
 

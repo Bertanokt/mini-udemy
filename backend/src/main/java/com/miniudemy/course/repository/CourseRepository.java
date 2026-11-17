@@ -23,6 +23,9 @@ import com.miniudemy.course.domain.CourseLevel;
  */
 public interface CourseRepository extends JpaRepository<Course, Long> {
 
+    /** Kategori herhangi bir kursta (durumu ne olursa olsun) kullanılıyor mu; kategori silme kuralı (#118). */
+    boolean existsByCategoryId(Long categoryId);
+
     String CATALOG_FILTER = """
             from Course c
             where c.status = com.miniudemy.course.domain.CourseStatus.PUBLISHED

@@ -2570,6 +2570,7 @@ components:
       properties:
         name:
           type: string
+          description: Baştaki ve sondaki boşluklar kırpılır; uzunluk kırpılmış ad üzerinden denetlenir.
           minLength: 2
           maxLength: 100
           example: Yazılım Geliştirme
