@@ -22,7 +22,7 @@ Kapsamın tek kaynağı hocanın proje tanım dokümanıdır (modüller A–L, s
 | Sekans: sertifika oluşturma ve bildirim | `diagrams/seq-certificate.*` | Hafta 4 |
 | Dağıtım diyagramı | `diagrams/deployment.*` | Hafta 4 |
 | SOLID ve OOP (koddan örneklerle) | `solid.md` | Hafta 4 |
-| İzlenebilirlik matrisi, test raporu, kütüphaneler | `traceability.md`, `test-report.md`, `dependencies.md` | Hafta 5 |
+| İzlenebilirlik matrisi, test raporu, kütüphaneler | [`traceability.md`](traceability.md), `test-report.md`, `dependencies.md` | Hafta 5 |
 | Demo senaryosu | `demo.md` | Hafta 5 |
 | Proje raporu (Word şablonu) | `rapor/` | Sunum (teslim 02.12.2026, .docx) |
 
