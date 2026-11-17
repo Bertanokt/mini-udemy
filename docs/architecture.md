@@ -108,7 +108,7 @@ Bir modül başka bir modülle **yalnız iki yoldan** konuşur:
 | `progress` | `course`, `enrollment` | `LessonCompleted` |
 | `quiz` | `course`, `enrollment` | – |
 | `certificate` | `course`, `progress`, `quiz` | `LessonCompleted`, `QuizCompleted` |
-| `review` | `course`, `enrollment` | – |
+| `review` | `auth`, `course`, `enrollment` | – |
 | `notification` | `auth` | Tüm bildirim olayları (bölüm 5) |
 | `admin` | `auth`, `course`, `enrollment`, `progress`, `certificate`, `review` | – |
 
@@ -188,6 +188,7 @@ flowchart LR
   certificate --> course
   certificate --> progress
   certificate --> quiz
+  review --> auth
   review --> course
   review --> enrollment
   notification --> auth
