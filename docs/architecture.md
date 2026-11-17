@@ -53,6 +53,37 @@ Bağımlılık yönü tek yönlüdür: **controller → service → repository**
 - Hata yanıtı controller'da elle kurulmaz; service tanımlı bir istisna fırlatır, `common` içindeki global handler standart hata gövdesine çevirir (`CLAUDE.md` › Standart hata formatı).
 - Şema yalnız Flyway migration'ı ile değişir (`backend/src/main/resources/db/migration/README.md`).
 
+### Yetki kontrolleri nasıl yazılır
+
+Kimlik doğrulama ve rol kontrolü `common/security/SecurityConfig`'te kurulu (#10, [ADR-002](adr/0002-jwt-stateless-kimlik-dogrulama.md)). Yeni bir uç yazarken üç soru sorulur: kim çağırabilir, hangi rol, kimin kaynağı?
+
+1. **Kimlik:** sözleşmede `security: []` olmayan her uç token ister. Token yoksa, geçersizse ya da süresi dolmuşsa filtre 401 döner; uçta ayrıca bir şey yazılmaz. Yeni bir **herkese açık** uç, sözleşmede `security: []` ile ve `SecurityConfig.PUBLIC_GET` / `PUBLIC_POST` listesinde aynı PR'da eklenir.
+2. **Rol:**
+   - `/api/admin/**` yalnız ADMIN'e, `/api/instructor/**` yalnız INSTRUCTOR'a açıktır. Bu adres kuralı `SecurityConfig`'te; bu öneklerin altındaki uçlara ayrıca anotasyon yazılmaz.
+   - Diğer uçlarda rol kuralı **controller metodunda** `@PreAuthorize` ile yazılır (`@EnableMethodSecurity` açık).
+   - Rol token'daki claim'den değil, her istekte veritabanından okunur (`AccountLookup`). Rolü değişen kullanıcının eski token'ı eski rolle çalışmaz.
+   - Ret 403 ve standart gövde döner ("Bu işlem için yetkiniz yok."), 500 değil.
+3. **Giriş yapan kullanıcı ve sahiplik:**
+   - Controller kullanıcının id'sini `CurrentUser.id(authentication)` ile alır ve service'e **id olarak** verir. Service `Authentication`'a ya da `SecurityContextHolder`'a erişmez.
+   - "Bu kurs bu eğitmenin mi?" gibi sahiplik kontrolleri rol değil iş kuralıdır. Service'te yapılır ve `ForbiddenException` fırlatır (NFR-05; proje dokümanı §6 "yetkisiz kurs düzenleme" testi).
+
+```java
+@PostMapping("/api/courses")
+@PreAuthorize("hasRole('INSTRUCTOR')")                       // 2. rol: uçta
+public CourseResponse create(@Valid @RequestBody CreateCourseRequest request, Authentication authentication) {
+    return courseService.create(CurrentUser.id(authentication), request);   // 3. kullanıcı id olarak
+}
+
+// CourseService — 3. sahiplik: service'te
+if (!course.getInstructorId().equals(userId)) {
+    throw new ForbiddenException("Bu kursu düzenleme yetkiniz yok.");
+}
+```
+
+Örnekler ve testleri:
+- `SecurityConfigTest`: `hasRole('ADMIN')` ve `hasRole('INSTRUCTOR')` (öğrenci 403, doğru rol 200); adres kuralı; rolün veritabanından geldiği.
+- `MeControllerTest`: `GET /api/me` için token'sız 401, kendi profili 200, pasif hesap 403.
+
 ## 4. Modüller arası iletişim
 
 Bir modül başka bir modülle **yalnız iki yoldan** konuşur:
