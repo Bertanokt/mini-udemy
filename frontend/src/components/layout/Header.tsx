@@ -7,8 +7,9 @@ import type { Role } from "@/lib/api/auth";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { HOME_BY_ROLE } from "@/lib/auth/routes";
 
-/** Rolün kendi paneli; öğrencinin ayrı bir paneli yok (kursları katalogda). */
+/** Rolün kendi sayfası: eğitmen/yönetici paneli, öğrencinin kayıtlı kursları (#37). */
 const PANEL_LINKS: Partial<Record<Role, { href: string; label: string }>> = {
+  STUDENT: { href: "/my-courses", label: "Kayıtlı kurslarım" },
   INSTRUCTOR: { href: HOME_BY_ROLE.INSTRUCTOR, label: "Eğitmen paneli" },
   ADMIN: { href: HOME_BY_ROLE.ADMIN, label: "Yönetici paneli" },
 };
