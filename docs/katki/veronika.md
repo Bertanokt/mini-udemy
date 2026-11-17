@@ -25,7 +25,7 @@ GitHub: [@vliashenko6](https://github.com/vliashenko6) · Son güncelleme: 16.11
 
 ## Kararlar ve nedenleri
 
-- **Her NFR ölçülebilir bir ölçütle yazıldı.** "Hızlı olmalı" test edilemez; "size en fazla 50" ya da "360 px'te yatay kaydırma yok" test edilebilir. Sınırlar proje tanım dokümanının §5'inden alındı (video 200 MB, doküman 20 MB, kapak 2 MB; aşan 413, izin verilmeyen tür 415).
+- **Her NFR ölçülebilir bir ölçütle yazıldı.** "Hızlı olmalı" test edilemez; "size en fazla 50" ya da "360 px'te yatay kaydırma yok" test edilebilir. §5 dosya türü ve boyutu denetimi istiyor; sınırları (video 200 MB, doküman 20 MB, kapak 2 MB; aşan 413, izin verilmeyen tür 415) NFR-11'de biz belirledik.
 - **Test planında her FR ve NFR bir test yöntemine bağlandı.** Böylece hiçbir gereksinim testsiz kalmıyor; test issue'su olmayan 7 FR tabloda "–" ile açıkça görünüyor.
 - **Coverage hedefi servis katmanında %70.** İş kurallarının çoğu servis katmanında; %100 bu sürede gerçekçi değil. İlk ölçüm %79,7.
 - **Coverage raporu CI'da saklanıyor.** Herkes bilgisayarına bir şey kurmadan her PR'ın raporunu indirebiliyor.
