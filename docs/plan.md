@@ -1,7 +1,7 @@
 # Proje planı: Gantt, görev dağılımı, risk analizi
 
 Proje raporu şablonunun 6. bölümü (#82). Planlanan takvim `CONTRIBUTING.md` › Sprint'teki milestone'lardan, görev sayıları GitHub'daki issue'lardan alındı.
-**Veri tarihi:** 16.11.2026 11:10 (İstanbul saati); risk tablosu ve freeze kararı (bölüm 6) 17.11.2026'da güncellendi. Hafta 5'te gerçekleşenle güncellenecek.
+**Veri tarihi:** 16.11.2026 14:10 (İstanbul saati); risk tablosu ve freeze kararı (bölüm 6) 17.11.2026'da güncellendi. Hafta 5'te gerçekleşenle güncellenecek.
 
 ## 1. Takvim özeti
 

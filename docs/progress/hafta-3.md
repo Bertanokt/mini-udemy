@@ -2,7 +2,7 @@
 
 **Milestone:** Hafta 3: Ders izleme, ilerleme, sınav oluşturma (bitiş 10.11.2026)
 **Rapor tarihi:** 16.11.2026
-**Veri tarihi:** 16.11.2026 10:52 (İstanbul saati). Kaynak: GitHub API (milestone, issue, PR, CI çalışmaları) ve `git log origin/main`.
+**Veri tarihi:** 16.11.2026 13:52 (İstanbul saati). Kaynak: GitHub API (milestone, issue, PR, CI çalışmaları) ve `git log origin/main`.
 
 Bu rapor hafta bittikten sonra yazıldı. Hafta sonundaki durum (10.11) ile bugünkü durum (16.11) ayrı sütunlarda verilmiştir; geriye dönük tarih atılmamıştır. Board sütun geçmişi kayıtlı olmadığından planlanan iş listesi milestone'dan alınmıştır.
 
