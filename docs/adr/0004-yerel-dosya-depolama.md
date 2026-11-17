@@ -71,3 +71,27 @@ Eğitmen videoyu harici platforma yükler, derse yalnız bağlantısını ekler.
 - Yükleme testleri: uzantısı `.mp4` yapılmış çalıştırılabilir dosya 415, sınırı aşan dosya 413 (NFR-11, NFR-12; #111, #112). Bu testler Bölüm 6 testlerindendir, silinmez ve `@Disabled` yapılmaz (`CLAUDE.md` › Test beklentisi).
 - İçerik servisi testleri: kayıtsız kursiyere 403, girişsize 401, kayıtlıya 200; `Range` isteğine 206 (#113).
 - `CLAUDE.md` › Yapma: "Dosya depolama için MinIO/S3 ya da dış servis ekleme (ADR-004)". Bu kararı değiştirmek yeni bir ADR gerektirir.
+
+## Ek (17.11.2026): tür tespitinin uygulanışı
+
+Bu ek kararı değiştirmiyor; "tür, dosyanın içeriğinden denetlenir" kararının #111'de (PR #201) nasıl uygulandığını ve bedelini kaydediyor. Kayıt tarihi: 17.11.2026, karar veren: Bertan.
+
+**Seçilen:** küçük, kendi yazdığımız bir tespit sınıfı: `content/service/FileFormatDetector`. Dosyanın ilk 64 baytına bakıyor:
+- PDF: `%PDF-`;
+- MP4: 4. bayttan itibaren `ftyp` (QuickTime `qt  ` hariç);
+- WEBM: EBML başlığı + DocType `webm`;
+- JPEG, PNG ve WEBP: imzaları.
+
+DOCX ve PPTX için zip'i açıp `word/document.xml` / `ppt/presentation.xml` girdisine bakıyor. Yalnız projede kabul edilen 8 tür tanınıyor; diğer her şey (çalıştırılabilir dosya, düz zip, başka Matroska, boş dosya) "tanınmadı" sayılıp 415 alıyor.
+
+**Değerlendirilen alternatif: Apache Tika** (`tika-core`). Binlerce türü tanıyan, yaygın ve bakımı yapılan bir kütüphane.
+- **Neden seçilmedi:**
+  - 8 tür için yeni bir bağımlılık getiriyor (`CLAUDE.md`: yeni bağımlılık sorulmadan eklenmez).
+  - Tika kendi tür adlarını döndürür; bunların bizim kabul listemizle (`FilePolicy`) eşleştirilmesi yine bizde kalırdı, yani kural kodu ortadan kalkmazdı.
+  - Office dosyalarını (DOCX/PPTX) ayırt etmek için `tika-core`'un yanında ek modüller gerekir; bu ihtiyaç için ağır.
+
+  Tika projede denenmedi; bu değerlendirme Tika'nın dokümantasyonuna dayanıyor.
+- **Bedeli (bizim yolumuz):**
+  - Tür imzalarının doğruluğu bizim sorumluluğumuzda. `FileFormatDetectorTest`, her tür için bir örnekle ve yanıltıcı dosyalarla bunu koruyor. Kodu bilerek bozunca (her Matroska'yı webm saymak) test kırıldı.
+  - Yeni bir tür (ör. ses) gelirse imzası bu sınıfa elle eklenir.
+  - İmza kontrolü "başı doğru, gerisi bozuk" dosyaları yakalamaz. Böyle bir video yüklenir ama oynatılamaz. Bu bir güvenlik açığı değil, çünkü dosya hiçbir zaman çalıştırılmıyor ve yalnız tanımlı türün Content-Type'ıyla sunuluyor (#113).
