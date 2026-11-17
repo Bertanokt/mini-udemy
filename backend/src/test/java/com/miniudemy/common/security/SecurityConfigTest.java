@@ -59,6 +59,7 @@ class SecurityConfigTest {
     private static final long DISABLED = 3L;
     private static final long DELETED = 4L;
     private static final long DEMOTED = 5L;
+    private static final long INSTRUCTOR = 6L;
 
     @Autowired
     private MockMvc mockMvc;
@@ -78,6 +79,7 @@ class SecurityConfigTest {
         given(accountLookup.findById(ADMIN)).willReturn(Optional.of(new AccountSnapshot(true, "ADMIN")));
         given(accountLookup.findById(DISABLED)).willReturn(Optional.of(new AccountSnapshot(false, "STUDENT")));
         given(accountLookup.findById(DELETED)).willReturn(Optional.empty());
+        given(accountLookup.findById(INSTRUCTOR)).willReturn(Optional.of(new AccountSnapshot(true, "INSTRUCTOR")));
         // Token'ı ADMIN iken alınmış, sonra rolü STUDENT'a düşürülmüş kullanıcı.
         given(accountLookup.findById(DEMOTED)).willReturn(Optional.of(new AccountSnapshot(true, "STUDENT")));
     }
@@ -175,6 +177,17 @@ class SecurityConfigTest {
     }
 
     @Test
+    void preAuthorizeInstructor_asStudent_returns403WithStandardBody() throws Exception {
+        expectError(withToken(get("/test-secure/instructor-only"), STUDENT, "STUDENT"), 403, SecurityMessages.FORBIDDEN);
+    }
+
+    @Test
+    void preAuthorizeInstructor_asInstructor_returns200() throws Exception {
+        mockMvc.perform(withToken(get("/test-secure/instructor-only"), INSTRUCTOR, "INSTRUCTOR"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void disabledUser_returns403AccountDisabled() throws Exception {
         expectError(withToken(get("/api/me/ping"), DISABLED, "STUDENT"), 403, SecurityMessages.ACCOUNT_DISABLED);
     }
@@ -234,6 +247,13 @@ class SecurityConfigTest {
         @PreAuthorize("hasRole('ADMIN')")
         String adminOnly() {
             return "admin";
+        }
+
+        /** docs/architecture.md › Yetki kontrolleri: uç bazlı rol kuralı örneği (#14). */
+        @GetMapping("/test-secure/instructor-only")
+        @PreAuthorize("hasRole('INSTRUCTOR')")
+        String instructorOnly() {
+            return "instructor";
         }
     }
 }
