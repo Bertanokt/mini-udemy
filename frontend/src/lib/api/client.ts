@@ -1,13 +1,13 @@
 /**
  * Backend'e giden tüm istekler bu katmandan geçer.
- * Sayfalar/bileşenler fetch'i doğrudan çağırmaz; endpoint modülleri (health.ts, ileride auth.ts, courses.ts ...)
+ * Sayfalar/bileşenler fetch'i doğrudan çağırmaz; endpoint modülleri (health.ts, auth.ts, catalog.ts ...)
  * bu dosyadaki apiFetch'i kullanır.
  */
 
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
-/** Backend'in döndüğü hata gövdesi. Sözleşme docs/api/openapi.yaml'da netleşecek (bkz. global exception handler issue'su). */
+/** Backend'in döndüğü hata gövdesi (docs/api/openapi.yaml › ErrorResponse). */
 export interface ApiErrorBody {
   status: number;
   message: string;
@@ -27,26 +27,50 @@ export class ApiError extends Error {
 type TokenProvider = () => string | null;
 
 let tokenProvider: TokenProvider = () => null;
+let unauthorizedHandler: () => void = () => {};
 
-/** Auth katmanı (auth context) giriş yapıldığında token kaynağını buraya bağlar. */
+/** Auth katmanı (AuthProvider) token kaynağını buraya bağlar. */
 export function setTokenProvider(provider: TokenProvider): void {
   tokenProvider = provider;
 }
 
-export async function apiFetch<T>(
-  path: string,
-  init: RequestInit = {},
-): Promise<T> {
+/** Token'la giden bir istek 401 alınca çağrılır: auth katmanı token'ı siler ve oturumu kapatır. */
+export function setUnauthorizedHandler(handler: () => void): void {
+  unauthorizedHandler = handler;
+}
+
+async function send(path: string, init: RequestInit, token: string | null): Promise<Response> {
   const headers = new Headers(init.headers);
   if (init.body !== undefined && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
-  const token = tokenProvider();
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
+  } else {
+    headers.delete("Authorization");
   }
+  return fetch(`${API_BASE_URL}${path}`, { ...init, headers });
+}
 
-  const response = await fetch(`${API_BASE_URL}${path}`, { ...init, headers });
+/**
+ * Backend'e istek atar; token varsa `Authorization: Bearer` ekler.
+ *
+ * Token'la giden istek 401 alırsa (token geçersiz ya da süresi dolmuş) oturum kapatılır ve istek **bir kez**
+ * token'sız tekrarlanır. Herkese açık uçlar (katalog vb.) geçersiz token'la da 401 döndüğü için kullanıcı bu
+ * sayede sayfayı token'sız görmeye devam eder; korumalı bir uçta tekrar da 401 döner ve hata çağırana iletilir
+ * (ADR-002, sözleşme › Kimlik doğrulama).
+ */
+export async function apiFetch<T>(
+  path: string,
+  init: RequestInit = {},
+): Promise<T> {
+  const token = tokenProvider();
+  let response = await send(path, init, token);
+
+  if (response.status === 401 && token) {
+    unauthorizedHandler();
+    response = await send(path, init, null);
+  }
 
   if (!response.ok) {
     let body: ApiErrorBody | undefined;
