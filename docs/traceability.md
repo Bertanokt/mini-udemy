@@ -86,10 +86,10 @@ Bu dört durumun testi henüz yok; hepsi #139'da ve ilgili servis testlerinde ya
 |---|---|---|
 | Uçtan uca çalışan platform | Senaryo 1–4'ün gereksinimleri ve issue'ları (bölüm 1.2) | #65, #138 (E), #106 demo provası |
 | Eğitmen paneli | #38 | #138 (E), #68 bug bash |
-| Yönetici paneli | #62, #63, #146, #147 | #61 (U), #68 bug bash |
+| Yönetici paneli | #62, #63, #118, #146, #147 | #61 (U), #68 bug bash |
 | Örnek kurs verileri | #67 seed data | #68 bug bash, #70 demo senaryosu |
 | API dokümantasyonu | #3 ✓, #4 ✓, #5 ✓, #108 ✓ | #66 kodla eşitleme (İ) |
-| Mimari dokümantasyon | #6 ✓, ADR'ler (#80 ✓, #81 ✓, #84 ✓), #87 C4, #91 bileşen diyagramı, #103 rapor bölüm 4 | #97 (İ) |
+| Mimari dokümantasyon | #6 ✓, ADR'ler (#80 ✓, #81 ✓, #84 ✓), #87 C4, #91 bileşen diyagramı, #94 dağıtım diyagramı, #103 rapor bölüm 4 | #97 (İ) |
 | Test senaryoları | #92 ✓ test planı, #70 demo senaryosu | #99 test raporu |
 
 ## 2. Gereksinim → issue → test
