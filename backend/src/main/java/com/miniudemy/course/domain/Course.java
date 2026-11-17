@@ -133,6 +133,15 @@ public class Course {
         return status == CourseStatus.PUBLISHED;
     }
 
+    /**
+     * Eğitmen kursun yapısını (bölüm sınavı gibi içerikleri) değiştirebilir mi: yalnız Taslak ve Yayından
+     * kaldırıldı durumlarında. Geçici: durum kuralları #85'te State nesnelerine taşınınca bu sorgu durum
+     * nesnesine yönlenir, çağıranlar değişmez.
+     */
+    public boolean isEditable() {
+        return status == CourseStatus.DRAFT || status == CourseStatus.UNPUBLISHED;
+    }
+
     public Long getId() {
         return id;
     }
