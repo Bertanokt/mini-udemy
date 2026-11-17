@@ -728,3 +728,97 @@ a {
 .cat-edit label {
   display: block;
 }
+
+/* Kullanıcı yönetimi (#63); qb-* ve catalog-search sınıflarını kullanır */
+.usr-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.usr-filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.875rem;
+}
+
+.usr-wrap {
+  overflow-x: auto;
+}
+
+.usr-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.usr-table th,
+.usr-table td {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.usr-name,
+.usr-email {
+  overflow-wrap: anywhere;
+}
+
+.usr-on {
+  color: var(--ok);
+}
+
+.usr-off {
+  color: var(--err);
+}
+
+@media (max-width: 700px) {
+  .usr-table,
+  .usr-table tbody,
+  .usr-table tr,
+  .usr-table td {
+    display: block;
+  }
+
+  .usr-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
+  .usr-table tr {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 12px;
+  }
+
+  .usr-table td {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 0;
+    padding: 6px 0;
+    text-align: right;
+  }
+
+  .usr-table td[data-label]::before {
+    content: attr(data-label);
+    color: var(--muted);
+    text-align: left;
+    flex-shrink: 0;
+  }
+
+  .usr-table .usr-act {
+    justify-content: flex-end;
+  }
+
+  .usr-filters label,
+  .usr-filters select {
+    width: 100%;
+  }
+}
