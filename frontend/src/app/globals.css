@@ -159,13 +159,6 @@ a {
   margin-bottom: 8px;
 }
 
-.site-footer {
-  border-top: 1px solid var(--border);
-  padding: 16px 0;
-  color: var(--muted);
-  font-size: 0.875rem;
-}
-
 .status-up {
   color: var(--ok);
 }
