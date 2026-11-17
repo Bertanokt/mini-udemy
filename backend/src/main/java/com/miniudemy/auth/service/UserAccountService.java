@@ -15,26 +15,23 @@ import com.miniudemy.auth.dto.AdminUserPage;
 import com.miniudemy.auth.dto.AdminUserResponse;
 import com.miniudemy.auth.mapper.AdminUserMapper;
 import com.miniudemy.auth.repository.UserRepository;
-import com.miniudemy.common.exception.ConflictException;
 import com.miniudemy.common.exception.NotFoundException;
 
-/** Yönetici kullanıcı yönetimi (#60): listeleme/arama ve hesabı aktifleştirme/pasifleştirme. */
+/** Kullanıcı hesapları üzerinde yönetim işlemleri (#60); `admin` modülü users tablosuna yalnız bunun üzerinden erişir. */
 @Service
-public class AdminUserService {
-
-    static final String SELF_DEACTIVATE = "Kendi hesabınızı pasifleştiremezsiniz.";
+public class UserAccountService {
 
     private final UserRepository userRepository;
     private final AdminUserMapper mapper;
 
-    public AdminUserService(UserRepository userRepository, AdminUserMapper mapper) {
+    public UserAccountService(UserRepository userRepository, AdminUserMapper mapper) {
         this.userRepository = userRepository;
         this.mapper = mapper;
     }
 
     /** En yeni kayıt önce; eşitlikte id ile sıra sabit kalır. Sorgu sayısı sayfa boyutundan bağımsızdır. */
     @Transactional(readOnly = true)
-    public AdminUserPage list(Role role, Boolean active, String q, int page, int size) {
+    public AdminUserPage search(Role role, Boolean active, String q, int page, int size) {
         PageRequest pageable = PageRequest.of(page, size,
                 Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("id")));
         Page<User> result = userRepository.searchForAdmin(role, active, toLikePattern(q), pageable);
@@ -43,11 +40,8 @@ public class AdminUserService {
     }
 
     @Transactional
-    public AdminUserResponse setStatus(Long id, boolean active, Long currentAdminId) {
+    public AdminUserResponse setActive(Long id, boolean active) {
         User user = userRepository.findById(id).orElseThrow(() -> new NotFoundException("Kullanıcı bulunamadı."));
-        if (!active && user.getId().equals(currentAdminId)) {
-            throw new ConflictException(SELF_DEACTIVATE);
-        }
         user.setActive(active);
         return mapper.toResponse(user);
     }

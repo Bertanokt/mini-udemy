@@ -1,4 +1,4 @@
-package com.miniudemy.auth.controller;
+package com.miniudemy.admin.controller;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -32,14 +32,15 @@ import com.miniudemy.auth.domain.User;
 import com.miniudemy.auth.mapper.AdminUserMapperImpl;
 import com.miniudemy.auth.repository.UserRepository;
 import com.miniudemy.auth.service.AccountLookupService;
-import com.miniudemy.auth.service.AdminUserService;
+import com.miniudemy.admin.service.AdminUserService;
+import com.miniudemy.auth.service.UserAccountService;
 import com.miniudemy.common.security.JwtConfig;
 import com.miniudemy.common.security.JwtService;
 import com.miniudemy.common.security.SecurityConfig;
 
 /** {@code /api/admin/users} gerçek güvenlik ayarıyla; yalnız {@link UserRepository} taklit edilir. */
 @WebMvcTest(controllers = AdminUserController.class)
-@Import({SecurityConfig.class, JwtConfig.class, AdminUserService.class, AccountLookupService.class,
+@Import({SecurityConfig.class, JwtConfig.class, AdminUserService.class, UserAccountService.class, AccountLookupService.class,
         AdminUserMapperImpl.class})
 @ActiveProfiles("test")
 class AdminUserControllerTest {

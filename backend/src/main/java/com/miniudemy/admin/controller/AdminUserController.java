@@ -1,4 +1,4 @@
-package com.miniudemy.auth.controller;
+package com.miniudemy.admin.controller;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,8 +17,8 @@ import jakarta.validation.constraints.Size;
 import com.miniudemy.auth.domain.Role;
 import com.miniudemy.auth.dto.AdminUserPage;
 import com.miniudemy.auth.dto.AdminUserResponse;
-import com.miniudemy.auth.dto.UserStatusRequest;
-import com.miniudemy.auth.service.AdminUserService;
+import com.miniudemy.admin.dto.UserStatusRequest;
+import com.miniudemy.admin.service.AdminUserService;
 import com.miniudemy.common.security.CurrentUser;
 
 /** Yönetici kullanıcı uçları (docs/api/openapi.yaml › Admin). {@code /api/admin/**} yalnız ADMIN (SecurityConfig). */

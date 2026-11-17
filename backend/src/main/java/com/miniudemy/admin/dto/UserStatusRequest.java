@@ -1,4 +1,4 @@
-package com.miniudemy.auth.dto;
+package com.miniudemy.admin.dto;
 
 import jakarta.validation.constraints.NotNull;
 
