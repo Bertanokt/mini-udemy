@@ -9,6 +9,7 @@ import { enrollCourse, listMyEnrollments } from "@/lib/api/enrollments";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { loginHref } from "@/lib/auth/routes";
 import { formatDuration } from "@/components/course/CourseCard";
+import { CourseReviews, type ReviewerState } from "@/components/review/CourseReviews";
 import styles from "./course-detail.module.css";
 
 type CourseResult =
@@ -140,6 +141,14 @@ export function CourseDetailView({ params }: { params: Promise<{ id: string }> }
   const enrollmentKnown = enrollment !== null && enrollment.userId === userId && enrollment.key === enrollRetry;
   const enrolled = enrolledNow === course.id || (enrollmentKnown && enrollment.enrolled === true);
 
+  let reviewer: ReviewerState;
+  if (status === "loading") reviewer = "loading";
+  else if (status === "anonymous") reviewer = "anonymous";
+  else if (!isStudent) reviewer = "not-student";
+  else if (enrolled) reviewer = "enrolled";
+  else if (!enrollmentKnown) reviewer = "loading";
+  else reviewer = enrollment.enrolled === null ? "unknown" : "not-enrolled";
+
   let action: React.ReactNode;
   if (status === "anonymous") {
     action = (
@@ -254,14 +263,11 @@ export function CourseDetailView({ params }: { params: Promise<{ id: string }> }
         )}
       </section>
 
-      {/* Puan ve yorumlar #127'de buraya gelecek. */}
       <section aria-labelledby="reviews-title">
         <h2 id="reviews-title" className={styles["section-title"]}>
           Değerlendirmeler
         </h2>
-        <div className={styles["reviews-slot"]} data-slot="reviews">
-          Değerlendirmeler yakında.
-        </div>
+        <CourseReviews courseId={course.id} reviewer={reviewer} userId={user?.id ?? null} />
       </section>
     </article>
   );

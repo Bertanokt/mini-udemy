@@ -127,13 +127,6 @@
   white-space: nowrap;
 }
 
-.reviews-slot {
-  border: 1px dashed var(--border);
-  border-radius: 8px;
-  padding: 16px;
-  color: var(--muted);
-}
-
 @media (max-width: 800px) {
   .hero {
     grid-template-columns: 1fr;
