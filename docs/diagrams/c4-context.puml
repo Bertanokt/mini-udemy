@@ -1,0 +1,27 @@
+@startuml c4-context
+' C4 seviye 1 — sistem bağlamı (#87). Kaynak: proje tanım dokümanı (roller), ADR-001, ADR-004.
+' Render: java -jar plantuml.jar -tpng -tsvg docs/diagrams/c4-context.puml (Graphviz gerekmez: smetana)
+!pragma layout smetana
+!include <C4/C4_Context>
+
+LAYOUT_TOP_DOWN()
+HIDE_STEREOTYPE()
+
+title Mini Udemy - Sistem bağlamı (C4 seviye 1)
+
+Person(student, "Kursiyer", "Kurs arar, kaydolur, dersleri izler, sınav çözer, sertifika alır, yorum yazar.")
+Person(instructor, "Eğitmen", "Kurs, bölüm ve ders oluşturur, içerik yükler, soru bankası hazırlar, istatistiklerini görür.")
+Person(admin, "Yönetici", "Kursları onaylar / reddeder / yayından kaldırır; kullanıcı, kategori ve şikâyetleri yönetir.")
+
+System(miniudemy, "Mini Udemy", "Çevrim içi kurs platformu: katalog, kayıt, ders içerikleri, ilerleme, sınav, sertifika, yorum, bildirim.")
+
+Rel(student, miniudemy, "Kullanır", "web tarayıcısı, HTTP")
+Rel(instructor, miniudemy, "Kullanır", "web tarayıcısı, HTTP")
+Rel(admin, miniudemy, "Yönetir", "web tarayıcısı, HTTP")
+
+note bottom of miniudemy
+  Dış sistem yok: ödeme, e-posta ve nesne depolama
+  (S3/MinIO) kullanılmıyor. Dosyalar sistemin kendi
+  diskinde (Docker volume) tutulur (ADR-004).
+end note
+@enduml

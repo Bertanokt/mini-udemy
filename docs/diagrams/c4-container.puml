@@ -1,0 +1,36 @@
+@startuml c4-container
+' C4 seviye 2 — container'lar (#87). Portlar ve adlar docker-compose.yml ile aynı; tutarlılık tablosu PR #87/#94'te.
+' Render: java -jar plantuml.jar -tpng -tsvg docs/diagrams/c4-container.puml (Graphviz gerekmez: smetana)
+!pragma layout smetana
+!include <C4/C4_Container>
+
+LAYOUT_TOP_DOWN()
+HIDE_STEREOTYPE()
+
+title Mini Udemy - Container'lar (C4 seviye 2)
+
+Person(users, "Kursiyer / Eğitmen / Yönetici", "Rol (STUDENT, INSTRUCTOR, ADMIN) token'dan değil, her istekte veritabanından okunur.")
+
+System_Boundary(mu, "Mini Udemy (docker compose)") {
+  Container(web, "Web sunucusu", "Next.js 16, Node.js 22 (standalone)", "Sayfaları ve statik dosyaları (HTML, JS, CSS) verir. Backend'e istek atmaz.")
+  Container(spa, "Web arayüzü", "React, tarayıcıda çalışır", "Sayfalar; API çağrıları src/lib/api/* üzerinden. JWT localStorage'da.")
+  Container(api, "Backend API", "Spring Boot 3.5, Java 21, modüler monolit", "REST/JSON uçları (/api/**); JWT doğrulama, rol kontrolü, iş kuralları, Flyway migration'ları, olaylar.")
+  ContainerDb(db, "Veritabanı", "PostgreSQL 17", "Kullanıcılar, kurslar, kayıtlar, ilerleme, sınavlar, dosya meta verisi (stored_files).")
+  ContainerDb(files, "Dosya deposu", "Docker volume: uploads, /data/uploads", "Yüklenen video, PDF, doküman ve kapak görselleri; diskte UUID adıyla.")
+}
+
+Rel(users, spa, "Kullanır", "tarayıcı")
+Rel(users, web, "Sayfayı açar", "HTTP :3000")
+Rel_R(web, spa, "Uygulamayı tarayıcıya yükler", "HTML/JS")
+Rel(spa, api, "API çağrıları", "HTTP :8080, JSON, Authorization: Bearer JWT, CORS")
+Rel(api, db, "Okur / yazar", "JDBC, postgres:5432")
+Rel(api, files, "Dosya yazar / okur / siler", "dosya sistemi (StorageService)")
+
+note right of files
+  Dosyalara yalnız backend erişir: volume yalnız backend
+  container'ına bağlı ve dışarıya açılmıyor (ADR-004).
+  Tarayıcı dosyayı backend'in yetki kontrollü ucundan alır:
+  GET /api/lessons/{id}/content (#113, planlanan);
+  yükleme ucu #112 (planlanan).
+end note
+@enduml
