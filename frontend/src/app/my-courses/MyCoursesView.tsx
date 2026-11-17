@@ -1,0 +1,129 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { API_BASE_URL, ApiError } from "@/lib/api/client";
+import { listMyEnrollments, type EnrollmentResponse } from "@/lib/api/enrollments";
+import { formatDuration } from "@/components/course/CourseCard";
+import styles from "./my-courses.module.css";
+
+type Result =
+  | { kind: "ok"; items: EnrollmentResponse[] }
+  | { kind: "error"; message: string };
+
+type Loaded = { key: number; result: Result };
+
+/** Kaldığı yere gidilir: son izlenen ders varsa o ders, yoksa kurs detayı. `/learn` sayfası henüz yok (yer tutucu). */
+export function resumeHref(e: EnrollmentResponse): string {
+  return e.lastLessonId != null
+    ? `/courses/${e.course.id}/learn?lesson=${e.lastLessonId}`
+    : `/courses/${e.course.id}`;
+}
+
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" });
+}
+
+/**
+ * Kayıtlı kurslar paneli (#37). Sayfa RequireRole ile yalnız STUDENT'a açılır (layout.tsx).
+ * Her kurs için kapak, başlık, ilerleme çubuğu ve son izlenen ders bilgisi gösterilir.
+ */
+export function MyCoursesView() {
+  const [retry, setRetry] = useState(0);
+  const [loaded, setLoaded] = useState<Loaded | null>(null);
+  const result = loaded?.key === retry ? loaded.result : null;
+
+  useEffect(() => {
+    let cancelled = false;
+    listMyEnrollments()
+      .then((items) => {
+        if (!cancelled) setLoaded({ key: retry, result: { kind: "ok", items } });
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        const message =
+          err instanceof ApiError && err.body?.message
+            ? err.body.message
+            : "Kurslarınız yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin.";
+        setLoaded({ key: retry, result: { kind: "error", message } });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [retry]);
+
+  return (
+    <section>
+      <h1>Kayıtlı kurslarım</h1>
+      {result === null && <p className={styles.status}>Kurslarınız yükleniyor…</p>}
+      {result?.kind === "error" && (
+        <div role="alert">
+          <p className={styles.error}>{result.message}</p>
+          <button type="button" className={styles.button} onClick={() => setRetry((r) => r + 1)}>
+            Tekrar dene
+          </button>
+        </div>
+      )}
+      {result?.kind === "ok" && result.items.length === 0 && (
+        <div className={styles.empty}>
+          <p>Henüz bir kursa kayıt olmadınız.</p>
+          <Link href="/" className={styles.button}>
+            Kurslara göz at
+          </Link>
+        </div>
+      )}
+      {result?.kind === "ok" && result.items.length > 0 && (
+        <ul className={styles.list}>
+          {result.items.map((e) => (
+            <EnrollmentItem key={e.id} enrollment={e} />
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+function EnrollmentItem({ enrollment: e }: { enrollment: EnrollmentResponse }) {
+  const course = e.course;
+  const cover = course.coverUrl ? `${API_BASE_URL}${course.coverUrl}` : null;
+  const percent = Math.max(0, Math.min(100, Math.round(e.progressPercent)));
+  const started = e.lastLessonId != null;
+  return (
+    <li className={styles.item}>
+      <div
+        className={styles.cover}
+        role="img"
+        aria-label={`${course.title} kapak görseli`}
+        style={cover ? { backgroundImage: `url("${cover}")` } : undefined}
+      >
+        {!cover && course.title.charAt(0)}
+      </div>
+      <div className={styles.body}>
+        <h2 className={styles.title}>
+          <Link href={resumeHref(e)}>{course.title}</Link>
+        </h2>
+        <p className={styles.meta}>
+          {course.instructor.fullName} · {course.lessonCount} ders · {formatDuration(course.totalDurationSeconds)}
+        </p>
+        <div
+          className={styles.bar}
+          role="progressbar"
+          aria-label={`${course.title} ilerlemesi`}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={percent}
+          aria-valuetext={`Yüzde ${percent} tamamlandı`}
+        >
+          <div className={styles.fill} style={{ width: `${percent}%` }} />
+        </div>
+        <p className={styles.meta}>
+          %{percent} tamamlandı
+          {started && e.lastAccessedAt && ` · Son izleme: ${formatDate(e.lastAccessedAt)}`}
+        </p>
+        <Link href={resumeHref(e)} className={styles.button}>
+          {started ? "Kaldığın yerden devam et" : "Kursa git"}
+        </Link>
+      </div>
+    </li>
+  );
+}
