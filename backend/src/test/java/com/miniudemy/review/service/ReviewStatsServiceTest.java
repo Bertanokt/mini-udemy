@@ -9,9 +9,11 @@ import static org.mockito.Mockito.verifyNoInteractions;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
+import com.miniudemy.course.service.CourseRating;
 import com.miniudemy.review.repository.ReviewRepository;
 
 class ReviewStatsServiceTest {
@@ -53,5 +55,36 @@ class ReviewStatsServiceTest {
     void ratingsByCourses_emptyInput_doesNotQuery() {
         assertThat(service.ratingsByCourses(List.of())).isEmpty();
         verifyNoInteractions(repository);
+    }
+
+    @Test
+    void ratingOf_courseWithoutReviews_returnsNullAndZero() {
+        given(repository.aggregateVisibleByCourses(anyCollection())).willReturn(List.of());
+
+        assertThat(service.ratingOf(9L)).isEqualTo(new CourseRating(null, 0));
+    }
+
+    @Test
+    void ratingOf_courseWithReviews_returnsRoundedAverageAndCount() {
+        given(repository.aggregateVisibleByCourses(anyCollection())).willReturn(List.of(row(9L, 4.25, 4)));
+
+        assertThat(service.ratingOf(9L)).isEqualTo(new CourseRating(4.3, 4));
+    }
+
+    @Test
+    void courseIdsWithAverageAtLeast_comparesRoundedAverageAndSkipsCoursesWithoutReviews() {
+        given(repository.aggregateAllVisible()).willReturn(List.of(
+                row(1L, 4.46, 10), row(2L, 4.44, 10), row(3L, 5.0, 1), row(4L, 3.0, 2)));
+
+        // 4.46 kartta 4.5 görünür, bu yüzden 4.5 filtresine girer; 4.44 (4.4) girmez.
+        assertThat(service.courseIdsWithAverageAtLeast(4.5)).containsExactlyInAnyOrder(1L, 3L);
+        assertThat(service.courseIdsWithAverageAtLeast(1)).isEqualTo(Set.of(1L, 2L, 3L, 4L));
+    }
+
+    @Test
+    void courseIdsWithAverageAtLeast_noReviewsAnywhere_returnsEmptySet() {
+        given(repository.aggregateAllVisible()).willReturn(List.of());
+
+        assertThat(service.courseIdsWithAverageAtLeast(1)).isEmpty();
     }
 }

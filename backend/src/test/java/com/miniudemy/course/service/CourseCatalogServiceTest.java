@@ -3,21 +3,26 @@ package com.miniudemy.course.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
@@ -47,31 +52,33 @@ class CourseCatalogServiceTest {
     private final LessonRepository lessonRepository = mock(LessonRepository.class);
     private final UserDirectoryService userDirectory = mock(UserDirectoryService.class);
     private final EnrollmentCounts enrollmentCounts = mock(EnrollmentCounts.class);
+    private final CourseRatings courseRatings = mock(CourseRatings.class);
     private final CourseCatalogService service = new CourseCatalogService(courseRepository, sectionRepository,
-            lessonRepository, userDirectory, enrollmentCounts, new CourseMapperImpl(new CategoryMapperImpl()));
+            lessonRepository, userDirectory, enrollmentCounts, courseRatings, new CourseMapperImpl(new CategoryMapperImpl()));
 
     // --- arama ---
 
     @Test
     void search_passesFiltersAndPageToRepository() {
-        given(courseRepository.searchCatalog(any(), any(), any(), any(), any())).willReturn(Page.empty());
+        given(courseRepository.searchCatalog(any(), any(), any(), any(), anyBoolean(), any(), any())).willReturn(Page.empty());
 
         service.search("Java", 3L, CourseLevel.ADVANCED, 9L, null, CatalogSort.NEWEST, 2, 10);
 
         ArgumentCaptor<Pageable> pageable = ArgumentCaptor.forClass(Pageable.class);
-        verify(courseRepository).searchCatalog(eq("%java%"), eq(3L), eq(CourseLevel.ADVANCED), eq(9L),
-                pageable.capture());
+        verify(courseRepository).searchCatalog(eq("%java%"), eq(3L), eq(CourseLevel.ADVANCED), eq(9L), eq(false),
+                any(), pageable.capture());
         assertThat(pageable.getValue().getPageNumber()).isEqualTo(2);
         assertThat(pageable.getValue().getPageSize()).isEqualTo(10);
     }
 
     @Test
     void search_withoutFilters_matchesEverything() {
-        given(courseRepository.searchCatalog(any(), any(), any(), any(), any())).willReturn(Page.empty());
+        given(courseRepository.searchCatalog(any(), any(), any(), any(), anyBoolean(), any(), any())).willReturn(Page.empty());
 
         service.search(null, null, null, null, null, CatalogSort.NEWEST, 0, 20);
 
-        verify(courseRepository).searchCatalog(eq("%"), eq(null), eq(null), eq(null), any());
+        verify(courseRepository).searchCatalog(eq("%"), eq(null), eq(null), eq(null), eq(false), any(), any());
+        verify(courseRatings, never()).courseIdsWithAverageAtLeast(anyDouble());
     }
 
     @Test
@@ -82,7 +89,7 @@ class CourseCatalogServiceTest {
 
     @Test
     void search_newestSortsByCreatedAtDescendingWithIdTieBreaker() {
-        given(courseRepository.searchCatalog(any(), any(), any(), any(), any())).willReturn(Page.empty());
+        given(courseRepository.searchCatalog(any(), any(), any(), any(), anyBoolean(), any(), any())).willReturn(Page.empty());
 
         service.search(null, null, null, null, null, CatalogSort.NEWEST, 0, 20);
 
@@ -91,7 +98,7 @@ class CourseCatalogServiceTest {
 
     @Test
     void search_titleSortsAlphabeticallyIgnoringCase() {
-        given(courseRepository.searchCatalog(any(), any(), any(), any(), any())).willReturn(Page.empty());
+        given(courseRepository.searchCatalog(any(), any(), any(), any(), anyBoolean(), any(), any())).willReturn(Page.empty());
 
         service.search(null, null, null, null, null, CatalogSort.TITLE, 0, 20);
 
@@ -99,25 +106,94 @@ class CourseCatalogServiceTest {
     }
 
     @Test
-    void search_ratingSortAndMinRatingAreIgnoredUntilReviewModule() {
-        given(courseRepository.searchCatalog(any(), any(), any(), any(), any())).willReturn(Page.empty());
+    void search_ratingSortIsOutOfScopeAndFallsBackToNewest() {
+        given(courseRepository.searchCatalog(any(), any(), any(), any(), anyBoolean(), any(), any()))
+                .willReturn(Page.empty());
 
-        service.search(null, null, null, null, 4.5, CatalogSort.RATING, 0, 20);
+        service.search(null, null, null, null, null, CatalogSort.RATING, 0, 20);
 
         assertThat(capturedSort()).isEqualTo(Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("id")));
+    }
+
+    @Test
+    void search_minRating_restrictsQueryToCoursesMeetingTheAverageAndKeepsFilteredTotal() {
+        given(courseRatings.courseIdsWithAverageAtLeast(4.0)).willReturn(Set.of(1L, 3L));
+        Course one = CourseFixtures.course(1, 7, "Bir", CourseStatus.PUBLISHED);
+        Course three = CourseFixtures.course(3, 7, "Üç", CourseStatus.PUBLISHED);
+        given(courseRepository.searchCatalog(any(), any(), any(), any(), eq(true), eq(Set.of(1L, 3L)), any()))
+                .willReturn(new PageImpl<>(List.of(three, one), PageRequest.of(0, 2), 2));
+        given(userDirectory.findSummaries(anyCollection())).willReturn(Map.of(7L, new UserSummary(7L, "Mehmet Demir")));
+        given(enrollmentCounts.countByCourses(anyCollection())).willReturn(Map.of());
+        given(courseRatings.ratingsByCourses(anyCollection()))
+                .willReturn(Map.of(1L, new CourseRating(4.0, 2), 3L, new CourseRating(4.8, 5)));
+
+        CourseSummaryPage page = service.search(null, null, null, null, 4.0, CatalogSort.NEWEST, 0, 2);
+
+        assertThat(page.totalElements()).isEqualTo(2);
+        assertThat(page.content()).extracting(CourseSummaryResponse::averageRating).containsExactly(4.8, 4.0);
+        assertThat(page.content()).extracting(CourseSummaryResponse::reviewCount).containsExactly(5, 2);
+    }
+
+    @Test
+    void search_minRatingMatchesNoCourse_returnsEmptyPageWithoutCatalogQuery() {
+        given(courseRatings.courseIdsWithAverageAtLeast(5.0)).willReturn(Set.of());
+
+        CourseSummaryPage page = service.search(null, null, null, null, 5.0, CatalogSort.NEWEST, 0, 20);
+
+        assertThat(page.content()).isEmpty();
+        assertThat(page.totalElements()).isZero();
+        assertThat(page.totalPages()).isZero();
+        verifyNoInteractions(courseRepository, lessonRepository, userDirectory);
+    }
+
+    @Test
+    void search_minRatingWithPopularSort_passesRestrictionToIdQueryAndKeepsFilteredTotal() {
+        given(courseRatings.courseIdsWithAverageAtLeast(3.0)).willReturn(Set.of(1L, 2L));
+        given(courseRepository.searchCatalogIds(any(), any(), any(), any(), eq(true), eq(Set.of(1L, 2L))))
+                .willReturn(List.of(1L, 2L));
+        given(enrollmentCounts.countByCourses(anyCollection())).willReturn(Map.of(1L, 3L, 2L, 9L));
+        given(courseRepository.findAllByIdIn(anyCollection())).willReturn(List.of(
+                CourseFixtures.course(1, 7, "Bir", CourseStatus.PUBLISHED),
+                CourseFixtures.course(2, 7, "İki", CourseStatus.PUBLISHED)));
+        given(userDirectory.findSummaries(anyCollection())).willReturn(Map.of(7L, new UserSummary(7L, "Mehmet Demir")));
+        given(courseRatings.ratingsByCourses(anyCollection()))
+                .willReturn(Map.of(1L, new CourseRating(3.0, 1), 2L, new CourseRating(4.5, 2)));
+
+        CourseSummaryPage page = service.search(null, null, null, null, 3.0, CatalogSort.POPULAR, 0, 20);
+
+        assertThat(page.content()).extracting(CourseSummaryResponse::id).containsExactly(2L, 1L);
+        assertThat(page.content()).extracting(CourseSummaryResponse::averageRating).containsExactly(4.5, 3.0);
+        assertThat(page.totalElements()).isEqualTo(2);
+    }
+
+    @Test
+    void search_courseWithoutReviews_hasNullAverageAndZeroCount() {
+        Course course = CourseFixtures.course(1, 7, "Bir", CourseStatus.PUBLISHED);
+        given(courseRepository.searchCatalog(any(), any(), any(), any(), anyBoolean(), any(), any()))
+                .willReturn(new PageImpl<>(List.of(course)));
+        given(userDirectory.findSummaries(anyCollection())).willReturn(Map.of());
+        given(enrollmentCounts.countByCourses(anyCollection())).willReturn(Map.of());
+        given(courseRatings.ratingsByCourses(anyCollection())).willReturn(Map.of(1L, new CourseRating(null, 0)));
+
+        CourseSummaryResponse card = service.search(null, null, null, null, null, CatalogSort.NEWEST, 0, 20)
+                .content().get(0);
+
+        assertThat(card.averageRating()).isNull();
+        assertThat(card.reviewCount()).isZero();
     }
 
     @Test
     void search_buildsCardsWithInstructorLessonTotalsAndEnrollmentCounts() {
         Course java = CourseFixtures.course(1, 7, "Java", CourseStatus.PUBLISHED);
         Course empty = CourseFixtures.course(2, 8, "Boş kurs", CourseStatus.PUBLISHED);
-        given(courseRepository.searchCatalog(any(), any(), any(), any(), any()))
+        given(courseRepository.searchCatalog(any(), any(), any(), any(), anyBoolean(), any(), any()))
                 .willReturn(new PageImpl<>(List.of(java, empty), org.springframework.data.domain.PageRequest.of(0, 2), 5));
         CourseTotals javaTotals = totals(1, 4, 1200);
         given(lessonRepository.totalsByCourseIds(anyCollection())).willReturn(List.of(javaTotals));
         given(userDirectory.findSummaries(anyCollection()))
                 .willReturn(Map.of(7L, new UserSummary(7L, "Mehmet Demir"), 8L, new UserSummary(8L, "Ayşe Kaya")));
         given(enrollmentCounts.countByCourses(anyCollection())).willReturn(Map.of(1L, 30L));
+        given(courseRatings.ratingsByCourses(anyCollection())).willReturn(Map.of(1L, new CourseRating(4.6, 12)));
 
         CourseSummaryPage page = service.search(null, null, null, null, null, CatalogSort.NEWEST, 0, 2);
 
@@ -130,8 +206,8 @@ class CourseCatalogServiceTest {
         assertThat(first.lessonCount()).isEqualTo(4);
         assertThat(first.totalDurationSeconds()).isEqualTo(1200);
         assertThat(first.enrollmentCount()).isEqualTo(30L);
-        assertThat(first.averageRating()).isNull();
-        assertThat(first.reviewCount()).isZero();
+        assertThat(first.averageRating()).isEqualTo(4.6);
+        assertThat(first.reviewCount()).isEqualTo(12);
         CourseSummaryResponse second = page.content().get(1);
         assertThat(second.lessonCount()).isZero();
         assertThat(second.totalDurationSeconds()).isZero();
@@ -144,7 +220,7 @@ class CourseCatalogServiceTest {
                 CourseFixtures.course(1, 7, "A", CourseStatus.PUBLISHED),
                 CourseFixtures.course(2, 7, "B", CourseStatus.PUBLISHED),
                 CourseFixtures.course(3, 8, "C", CourseStatus.PUBLISHED));
-        given(courseRepository.searchCatalog(any(), any(), any(), any(), any())).willReturn(new PageImpl<>(courses));
+        given(courseRepository.searchCatalog(any(), any(), any(), any(), anyBoolean(), any(), any())).willReturn(new PageImpl<>(courses));
         given(userDirectory.findSummaries(anyCollection())).willReturn(Map.of());
         given(enrollmentCounts.countByCourses(anyCollection())).willReturn(Map.of());
 
@@ -153,11 +229,12 @@ class CourseCatalogServiceTest {
         verify(lessonRepository).totalsByCourseIds(List.of(1L, 2L, 3L));
         verify(userDirectory).findSummaries(java.util.Set.of(7L, 8L));
         verify(enrollmentCounts).countByCourses(List.of(1L, 2L, 3L));
+        verify(courseRatings).ratingsByCourses(List.of(1L, 2L, 3L));
     }
 
     @Test
     void search_noResults_returnsEmptyPageWithoutExtraQueries() {
-        given(courseRepository.searchCatalog(any(), any(), any(), any(), any()))
+        given(courseRepository.searchCatalog(any(), any(), any(), any(), anyBoolean(), any(), any()))
                 .willReturn(new PageImpl<>(List.of(), org.springframework.data.domain.PageRequest.of(0, 20), 0));
         given(enrollmentCounts.countByCourses(anyCollection())).willReturn(Map.of());
 
@@ -171,7 +248,7 @@ class CourseCatalogServiceTest {
 
     @Test
     void search_popularOrdersByEnrollmentCountThenNewestAndSlicesPage() {
-        given(courseRepository.searchCatalogIds(any(), any(), any(), any())).willReturn(List.of(1L, 2L, 3L, 4L, 5L));
+        given(courseRepository.searchCatalogIds(any(), any(), any(), any(), anyBoolean(), any())).willReturn(List.of(1L, 2L, 3L, 4L, 5L));
         given(enrollmentCounts.countByCourses(anyCollection()))
                 .willReturn(Map.of(1L, 5L, 2L, 50L, 3L, 5L, 4L, 0L, 5L, 20L));
         // Sıra: 2 (50), 5 (20), 3 (5; id büyük önce), 1 (5), 4 (0). Sayfa 1, boyut 2 → 3 ve 1.
@@ -191,7 +268,7 @@ class CourseCatalogServiceTest {
 
     @Test
     void search_popularPageBeyondEnd_returnsEmptyContentWithTotals() {
-        given(courseRepository.searchCatalogIds(any(), any(), any(), any())).willReturn(List.of(1L, 2L));
+        given(courseRepository.searchCatalogIds(any(), any(), any(), any(), anyBoolean(), any())).willReturn(List.of(1L, 2L));
         given(enrollmentCounts.countByCourses(anyCollection())).willReturn(Map.of(1L, 1L, 2L, 2L));
 
         CourseSummaryPage page = service.search(null, null, null, null, null, CatalogSort.POPULAR, 4, 20);
@@ -222,6 +299,7 @@ class CourseCatalogServiceTest {
         given(sectionRepository.findAllWithLessonsByCourseId(5L)).willReturn(List.of(first, second));
         given(userDirectory.findSummaries(anyCollection())).willReturn(Map.of(7L, new UserSummary(7L, "Mehmet Demir")));
         given(enrollmentCounts.countByCourse(5L)).willReturn(41L);
+        given(courseRatings.ratingOf(5L)).willReturn(new CourseRating(4.2, 7));
 
         CourseDetailResponse detail = service.getDetail(5L, null, false);
 
@@ -234,8 +312,8 @@ class CourseCatalogServiceTest {
         assertThat(detail.enrollmentCount()).isEqualTo(41L);
         assertThat(detail.instructor().fullName()).isEqualTo("Mehmet Demir");
         assertThat(detail.learningOutcomes()).containsExactly("Hedef 1", "Hedef 2");
-        assertThat(detail.averageRating()).isNull();
-        assertThat(detail.reviewCount()).isZero();
+        assertThat(detail.averageRating()).isEqualTo(4.2);
+        assertThat(detail.reviewCount()).isEqualTo(7);
     }
 
     @Test
@@ -281,19 +359,20 @@ class CourseCatalogServiceTest {
 
         assertThatThrownBy(() -> service.getDetail(5L, null, false)).isInstanceOf(NotFoundException.class);
 
-        verifyNoInteractions(sectionRepository, userDirectory, enrollmentCounts);
+        verifyNoInteractions(sectionRepository, userDirectory, enrollmentCounts, courseRatings);
     }
 
     private void stubCourse(CourseStatus status) {
         Course course = CourseFixtures.course(5, 7, "Java", status);
         given(courseRepository.findWithCategoryById(5L)).willReturn(Optional.of(course));
         given(sectionRepository.findAllWithLessonsByCourseId(5L)).willReturn(List.of());
+        given(courseRatings.ratingOf(5L)).willReturn(new CourseRating(null, 0));
         given(userDirectory.findSummaries(anyCollection())).willReturn(Map.of(7L, new UserSummary(7L, "Mehmet Demir")));
     }
 
     private Sort capturedSort() {
         ArgumentCaptor<Pageable> pageable = ArgumentCaptor.forClass(Pageable.class);
-        verify(courseRepository).searchCatalog(any(), any(), any(), any(), pageable.capture());
+        verify(courseRepository).searchCatalog(any(), any(), any(), any(), anyBoolean(), any(), pageable.capture());
         return pageable.getValue().getSort();
     }
 

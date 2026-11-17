@@ -368,7 +368,7 @@ paths:
             maximum: 5
         - name: sort
           in: query
-          description: "Sıralama: `newest` (varsayılan), `title`, `rating`, `popular` (kayıt sayısı)."
+          description: "Sıralama: `newest` (varsayılan), `title`, `rating`, `popular` (kayıt sayısı). `rating` henüz uygulanmadı (#143 ince kapsam dışı): şimdilik `newest` gibi davranır."
           schema:
             type: string
             enum: [newest, title, rating, popular]

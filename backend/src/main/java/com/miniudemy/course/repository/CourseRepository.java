@@ -19,7 +19,8 @@ import com.miniudemy.course.domain.CourseLevel;
  *
  * Katalog sorguları yalnız Yayımlandı kursları döndürür; filtreler VE ile birleşir, boş (null) filtre uygulanmaz.
  * {@code pattern} küçük harfe çevrilmiş, `%`/`_`/`\` kaçırılmış ve `%` ile sarılmış arama ifadesidir (boşsa `%`):
- * böylece `like` parametresi hiç null olmaz.
+ * böylece `like` parametresi hiç null olmaz. {@code restrictToIds} true ise yalnız {@code ids} içindeki kurslar gelir
+ * ({@code minRating} filtresi, #143); false iken {@code ids} kullanılmaz ama boş olmayan bir liste verilmelidir.
  */
 public interface CourseRepository extends JpaRepository<Course, Long> {
 
@@ -32,6 +33,7 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
               and (:categoryId is null or c.category.id = :categoryId)
               and (:level is null or c.level = :level)
               and (:instructorId is null or c.instructorId = :instructorId)
+              and (:restrictToIds = false or c.id in :ids)
               and (lower(c.title) like :pattern escape '\\' or lower(c.description) like :pattern escape '\\')
             """;
 
@@ -39,12 +41,14 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
     @EntityGraph(attributePaths = "category")
     @Query(value = "select c " + CATALOG_FILTER, countQuery = "select count(c) " + CATALOG_FILTER)
     Page<Course> searchCatalog(@Param("pattern") String pattern, @Param("categoryId") Long categoryId,
-            @Param("level") CourseLevel level, @Param("instructorId") Long instructorId, Pageable pageable);
+            @Param("level") CourseLevel level, @Param("instructorId") Long instructorId,
+            @Param("restrictToIds") boolean restrictToIds, @Param("ids") Collection<Long> ids, Pageable pageable);
 
     /** Aynı filtrenin yalnız id'leri; kayıt sayısına göre sıralamada sıra bellekte kurulduğu için gerekir. */
     @Query("select c.id " + CATALOG_FILTER)
     List<Long> searchCatalogIds(@Param("pattern") String pattern, @Param("categoryId") Long categoryId,
-            @Param("level") CourseLevel level, @Param("instructorId") Long instructorId);
+            @Param("level") CourseLevel level, @Param("instructorId") Long instructorId,
+            @Param("restrictToIds") boolean restrictToIds, @Param("ids") Collection<Long> ids);
 
     @EntityGraph(attributePaths = "category")
     List<Course> findAllByIdIn(Collection<Long> ids);
