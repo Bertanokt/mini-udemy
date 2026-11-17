@@ -38,6 +38,7 @@ ADR, kararın alındığı iş ile **aynı PR'da** yazılır.
 | [ADR-004](0004-yerel-dosya-depolama.md) | Yerel dosya depolama (Docker volume) ve yetki kontrollü servis | Kabul edildi | #84 |
 | [ADR-005](0005-ayri-frontend-rest-openapi.md) | Ayrı frontend, REST API ve önce OpenAPI sözleşmesi | Kabul edildi | #84 |
 | [ADR-006](0006-dto-mapper-mapstruct.md) | DTO + Mapper deseni, MapStruct ile ve eşlenmemiş alan derleme hatası | Kabul edildi | #9 |
+| [ADR-007](0007-csp-nonce-suz.md) | Next.js'te nonce'suz Content-Security-Policy (`'unsafe-inline'`) | Kabul edildi | #16 |
 
 ### Planlanan
 

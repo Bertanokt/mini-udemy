@@ -32,7 +32,7 @@ Kimlik doğrulama **sunucuda oturum tutmadan, HS256 ile imzalanmış ve süresi 
 `localStorage`'daki değeri sayfada çalışan her JavaScript okuyabilir. Sitede bir XSS açığı olursa (örneğin bir kurs açıklamasına ya da yoruma gömülmüş betik), saldırgan token'ı çalıp süresi dolana kadar kullanıcının yerine API'yi çağırabilir. Bu risk bilerek kabul edildi ve şu önlemlerle küçültülüyor:
 
 - **İçerik metin olarak gösterilir:** React değerleri varsayılan olarak kaçışlayarak (escape) basar. `dangerouslySetInnerHTML` kullanılmaz; yasak #16'da ESLint kuralıyla (`react/no-danger`) zorunlu hale gelir.
-- **Temel CSP:** #16'da `next.config.ts`'e, betiklerin yalnız sitenin kendisinden yüklenmesine izin veren bir `Content-Security-Policy` başlığı eklenir. Böylece enjekte edilen satır içi ya da dış betik çalışmaz.
+- **Temel CSP:** #16'da `next.config.ts`'e, betiklerin yalnız sitenin kendisinden yüklenmesine izin veren bir `Content-Security-Policy` başlığı eklenir. Böylece enjekte edilen satır içi ya da dış betik çalışmaz. (Bkz. [ADR-007](0007-csp-nonce-suz.md).)
 - **Kısa süre:** token en fazla 1 saat geçerli; çalınan bir token'ın kullanılabileceği süre bununla sınırlı.
 - **Çıkışta ve 401'de silinir:** istemci çıkışta ve 401 aldığında token'ı `localStorage`'dan siler.
 
