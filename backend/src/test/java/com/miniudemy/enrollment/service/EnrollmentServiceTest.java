@@ -185,4 +185,29 @@ class EnrollmentServiceTest {
         assertThat(service.isEnrolled(42L, 5L)).isTrue();
         assertThat(service.isEnrolled(43L, 5L)).isFalse();
     }
+
+    // --- ilerleme modülünün kullandığı kayıt id sorguları (#43) ---
+
+    @Test
+    void requireEnrollmentId_enrolled_returnsId() {
+        given(repository.findIdByStudentIdAndCourseId(42L, 5L)).willReturn(java.util.Optional.of(9L));
+
+        assertThat(service.requireEnrollmentId(42L, 5L)).isEqualTo(9L);
+    }
+
+    @Test
+    void requireEnrollmentId_notEnrolled_throwsForbidden() {
+        given(repository.findIdByStudentIdAndCourseId(42L, 5L)).willReturn(java.util.Optional.empty());
+
+        assertThatThrownBy(() -> service.requireEnrollmentId(42L, 5L))
+                .isInstanceOf(com.miniudemy.common.exception.ForbiddenException.class)
+                .hasMessage("Bu kursa kayıtlı değilsiniz.");
+    }
+
+    @Test
+    void findEnrollmentIdsByCourse_returnsRepositoryIds() {
+        given(repository.findIdsByCourseId(5L)).willReturn(List.of(9L, 10L));
+
+        assertThat(service.findEnrollmentIdsByCourse(5L)).containsExactly(9L, 10L);
+    }
 }

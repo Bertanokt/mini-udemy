@@ -158,11 +158,11 @@ AFTER_COMMIT dinleyicisi, işlem bittiği için veritabanı yazması gerekiyorsa
 | `LessonPublished` | `course` | ders yayımlama (#41) | `notification` (kayıtlı kursiyerlere) | Yalnız tip; yayıncı ve dinleyici sonra |
 | `CourseApproved` | `course` | admin onayı | `notification` (eğitmene) | Yalnız tip; yayıncı ve dinleyici sonra |
 | `CourseRejected` (gerekçeli) | `course` | admin reddi | `notification` (eğitmene) | Yalnız tip; yayıncı ve dinleyici sonra |
-| `LessonCompleted` | `progress` | ders tamamlama (#54) | `progress` (ilerleme yüzdesi), `certificate` (uygunluk) | Yalnız tip; yayıncı ve dinleyici sonra |
+| `LessonCompleted` | `progress` | ders tamamlama (#41) | `progress` (`ProgressListener`, kurs yüzdesi), `certificate` (uygunluk) | Tip ve `progress` dinleyicisi (#43) var; yayıncı #41'de, `certificate` dinleyicisi sonra |
 | `QuizCompleted` | `quiz` | sınav çözme | `certificate` (uygunluk), `notification` (kursiyere) | Yalnız tip; yayıncı ve dinleyici sonra |
 | `CertificateIssued` | `certificate` | sertifika verme | `notification` (kursiyere) | Yalnız tip; yayıncı ve dinleyici sonra |
 
-Bugün yalnız `EnrollmentCreated` gerçekten yayınlanıyor ve henüz üretim dinleyicisi yok; teslim kuralı `EnrollmentCreatedDeliveryTest` ile gösterilir. Diğer olayların yayıncıları ilgili issue'larda eklenir; tipleri şimdiden tanımlıdır ve alanları o issue'larda gerekirse genişletilir.
+Bugün yalnız `EnrollmentCreated` gerçekten yayınlanıyor ve henüz üretim dinleyicisi yok; teslim kuralı `EnrollmentCreatedDeliveryTest` ile gösterilir. `LessonCompleted` için `ProgressListener` yazılıdır ama ders tamamlama ucu (#41) olmadığından olay şimdilik yalnız testte yayınlanır (`LessonCompletedDeliveryTest`). Diğer olayların yayıncıları ilgili issue'larda eklenir; tipleri şimdiden tanımlıdır ve alanları o issue'larda gerekirse genişletilir.
 
 ## 6. Diyagramlar
 
@@ -199,6 +199,16 @@ flowchart TB
 ### Modül bağımlılıkları
 
 Düz ok: service çağrısı. Kesikli ok: domain olayı (yayınlayan → dinleyen). Noktalı çizgi: `course`'un tanımladığı istatistik arayüzünü uygulama.
+
+### İlerleme yüzdesi hesaplama kuralı (#43)
+
+- **Kurs yüzdesi** = kaydın tamamladığı ders sayısı / kurstaki toplam ders sayısı × 100, iki ondalığa yuvarlanır (HALF_UP). Örnek: 20 dersin 15'i 75.00; 3 dersin 1'i 33.33.
+- **Bölüm yüzdesi** aynı kuraldır, yalnız bölümün dersleri üzerinden.
+- **Dersi olmayan kurs ya da bölümde yüzde 0'dır**; sıfıra bölme yapılmaz. Dersi olmayan bölüm kurs yüzdesini değiştirmez (paydaya ders eklemez).
+- Yalnız kursta **hâlâ var olan** dersler sayılır. Bir ders silinirse hem payda hem (o dersi tamamlamış kayıtlar için) pay değişir; tamamlama kaydı da `ON DELETE CASCADE` ile silinir.
+- Bütün dersler eşit ağırlıktadır (zorunlu/isteğe bağlı ayrımı yüzdeye girmez).
+- `GET /api/me/courses/{id}/progress` yanıtı her istekte güncel ders yapısından hesaplanır; bölüm yüzdeleri hiçbir yerde saklanmaz. `course_progress.progress_percent` liste ekranları için tutulan önbellektir: `ProgressListener` her `LessonCompleted` olayında ilgili kaydın satırını yazar, ders silme akışı `ProgressService.recalculateCourse(courseId)` ile kursun tüm kayıtlarını yeniden yazar (bu çağrıyı ders silme ucu ekleyecek).
+- `progress`, ders sayıları için `course/service/CourseStructureService`'i, kayıt id'si ve kayıt denetimi için `enrollment/service/EnrollmentService`'i kullanır (tablodaki `course`, `enrollment` bağımlılıkları içinde).
 
 ```mermaid
 flowchart LR
