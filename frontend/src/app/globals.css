@@ -263,3 +263,82 @@ a {
     width: 100%;
   }
 }
+
+/* Giriş ve kayıt formları (#18, #17) */
+.auth-page {
+  max-width: 420px;
+  margin: 32px auto;
+}
+
+.auth-page h1 {
+  margin-bottom: 20px;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.auth-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.auth-form input,
+.auth-form button {
+  font: inherit;
+  color: inherit;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  width: 100%;
+}
+
+.auth-form input[aria-invalid="true"] {
+  border-color: var(--err);
+}
+
+.auth-form button {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  cursor: pointer;
+}
+
+.auth-form button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.auth-error,
+.field-error {
+  color: var(--err);
+}
+
+.auth-error {
+  border: 1px solid var(--err);
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+
+.field-error {
+  font-size: 0.8125rem;
+}
+
+.auth-status,
+.placeholder-page p {
+  color: var(--muted);
+}
+
+.placeholder-page {
+  margin: 32px 0;
+}
+
+.placeholder-page h1 {
+  margin-bottom: 8px;
+}
