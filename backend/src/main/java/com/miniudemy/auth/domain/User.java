@@ -104,6 +104,11 @@ public class User {
         return active;
     }
 
+    /** Hesabı aktifleştirir ya da pasifleştirir (yönetici işlemi, #60). */
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
     public Instant getCreatedAt() {
         return createdAt;
     }
