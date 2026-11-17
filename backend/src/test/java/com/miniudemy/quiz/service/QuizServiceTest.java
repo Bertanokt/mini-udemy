@@ -45,7 +45,8 @@ class QuizServiceTest {
     private final QuestionRepository questionRepository = mock(QuestionRepository.class);
     private final CourseOwnershipService ownership = mock(CourseOwnershipService.class);
     private final QuizService service = new QuizService(quizRepository, questionRepository,
-            Mappers.getMapper(QuizMapper.class), Mappers.getMapper(QuestionMapper.class), ownership);
+            Mappers.getMapper(QuizMapper.class), Mappers.getMapper(QuestionMapper.class), ownership,
+            mock(com.miniudemy.enrollment.service.EnrollmentService.class));
 
     private final Question q1 = question(21L, COURSE);
     private final Question q2 = question(22L, COURSE);
