@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   title: "Yönetici paneli · Mini Udemy",
 };
 
-/** Yer tutucu (#18): giriş sonrası yönlendirme adresi. Asıl panel #62'de; şimdilik yalnız kategori yönetimi bağlantısı var (#118). */
+/** Yer tutucu (#18): giriş sonrası yönlendirme adresi. Asıl panel #62'de; şimdilik yalnız kategori (#118) ve kullanıcı (#63) yönetimi bağlantıları var. */
 export default function Page() {
   return (
     <section className="placeholder-page">
@@ -13,6 +13,9 @@ export default function Page() {
       <ul>
         <li>
           <Link href="/admin/categories">Kategori yönetimi</Link>
+        </li>
+        <li>
+          <Link href="/admin/users">Kullanıcı yönetimi</Link>
         </li>
       </ul>
       <p>Diğer panel bölümleri yakında.</p>
