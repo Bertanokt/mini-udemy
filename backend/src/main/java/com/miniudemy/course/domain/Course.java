@@ -125,6 +125,14 @@ public class Course {
         return sections.stream().mapToInt(Section::getTotalDurationSeconds).sum();
     }
 
+    /**
+     * Kurs katalogda görünür (Yayımlandı) mü. Durum kuralları #85'te State nesnelerine taşınacak; o zaman bu sorgu da
+     * durum nesnesine yönlenir, çağıranlar değişmez.
+     */
+    public boolean isPublished() {
+        return status == CourseStatus.PUBLISHED;
+    }
+
     public Long getId() {
         return id;
     }
