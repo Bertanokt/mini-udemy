@@ -14,17 +14,21 @@ import com.miniudemy.common.exception.BadRequestException;
 import com.miniudemy.common.exception.ConflictException;
 import com.miniudemy.common.exception.NotFoundException;
 import com.miniudemy.course.service.CourseOwnershipService;
+import com.miniudemy.enrollment.service.EnrollmentService;
 import com.miniudemy.quiz.domain.Question;
 import com.miniudemy.quiz.domain.Quiz;
 import com.miniudemy.quiz.dto.InstructorQuizResponse;
 import com.miniudemy.quiz.dto.QuizRequest;
+import com.miniudemy.quiz.dto.QuizSummaryResponse;
+import com.miniudemy.quiz.dto.StudentQuizResponse;
 import com.miniudemy.quiz.mapper.QuestionMapper;
 import com.miniudemy.quiz.mapper.QuizMapper;
 import com.miniudemy.quiz.repository.QuestionRepository;
 import com.miniudemy.quiz.repository.QuizRepository;
 
 /**
- * Bölüm sonu sınavının yazma işlemleri (#48). Yalnız kursun sahibi eğitmen içindir ve kurs düzenlenebilir
+ * Bölüm sonu sınavının yazma (#48) ve okuma (#49) işlemleri. Okumada öğrenci ve eğitmen görünümü ayrı DTO'larla verilir.
+ * Yazma Yalnız kursun sahibi eğitmen içindir ve kurs düzenlenebilir
  * durumdayken (course modülü karar verir; #85'te State nesnesi) yapılır.
  */
 @Service
@@ -35,14 +39,17 @@ public class QuizService {
     private final QuizMapper quizMapper;
     private final QuestionMapper questionMapper;
     private final CourseOwnershipService courseOwnershipService;
+    private final EnrollmentService enrollmentService;
 
     public QuizService(QuizRepository quizRepository, QuestionRepository questionRepository, QuizMapper quizMapper,
-            QuestionMapper questionMapper, CourseOwnershipService courseOwnershipService) {
+            QuestionMapper questionMapper, CourseOwnershipService courseOwnershipService,
+            EnrollmentService enrollmentService) {
         this.quizRepository = quizRepository;
         this.questionRepository = questionRepository;
         this.quizMapper = quizMapper;
         this.questionMapper = questionMapper;
         this.courseOwnershipService = courseOwnershipService;
+        this.enrollmentService = enrollmentService;
     }
 
     @Transactional
@@ -84,6 +91,53 @@ public class QuizService {
             throw new ConflictException("Bu sınavın denemeleri var, silinemez.");
         }
         quizRepository.delete(quiz);
+    }
+
+    /** Kursa kayıtlı öğrenci için sınav; doğru cevap bilgisi yoktur. Sınav yoksa 404, kayıtsızsa 403. */
+    @Transactional(readOnly = true)
+    public StudentQuizResponse getQuizForStudent(Long quizId, Long studentId) {
+        Quiz quiz = findQuiz(quizId);
+        enrollmentService.assertEnrolled(studentId, courseOwnershipService.findCourseIdOfSection(quiz.getSectionId()));
+        return quizMapper.toStudentResponse(quiz, questionMapper.toStudentResponses(loadQuestions(quiz)));
+    }
+
+    /** Kursun sahibi eğitmen için sınav, doğru cevaplarla. Sınav yoksa 404, başkasının kursuysa 403. */
+    @Transactional(readOnly = true)
+    public InstructorQuizResponse getQuizForInstructor(Long quizId, Long instructorId) {
+        Quiz quiz = findQuiz(quizId);
+        courseOwnershipService.assertOwner(courseOwnershipService.findCourseIdOfSection(quiz.getSectionId()),
+                instructorId);
+        return quizMapper.toInstructorResponse(quiz, questionMapper.toResponses(loadQuestions(quiz)));
+    }
+
+    /**
+     * Bölümün sınav özetleri. Bölüm yoksa 404. ADMIN herkesinkini görür; INSTRUCTOR yalnız kendi kursunu (değilse
+     * 403); STUDENT yalnız kayıtlı olduğu kursu (değilse 403).
+     */
+    @Transactional(readOnly = true)
+    public List<QuizSummaryResponse> listSectionQuizzes(Long sectionId, Long userId, String role) {
+        Long courseId = courseOwnershipService.findCourseIdOfSection(sectionId);
+        switch (role) {
+            case "ADMIN" -> { }
+            case "INSTRUCTOR" -> courseOwnershipService.assertOwner(courseId, userId);
+            default -> enrollmentService.assertEnrolled(userId, courseId);
+        }
+        return quizMapper.toSummaries(quizRepository.findBySectionIdOrderByIdAsc(sectionId));
+    }
+
+    private Quiz findQuiz(Long quizId) {
+        return quizRepository.findById(quizId).orElseThrow(() -> new NotFoundException("Sınav bulunamadı."));
+    }
+
+    /** Sınavın sorularını şıklarıyla, sınavdaki sırayla ve sabit sayıda sorguyla yükler. */
+    private List<Question> loadQuestions(Quiz quiz) {
+        List<Long> ids = quiz.getQuestionIds();
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        Map<Long, Question> byId = questionRepository.findAllWithOptionsByIdIn(ids).stream()
+                .collect(Collectors.toMap(Question::getId, Function.identity()));
+        return ids.stream().map(byId::get).toList();
     }
 
     /** Sınav yoksa 404; bölümün kursu için sahiplik (403) ve düzenlenebilirlik (409) denetlenir. */

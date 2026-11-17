@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.miniudemy.common.exception.ConflictException;
+import com.miniudemy.common.exception.ForbiddenException;
 import com.miniudemy.course.dto.CourseSummaryResponse;
 import com.miniudemy.course.service.CourseLookupService;
 import com.miniudemy.enrollment.domain.Enrollment;
@@ -79,6 +80,20 @@ public class EnrollmentService {
                 .filter(e -> courses.containsKey(e.getCourseId()))
                 .map(e -> toResponse(e, courses.get(e.getCourseId())))
                 .toList();
+    }
+
+    /** Kursiyer kursa kayıtlı mı. Başka modüller kayıt denetimini yalnız buradan yapar. */
+    @Transactional(readOnly = true)
+    public boolean isEnrolled(Long studentId, Long courseId) {
+        return repository.existsByStudentIdAndCourseId(studentId, courseId);
+    }
+
+    /** Kursiyer kursa kayıtlı değilse 403. */
+    @Transactional(readOnly = true)
+    public void assertEnrolled(Long studentId, Long courseId) {
+        if (!isEnrolled(studentId, courseId)) {
+            throw new ForbiddenException("Bu kursa kayıtlı değilsiniz.");
+        }
     }
 
     private EnrollmentResponse toResponse(Enrollment enrollment, CourseSummaryResponse course) {
