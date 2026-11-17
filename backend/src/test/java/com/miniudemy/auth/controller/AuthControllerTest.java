@@ -1,6 +1,7 @@
 package com.miniudemy.auth.controller;
 
 import static org.hamcrest.Matchers.anEmptyMap;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -24,6 +25,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.RequestBuilder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -76,6 +78,14 @@ class AuthControllerTest {
         given(userRepository.findByEmail(anyString())).willReturn(Optional.empty());
         given(userRepository.findByEmail(EMAIL)).willReturn(Optional.of(ayse));
         given(userRepository.findById(42L)).willReturn(Optional.of(ayse));
+        given(userRepository.existsByEmail(anyString())).willReturn(false);
+        given(userRepository.existsByEmail(EMAIL)).willReturn(true);
+        given(userRepository.saveAndFlush(any(User.class))).willAnswer(inv -> {
+            User saved = inv.getArgument(0);
+            ReflectionTestUtils.setField(saved, "id", 7L);
+            ReflectionTestUtils.setField(saved, "createdAt", Instant.parse("2026-11-17T08:00:00Z"));
+            return saved;
+        });
     }
 
     @Test
@@ -152,6 +162,75 @@ class AuthControllerTest {
         mockMvc.perform(get("/api/test/protected").header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(content().string("42"));
+    }
+
+    // --- Kayıt (#12) ---
+
+    @Test
+    void register_withValidData_returns201WithUserAndNoToken_withoutAuthorizationHeader() throws Exception {
+        mockMvc.perform(register("Mehmet Kaya", "mehmet.kaya@example.com", PASSWORD, "INSTRUCTOR"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(7))
+                .andExpect(jsonPath("$.email").value("mehmet.kaya@example.com"))
+                .andExpect(jsonPath("$.fullName").value("Mehmet Kaya"))
+                .andExpect(jsonPath("$.role").value("INSTRUCTOR"))
+                .andExpect(jsonPath("$.bio").isEmpty())
+                .andExpect(jsonPath("$.createdAt").value("2026-11-17T08:00:00Z"))
+                .andExpect(jsonPath("$.passwordHash").doesNotExist())
+                .andExpect(jsonPath("$.accessToken").doesNotExist());
+    }
+
+    @Test
+    void register_withInvalidFields_returns400WithFieldErrors() throws Exception {
+        mockMvc.perform(register("A", "e-posta-degil", "kisa", "STUDENT"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Girilen bilgilerde hata var."))
+                .andExpect(jsonPath("$.errors.fullName").value("Ad soyad 2–100 karakter olmalıdır."))
+                .andExpect(jsonPath("$.errors.email").value("Geçerli bir e-posta adresi girin."))
+                .andExpect(jsonPath("$.errors.password").value("Parola en az 8 karakter olmalıdır."));
+
+        mockMvc.perform(register("Ayşe Yılmaz", "yeni@example.com", "a".repeat(73), "STUDENT"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.password").value("Parola en fazla 72 karakter olabilir."));
+
+        mockMvc.perform(register("Ayşe Yılmaz", "yeni@example.com", PASSWORD, null))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.role").value("Rol zorunludur."));
+    }
+
+    @Test
+    void register_asAdmin_returns400MatchingContractExample() throws Exception {
+        mockMvc.perform(register("Admin Olmak", "admin@example.com", PASSWORD, "ADMIN"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().json("""
+                        {"status": 400, "message": "Girilen bilgilerde hata var.",
+                         "errors": {"role": "Bu rol ile kayıt olunamaz."}}""", true));
+    }
+
+    @Test
+    void register_withUnknownRole_returns400() throws Exception {
+        mockMvc.perform(register("Ayşe Yılmaz", "yeni@example.com", PASSWORD, "MODERATOR"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void register_withExistingEmail_returns409MatchingContractExample() throws Exception {
+        mockMvc.perform(register("Ayşe Yılmaz", EMAIL, PASSWORD, "STUDENT"))
+                .andExpect(status().isConflict())
+                .andExpect(content().json("""
+                        {"status": 409, "message": "Bu e-posta adresi zaten kayıtlı.",
+                         "errors": {"email": "Bu e-posta adresi zaten kayıtlı."}}""", true));
+    }
+
+    private RequestBuilder register(String fullName, String email, String password, String role) throws Exception {
+        java.util.Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put("fullName", fullName);
+        body.put("email", email);
+        body.put("password", password);
+        body.put("role", role);
+        return post("/api/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(body));
     }
 
     private org.springframework.test.web.servlet.RequestBuilder login(String email, String password)
