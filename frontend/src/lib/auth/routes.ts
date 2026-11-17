@@ -13,3 +13,20 @@ export const HOME_BY_ROLE: Record<Role, string> = {
 export function homeForRole(role: Role): string {
   return HOME_BY_ROLE[role];
 }
+
+/**
+ * Girişten sonra dönülecek adres (`/login?next=...`). Yalnız site içi yollar kabul edilir: `/` ile başlamalı,
+ * `//` ya da `/\` ile başlamamalı (tarayıcı bunları başka bir siteye giden adres sayar; açık yönlendirme açığı).
+ * Geçersizse `null`.
+ */
+export function safeNextPath(next: string | null): string | null {
+  if (!next || !next.startsWith("/") || next.startsWith("//") || next.startsWith("/\\")) {
+    return null;
+  }
+  return next;
+}
+
+/** Giriş sayfasının, dönülecek adresi taşıyan bağlantısı. */
+export function loginHref(next: string): string {
+  return `/login?next=${encodeURIComponent(next)}`;
+}
