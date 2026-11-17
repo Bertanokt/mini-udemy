@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { Header } from "@/components/layout/Header";
 import { AuthProvider } from "@/lib/auth/AuthProvider";
@@ -13,7 +14,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="tr">
       <body>
         <AuthProvider>
-          <Header />
+          {/* Header adresi okur (usePathname); `[id]` gibi dinamik yollarda bekleme sınırı gerekir. */}
+          <Suspense fallback={<div className="site-header" style={{ height: 65 }} />}>
+            <Header />
+          </Suspense>
           <main className="container site-main">{children}</main>
         </AuthProvider>
       </body>
