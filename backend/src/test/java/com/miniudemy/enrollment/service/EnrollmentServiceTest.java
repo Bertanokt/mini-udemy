@@ -177,4 +177,12 @@ class EnrollmentServiceTest {
 
         verifyNoInteractions(courseLookup);
     }
+
+    @Test
+    void isEnrolled_delegatesToRepository() {
+        given(repository.existsByStudentIdAndCourseId(42L, 5L)).willReturn(true);
+
+        assertThat(service.isEnrolled(42L, 5L)).isTrue();
+        assertThat(service.isEnrolled(43L, 5L)).isFalse();
+    }
 }
