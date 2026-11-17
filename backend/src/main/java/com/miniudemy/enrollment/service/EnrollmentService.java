@@ -67,6 +67,12 @@ public class EnrollmentService {
         return toResponse(enrollment, course);
     }
 
+    /** Kursiyer bu kursa kayıtlı mı; başka modüller (ör. review) kayıt kontrolünü buradan yapar. */
+    @Transactional(readOnly = true)
+    public boolean isEnrolled(Long studentId, Long courseId) {
+        return repository.existsByStudentIdAndCourseId(studentId, courseId);
+    }
+
     /** Kursiyerin kayıtları, en son kaydolunan önce. Sorgu sayısı kayıt sayısından bağımsızdır. */
     @Transactional(readOnly = true)
     public List<EnrollmentResponse> listMyEnrollments(Long studentId) {
