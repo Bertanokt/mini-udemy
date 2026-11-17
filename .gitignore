@@ -5,3 +5,6 @@
 .env
 scripts/.issue-map.tsv
 .claude/settings.local.json
+# Yerelde yüklenen dosyalar (app.storage.root varsayılanı)
+data/
+backend/data/

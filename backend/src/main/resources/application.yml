@@ -15,6 +15,12 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+  servlet:
+    multipart:
+      # Genel üst sınır: en büyük tür (video) 200 MB. Türe özgü sınırları ve 413 mesajını içerik türünün kuralı
+      # (FilePolicy, #110) verir; bu sınır yalnız çok büyük istekleri baştan keser (ADR-004).
+      max-file-size: 200MB
+      max-request-size: 201MB
 
 server:
   port: ${SERVER_PORT:8080}
@@ -33,3 +39,6 @@ app:
     # Yalnız dev ve test profilleri kendi "dev-only" / "test-only" anahtarlarıyla bunu geçersiz kılar.
     secret: ${JWT_SECRET}
     expiration: 1h
+  storage:
+    # Yüklenen dosyaların dizini (#111, ADR-004). Docker'da uploads volume'u (/data/uploads); yerelde ./data/uploads.
+    root: ${STORAGE_ROOT:./data/uploads}
