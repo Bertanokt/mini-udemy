@@ -12,6 +12,7 @@ import com.miniudemy.course.domain.Course;
 import com.miniudemy.course.domain.Lesson;
 import com.miniudemy.course.domain.Section;
 import com.miniudemy.course.dto.CourseDetailResponse;
+import com.miniudemy.course.dto.CourseResponse;
 import com.miniudemy.course.dto.CourseStats;
 import com.miniudemy.course.dto.CourseSummaryResponse;
 import com.miniudemy.course.dto.LessonResponse;
@@ -55,6 +56,22 @@ public interface CourseMapper {
     @Mapping(target = "sections", source = "sections")
     CourseDetailResponse toDetail(Course course, UserSummary instructor, CourseStats stats,
             List<SectionResponse> sections);
+
+    /** Kursun yönetim görünümü (eğitmen ve yönetici; #22 oluşturma yanıtı). */
+    @Mapping(target = "id", source = "course.id")
+    @Mapping(target = "title", source = "course.title")
+    @Mapping(target = "description", source = "course.description")
+    @Mapping(target = "category", source = "course.category")
+    @Mapping(target = "level", source = "course.level")
+    @Mapping(target = "status", source = "course.status")
+    @Mapping(target = "instructor", source = "instructor")
+    @Mapping(target = "coverUrl", source = "course")
+    @Mapping(target = "learningOutcomes", source = "course.learningOutcomes")
+    @Mapping(target = "rejectionReason", source = "course.rejectionReason")
+    @Mapping(target = "unpublishReason", source = "course.unpublishReason")
+    @Mapping(target = "createdAt", source = "course.createdAt")
+    @Mapping(target = "updatedAt", source = "course.updatedAt")
+    CourseResponse toResponse(Course course, UserSummary instructor);
 
     @Mapping(target = "courseId", source = "course.id")
     SectionResponse toSectionResponse(Section section);
