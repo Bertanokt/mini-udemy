@@ -44,7 +44,17 @@ Her modülün en az bir test issue'su var. Modüllerin içinde test issue'su olm
 
 §5 kaynaklı 11 fonksiyonel olmayan gereksinim: NFR-01, 02, 03, 04, 05, 07, 08, 11, 12, 16, 17 ([non-functional-requirements.md](non-functional-requirements.md)). Her birinin geliştirme issue'su ve testi bölüm 2.2'de.
 
-### 1.4 §6 test durumları
+§5'in saydığı işlevler de fonksiyonel gereksinimlere bağlı:
+
+| §5 maddesi | Gereksinim | Geliştirme ve test |
+|---|---|---|
+| Arama ve filtreleme | FR-13, FR-14 | Bölüm 2.1 |
+| Sayfalama | FR-13, FR-16, FR-39, NFR-01 | Bölüm 2.1, 2.2 |
+| Sertifika | FR-27, FR-28, FR-29 | Bölüm 2.1 |
+| Yönetim raporları | FR-42 | Bölüm 2.1 |
+| Dosya türü ve boyutu denetimi | FR-11, NFR-11, NFR-12 | Bölüm 2.1, 2.2. Sınırları (200 / 20 / 2 MB) dokümanda yok, NFR-11'de belirlendi |
+
+### 1.4 §6 test durumları ve tasarım beklentileri
 
 | Test durumu | Gereksinim | Beklenen | Test |
 |---|---|---|---|
@@ -55,13 +65,32 @@ Her modülün en az bir test issue'su var. Modüllerin içinde test issue'su olm
 
 Bu dört durumun testi henüz yok; hepsi #139'da ve ilgili servis testlerinde yazılacak. Test planı gereği bu testler silinmez ve `@Disabled` yapılmaz.
 
-### 1.5 §7
+§6'nın tasarım beklentileri:
 
-| Madde | Geliştirme | Doğrulama |
+| Tasarım beklentisi | Geliştirme / doküman | Doğrulama |
 |---|---|---|
-| Örnek kurs verileri (#67'nin açıklamasına göre) | #67 seed data | #68 bug bash, #70 demo senaryosu |
+| Modüler monolit (10 modül) | #6 ✓ `architecture.md`, #80 ✓ ADR-001 | #86 ArchUnit (M), NFR-13 |
+| State deseni (kurs yaşam döngüsü) | #85 | #31, #61 (U) |
+| Strategy deseni (sınav puanlama) | #52 | #56 (U) |
+| Factory Method deseni (ders içerik türleri) | #110 | #114 (U), NFR-18 |
+| Observer deseni (domain olayları, bildirimler) | #42, #124 | #137 (U), NFR-19 |
+| Use-case diyagramı | #1 ✓ | #97 diyagram–kod kontrolü (İ) |
+| Sınıf diyagramı | #51 | #97 (İ) |
+| Sekans diyagramları (kursa kayıt, sınav çözme, sertifika) | #39, #64, #140 | #97 (İ) |
+| ER diyagramı | #2 ✓ | #97 (İ); migration'larla `ddl-auto=validate` |
+| API sözleşmesi (OpenAPI) | #3 ✓, #4 ✓, #5 ✓, #108 ✓ | #66 kodla eşitleme (İ), NFR-15 |
 
-§7'nin tam metni bu repoda yok; satır #67'deki atfa göre yazıldı. Rapora geçmeden önce proje tanım dokümanıyla karşılaştırılacak.
+### 1.5 §7 Beklenen nihai ürün
+
+| Teslim edilecek | Geliştirme / doküman | Doğrulama |
+|---|---|---|
+| Uçtan uca çalışan platform | Senaryo 1–4'ün gereksinimleri ve issue'ları (bölüm 1.2) | #65, #138 (E), #106 demo provası |
+| Eğitmen paneli | #38 | #138 (E), #68 bug bash |
+| Yönetici paneli | #62, #63, #146, #147 | #61 (U), #68 bug bash |
+| Örnek kurs verileri | #67 seed data | #68 bug bash, #70 demo senaryosu |
+| API dokümantasyonu | #3 ✓, #4 ✓, #5 ✓, #108 ✓ | #66 kodla eşitleme (İ) |
+| Mimari dokümantasyon | #6 ✓, ADR'ler (#80 ✓, #81 ✓, #84 ✓), #87 C4, #91 bileşen diyagramı, #103 rapor bölüm 4 | #97 (İ) |
+| Test senaryoları | #92 ✓ test planı, #70 demo senaryosu | #99 test raporu |
 
 ## 2. Gereksinim → issue → test
 
