@@ -133,6 +133,8 @@ Yayından kaldırılan bir kursa daha önce kaydolmuş kursiyerler içeriğe eri
 | 4. Sınav ve sertifika | FR-25, FR-27, FR-28, FR-29 |
 | 5. Eğitmen analitiği | FR-33, FR-34, FR-35 |
 
+Senaryoların ve kullanım durumlarının (UC-xx) adım adım akışları: [use-cases.md](use-cases.md).
+
 ## Bölüm 6 test durumları → gereksinimler
 
 | Test durumu (proje tanım dokümanı, bölüm 6) | Gereksinim |
