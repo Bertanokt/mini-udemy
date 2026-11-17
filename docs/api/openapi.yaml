@@ -1459,7 +1459,10 @@ paths:
     get:
       tags: [Quizzes]
       summary: Sınav deneme geçmişim
-      description: "**Rol:** STUDENT. Yalnız kendi denemeleri, en yeni önce."
+      description: >
+        **Rol:** STUDENT. Yalnız kendi denemeleri, en yeni önce. Sınavın kursuna kayıtlı olmayan
+        öğrenciye 403 döner (sınav görüntüleme ile aynı kural); kayıtlı ama denemesi olmayana boş liste.
+        `percent` bir ondalığa yuvarlanır; `maxScore` 0 ise 0.
       operationId: listMyQuizAttempts
       x-roles: [STUDENT]
       security:
