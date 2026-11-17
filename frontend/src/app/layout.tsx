@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { AuthProvider } from "@/lib/auth/AuthProvider";
 import "./globals.css";
@@ -16,7 +15,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <AuthProvider>
           <Header />
           <main className="container site-main">{children}</main>
-          <Footer />
         </AuthProvider>
       </body>
     </html>
