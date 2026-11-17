@@ -157,14 +157,14 @@ AFTER_COMMIT dinleyicisi, işlem bittiği için veritabanı yazması gerekiyorsa
 | Olay | Olay tipi (modül) | Yayıncı | Dinleyenler (planlanan) | Durum |
 |---|---|---|---|---|
 | `EnrollmentCreated` | `enrollment` | `EnrollmentService.enroll` | `notification` (eğitmene) | Yayıncı var; dinleyici #124 |
-| `LessonPublished` | `course` | ders yayımlama (#41) | `notification` (kayıtlı kursiyerlere) | Yalnız tip; yayıncı ve dinleyici sonra |
+| `LessonPublished` | `course` | ders yayımlama | `notification` (kayıtlı kursiyerlere) | Yalnız tip; yayıncı ve dinleyici sonra |
 | `CourseApproved` | `course` | `CourseLifecycleService.approve` (#59) | `notification` (eğitmene) | Yayıncı var; dinleyici #124 |
 | `CourseRejected` (gerekçeli) | `course` | `CourseLifecycleService.reject` (#59) | `notification` (eğitmene) | Yayıncı var; dinleyici #124 |
-| `LessonCompleted` | `progress` | ders tamamlama (#41) | `progress` (`ProgressListener`, kurs yüzdesi), `certificate` (uygunluk) | Tip ve `progress` dinleyicisi (#43) var; yayıncı #41'de, `certificate` dinleyicisi sonra |
+| `LessonCompleted` | `progress` | `LessonCompletionService.complete` (#41), yalnız ilk tamamlamada | `progress` (`ProgressListener`, kurs yüzdesi), `certificate` (uygunluk) | Yayıncı ve `progress` dinleyicisi (#43) var; `certificate` dinleyicisi sonra |
 | `QuizCompleted` | `quiz` | sınav çözme | `certificate` (uygunluk), `notification` (kursiyere) | Yalnız tip; yayıncı ve dinleyici sonra |
 | `CertificateIssued` | `certificate` | sertifika verme | `notification` (kursiyere) | Yalnız tip; yayıncı ve dinleyici sonra |
 
-Bugün `EnrollmentCreated`, `CourseApproved` ve `CourseRejected` gerçekten yayınlanıyor ve henüz üretim dinleyicileri yok; teslim kuralı `EnrollmentCreatedDeliveryTest` ile gösterilir. `LessonCompleted` için `ProgressListener` yazılıdır ama ders tamamlama ucu (#41) olmadığından olay şimdilik yalnız testte yayınlanır (`LessonCompletedDeliveryTest`). Diğer olayların yayıncıları ilgili issue'larda eklenir; tipleri şimdiden tanımlıdır ve alanları o issue'larda gerekirse genişletilir.
+Bugün `EnrollmentCreated`, `CourseApproved`, `CourseRejected` ve `LessonCompleted` gerçekten yayınlanıyor. İlk üçünün henüz üretim dinleyicisi yok; teslim kuralı `EnrollmentCreatedDeliveryTest` ile gösterilir. `LessonCompleted`'ı ders tamamlama ucu (`POST /api/lessons/{id}/complete`, #41) yayınlar; `ProgressListener` commit'ten sonra kurs yüzdesini günceller (`LessonCompletedDeliveryTest`). Diğer olayların yayıncıları ilgili issue'larda eklenir; tipleri şimdiden tanımlıdır ve alanları o issue'larda gerekirse genişletilir.
 
 ## 6. Diyagramlar
 
