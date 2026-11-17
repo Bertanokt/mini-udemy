@@ -1,6 +1,7 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { API_BASE_URL, ApiError } from "@/lib/api/client";
 import { LEVEL_LABELS } from "@/lib/api/catalog";
@@ -26,8 +27,8 @@ type EnrollmentState = { userId: number; enrolled: boolean | null; key: number }
  * Kayıtlılık `GET /api/me/enrollments`'tan anlaşılır (yalnız giriş yapmış STUDENT için).
  * Ders izleme sayfası henüz yok; "Derse devam et" `/courses/{id}/learn` adresine bağlıdır (yer tutucu).
  */
-export function CourseDetailView({ params }: { params: Promise<{ id: string }> }) {
-  const { id: rawId } = use(params);
+export function CourseDetailView() {
+  const { id: rawId } = useParams<{ id: string }>();
   const id = /^\d+$/.test(rawId) ? Number(rawId) : null;
   const { status, user } = useAuth();
   const [retry, setRetry] = useState(0);
