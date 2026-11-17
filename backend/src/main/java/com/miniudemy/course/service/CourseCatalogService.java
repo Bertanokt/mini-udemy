@@ -122,6 +122,11 @@ public class CourseCatalogService {
         return new CourseSummaryPage(toCards(ordered, counts), page, size, ranked.size(), totalPages);
     }
 
+    /** Verilen kurslar için kart: sayılar ve eğitmen adları toplu sorgularla gelir (CourseLookupService kullanır). */
+    List<CourseSummaryResponse> summaries(List<Course> courses) {
+        return toCards(courses, enrollmentCounts.countByCourses(ids(courses)));
+    }
+
     /** Sayfadaki kurslar için ders sayıları, eğitmen adları ve (hazır) kayıt sayıları; her biri tek sorgu. */
     private List<CourseSummaryResponse> toCards(List<Course> courses, Map<Long, Long> enrollmentByCourse) {
         if (courses.isEmpty()) {

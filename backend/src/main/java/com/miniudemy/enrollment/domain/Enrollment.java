@@ -13,8 +13,7 @@ import jakarta.persistence.Table;
  * Bir kursiyerin bir kursa kaydı.
  *
  * Tablo: `enrollments` (migration `V202611131600__create_enrollments.sql`). Kursiyer ve kurs başka modüllerin
- * entity'leri olduğu için yalnız id olarak tutulur. Kayıt oluşturma ve kurallar #30'da eklenecek; şimdilik katalog
- * için sayım yeterli.
+ * entity'leri olduğu için yalnız id olarak tutulur. (student_id, course_id) çifti veritabanında benzersizdir.
  */
 @Entity
 @Table(name = "enrollments")
@@ -30,11 +29,18 @@ public class Enrollment {
     @Column(name = "course_id", nullable = false)
     private Long courseId;
 
-    @Column(name = "enrolled_at", nullable = false, insertable = false, updatable = false)
+    @Column(name = "enrolled_at", nullable = false, updatable = false)
     private Instant enrolledAt;
 
     /** JPA için. */
     protected Enrollment() {
+    }
+
+    /** Kayıt zamanı burada atanır; böylece kayıt anında yanıtta ve olayda veritabanına gidilmeden bilinir. */
+    public Enrollment(Long studentId, Long courseId) {
+        this.studentId = studentId;
+        this.courseId = courseId;
+        this.enrolledAt = Instant.now();
     }
 
     public Long getId() {
