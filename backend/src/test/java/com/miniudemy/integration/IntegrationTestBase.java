@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -119,7 +120,35 @@ public abstract class IntegrationTestBase {
         return response.getBody().get("accessToken").asText();
     }
 
+    // --- Dosyalar ---
+
+    /**
+     * Yüklenmiş bir dosyayı taklit eder: içeriği geçici depolama dizinine yazar ve {@code stored_files} kaydını
+     * ekler (anahtar, uygulamanın ürettiği gibi bir UUID). Yükleme ucunu sınamayan senaryolar için.
+     */
+    protected long storeFile(long uploaderId, String originalName, String mimeType, byte[] content) {
+        String key = UUID.randomUUID().toString();
+        try {
+            Files.write(STORAGE_ROOT.resolve(key), content);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        return jdbc.queryForObject("""
+                INSERT INTO stored_files (uploader_id, storage_key, original_name, mime_type, size_bytes)
+                VALUES (?, ?, ?, ?, ?) RETURNING id
+                """, Long.class, uploaderId, key, originalName, mimeType, content.length);
+    }
+
     // --- HTTP ---
+
+    /** Dosya indiren uçlar için: gövde bayt olarak döner; {@code range} null değilse Range başlığı gönderilir. */
+    protected ResponseEntity<byte[]> download(String path, String token, String range) {
+        HttpHeaders headers = headers(token);
+        if (range != null) {
+            headers.set(HttpHeaders.RANGE, range);
+        }
+        return http.exchange(path, HttpMethod.GET, new HttpEntity<>(headers), byte[].class);
+    }
 
     protected ResponseEntity<JsonNode> get(String path, String token) {
         return http.exchange(path, HttpMethod.GET, new HttpEntity<>(headers(token)), JsonNode.class);
