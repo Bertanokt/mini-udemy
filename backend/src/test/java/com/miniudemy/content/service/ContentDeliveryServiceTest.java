@@ -8,7 +8,11 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,12 +20,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 
 import com.miniudemy.common.exception.ForbiddenException;
 import com.miniudemy.common.exception.NotFoundException;
 import com.miniudemy.content.domain.DeliveryMode;
+import com.miniudemy.content.domain.LessonOpened;
 import com.miniudemy.content.dto.ContentDownload;
 import com.miniudemy.content.dto.StoredFileInfo;
 import com.miniudemy.course.domain.LessonContentType;
@@ -46,9 +52,11 @@ class ContentDeliveryServiceTest {
     private final CourseLookupService courses = mock(CourseLookupService.class);
     private final EnrollmentService enrollments = mock(EnrollmentService.class);
     private final StorageService storage = mock(StorageService.class);
+    private static final Instant NOW = Instant.parse("2026-11-18T15:00:00Z");
+    private final ApplicationEventPublisher events = mock(ApplicationEventPublisher.class);
     private final ContentDeliveryService service = new ContentDeliveryService(lessons, courses, enrollments, storage,
             new LessonContentFactories(List.of(new VideoContentFactory(), new PdfContentFactory(),
-                    new DocumentContentFactory())));
+                    new DocumentContentFactory())), events, Clock.fixed(NOW, ZoneOffset.UTC));
 
     private final Resource bytes = new ByteArrayResource("0123456789".getBytes());
 
@@ -139,5 +147,31 @@ class ContentDeliveryServiceTest {
         assertThatThrownBy(() -> service.openCourseCover(4L))
                 .isInstanceOf(NotFoundException.class).hasMessage("Kursun kapak görseli yok.");
         verify(storage, never()).open(any());
+    }
+
+    // --- son izlenen ders olayı (#119) ---
+
+    @Test
+    void openLessonContent_enrolledStudent_publishesLessonOpened() {
+        service.openLessonContent(11L, STUDENT, false);
+
+        verify(events).publishEvent(new LessonOpened(STUDENT, 3L, 11L, NOW));
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @CsvSource({"kursun eğitmeni, 7, false", "yönetici, 1, true"})
+    void openLessonContent_instructorOrAdmin_publishesNothing(String who, long viewer, boolean admin) {
+        service.openLessonContent(11L, viewer, admin);
+
+        verifyNoInteractions(events);
+    }
+
+    @Test
+    void openLessonContent_refusedOrWithoutContent_publishesNothing() {
+        given(lessons.contentRefOf(12L)).willReturn(new LessonContentRef(12L, 3L, INSTRUCTOR, LessonContentType.PDF, null));
+
+        assertThatThrownBy(() -> service.openLessonContent(11L, 43L, false)).isInstanceOf(ForbiddenException.class);
+        assertThatThrownBy(() -> service.openLessonContent(12L, STUDENT, false)).isInstanceOf(NotFoundException.class);
+        verifyNoInteractions(events);
     }
 }

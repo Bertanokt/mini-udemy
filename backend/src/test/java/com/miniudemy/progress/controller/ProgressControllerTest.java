@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,8 +29,9 @@ import com.miniudemy.common.exception.ForbiddenException;
 import com.miniudemy.common.security.JwtConfig;
 import com.miniudemy.common.security.JwtService;
 import com.miniudemy.common.security.SecurityConfig;
-import com.miniudemy.progress.dto.CourseProgressResponse;
 import com.miniudemy.progress.dto.CourseProgressResponse.SectionProgress;
+import com.miniudemy.progress.dto.CourseProgressResponse;
+import com.miniudemy.progress.dto.ResumeResponse;
 import com.miniudemy.progress.service.ProgressService;
 
 /** İlerleme ucu gerçek güvenlik ayarıyla; service ve kullanıcı veritabanı taklit edilir. */
@@ -101,5 +103,29 @@ class ProgressControllerTest {
                 .header(HttpHeaders.AUTHORIZATION, bearer(7L, "INSTRUCTOR")))
                 .andExpect(status().isForbidden());
         verifyNoInteractions(progressService);
+    }
+
+    // --- kaldığı yerden devam (#119) ---
+
+    @Test
+    void resume_asEnrolledStudent_returnsResumePoint() throws Exception {
+        given(progressService.getMyResumePoint(42L, 7L)).willReturn(
+                new ResumeResponse(7L, 12L, "Merhaba", 1L, 33.33, Instant.parse("2026-11-18T09:00:00Z")));
+
+        mockMvc.perform(get("/api/me/courses/7/resume").header(HttpHeaders.AUTHORIZATION, bearer(42L, "STUDENT")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.courseId").value(7))
+                .andExpect(jsonPath("$.lessonId").value(12))
+                .andExpect(jsonPath("$.lessonTitle").value("Merhaba"))
+                .andExpect(jsonPath("$.sectionId").value(1))
+                .andExpect(jsonPath("$.progressPercent").value(33.33))
+                .andExpect(jsonPath("$.lastAccessedAt").value("2026-11-18T09:00:00Z"));
+    }
+
+    @Test
+    void resume_asInstructor_returns403_andWithoutToken_returns401() throws Exception {
+        mockMvc.perform(get("/api/me/courses/7/resume").header(HttpHeaders.AUTHORIZATION, bearer(7L, "INSTRUCTOR")))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/me/courses/7/resume")).andExpect(status().isUnauthorized());
     }
 }

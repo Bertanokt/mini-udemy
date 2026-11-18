@@ -32,6 +32,7 @@ import com.miniudemy.course.dto.CourseSummaryResponse;
 import com.miniudemy.course.service.CourseLookupService;
 import com.miniudemy.enrollment.domain.Enrollment;
 import com.miniudemy.enrollment.domain.EnrollmentCreated;
+import com.miniudemy.enrollment.dto.EnrollmentProgressSnapshot;
 import com.miniudemy.enrollment.dto.EnrollmentResponse;
 import com.miniudemy.enrollment.mapper.EnrollmentMapperImpl;
 import com.miniudemy.enrollment.repository.EnrollmentRepository;
@@ -42,8 +43,9 @@ class EnrollmentServiceTest {
     private final EnrollmentRepository repository = mock(EnrollmentRepository.class);
     private final CourseLookupService courseLookup = mock(CourseLookupService.class);
     private final ApplicationEventPublisher events = mock(ApplicationEventPublisher.class);
+    private final EnrollmentProgress progress = mock(EnrollmentProgress.class);
     private final EnrollmentService service = new EnrollmentService(repository, courseLookup,
-            new EnrollmentMapperImpl(), events);
+            new EnrollmentMapperImpl(), events, progress);
 
     private static CourseSummaryResponse card(long id, String title) {
         return new CourseSummaryResponse(id, title, new CategoryResponse(1L, "Yazılım"), CourseLevel.BEGINNER,
@@ -209,5 +211,25 @@ class EnrollmentServiceTest {
         given(repository.findIdsByCourseId(5L)).willReturn(List.of(9L, 10L));
 
         assertThat(service.findEnrollmentIdsByCourse(5L)).containsExactly(9L, 10L);
+    }
+
+    // --- ilerleme özeti (#119) ---
+
+    @Test
+    void listMyEnrollments_fillsPercentAndLastLessonFromProgress_andZeroForEnrollmentWithoutProgress() {
+        Instant now = Instant.parse("2026-11-10T10:00:00Z");
+        Instant opened = Instant.parse("2026-11-18T09:00:00Z");
+        given(repository.findAllByStudentIdOrderByEnrolledAtDescIdDesc(42L)).willReturn(List.of(
+                enrollment(2L, 42L, 6L, now), enrollment(1L, 42L, 5L, now.minusSeconds(60))));
+        given(courseLookup.findSummaries(anyCollection()))
+                .willReturn(Map.of(5L, card(5L, "Java"), 6L, card(6L, "Spring")));
+        given(progress.snapshots(anyCollection()))
+                .willReturn(Map.of(1L, new EnrollmentProgressSnapshot(50.0, 11L, opened)));
+
+        List<EnrollmentResponse> result = service.listMyEnrollments(42L);
+
+        assertThat(result).extracting(EnrollmentResponse::progressPercent).containsExactly(0.0, 50.0);
+        assertThat(result).extracting(EnrollmentResponse::lastLessonId).containsExactly(null, 11L);
+        assertThat(result).extracting(EnrollmentResponse::lastAccessedAt).containsExactly(null, opened);
     }
 }

@@ -105,7 +105,7 @@ Bir modül başka bir modülle **yalnız iki yoldan** konuşur:
 | `course` | `auth` | – |
 | `enrollment` | `course` | – |
 | `content` | `course`, `enrollment` | – |
-| `progress` | `course`, `enrollment` | `LessonCompleted` |
+| `progress` | `course`, `enrollment` | `LessonCompleted`, `LessonOpened` |
 | `quiz` | `course`, `enrollment` | – |
 | `certificate` | `course`, `progress`, `quiz` | `LessonCompleted`, `QuizCompleted` |
 | `review` | `auth`, `course`, `enrollment` | – |
@@ -162,9 +162,10 @@ AFTER_COMMIT dinleyicisi, işlem bittiği için veritabanı yazması gerekiyorsa
 | `CourseRejected` (gerekçeli) | `course` | `CourseLifecycleService.reject` (#59) | `notification` (eğitmene) | Yayıncı var; dinleyici #124 |
 | `LessonCompleted` | `progress` | `LessonCompletionService.complete` (#41), yalnız ilk tamamlamada | `progress` (`ProgressListener`, kurs yüzdesi), `certificate` (uygunluk) | Yayıncı ve `progress` dinleyicisi (#43) var; `certificate` dinleyicisi sonra |
 | `QuizCompleted` | `quiz` | `QuizAttemptService.submit` (#54) | `certificate` (uygunluk), `notification` (kursiyere) | Yayıncı var; dinleyiciler sonra |
+| `LessonOpened` | `content` | `ContentDeliveryService.openLessonContent` (#119), yalnız kayıtlı kursiyer açınca; eğitmen ve yönetici açınca yok | `progress` (`ProgressListener`, son izlenen ders) | Yayıncı ve dinleyici var |
 | `CertificateIssued` | `certificate` | sertifika verme | `notification` (kursiyere) | Yalnız tip; yayıncı ve dinleyici sonra |
 
-Bugün `EnrollmentCreated`, `CourseApproved`, `CourseRejected`, `LessonCompleted` ve `QuizCompleted` gerçekten yayınlanıyor. `QuizCompleted`'ı sınav çözme ucu (`POST /api/quizzes/{id}/attempts`, #54) yayınlar. `EnrollmentCreated`, `CourseApproved` ve `CourseRejected`'ın henüz üretim dinleyicisi yok; teslim kuralı `EnrollmentCreatedDeliveryTest` ile gösterilir. `LessonCompleted`'ı ders tamamlama ucu (`POST /api/lessons/{id}/complete`, #41) yayınlar; `ProgressListener` commit'ten sonra kurs yüzdesini günceller (`LessonCompletedDeliveryTest`). Diğer olayların yayıncıları ilgili issue'larda eklenir; tipleri şimdiden tanımlıdır ve alanları o issue'larda gerekirse genişletilir.
+Bugün `EnrollmentCreated`, `CourseApproved`, `CourseRejected`, `LessonCompleted`, `QuizCompleted` ve `LessonOpened` gerçekten yayınlanıyor. `LessonOpened`'ı ders içeriği ucu (`GET /api/lessons/{id}/content`, #119) yayınlar; `ProgressListener` commit'ten sonra `course_progress`'e son açılan dersi ve zamanı yazar (her istekte; video oynatıcının Range istekleri de dahil, satır tek kalır). `QuizCompleted`'ı sınav çözme ucu (`POST /api/quizzes/{id}/attempts`, #54) yayınlar. `EnrollmentCreated`, `CourseApproved` ve `CourseRejected`'ın henüz üretim dinleyicisi yok; teslim kuralı `EnrollmentCreatedDeliveryTest` ile gösterilir. `LessonCompleted`'ı ders tamamlama ucu (`POST /api/lessons/{id}/complete`, #41) yayınlar; `ProgressListener` commit'ten sonra kurs yüzdesini günceller (`LessonCompletedDeliveryTest`). Diğer olayların yayıncıları ilgili issue'larda eklenir; tipleri şimdiden tanımlıdır ve alanları o issue'larda gerekirse genişletilir.
 
 ## 6. Diyagramlar
 
@@ -211,6 +212,8 @@ Düz ok: service çağrısı. Kesikli ok: domain olayı (yayınlayan → dinleye
 - Bütün dersler eşit ağırlıktadır (zorunlu/isteğe bağlı ayrımı yüzdeye girmez).
 - `GET /api/me/courses/{id}/progress` yanıtı her istekte güncel ders yapısından hesaplanır; bölüm yüzdeleri hiçbir yerde saklanmaz. `course_progress.progress_percent` liste ekranları için tutulan önbellektir: `ProgressListener` her `LessonCompleted` olayında ilgili kaydın satırını yazar, ders silme akışı `ProgressService.recalculateCourse(courseId)` ile kursun tüm kayıtlarını yeniden yazar (bu çağrıyı ders silme ucu ekleyecek).
 - `progress`, ders sayıları için `course/service/CourseStructureService`'i, kayıt id'si ve kayıt denetimi için `enrollment/service/EnrollmentService`'i kullanır (tablodaki `course`, `enrollment` bağımlılıkları içinde).
+- **Kaldığı yerden devam (#119):** `GET /api/me/courses/{id}/resume` son açılan dersi döner; o ders yoksa (hiç açılmamış ya da silinmiş) ilk tamamlanmamış dersi, hepsi tamamlanmışsa kursun ilk dersini; kursta ders yoksa ders alanları boştur. Yüzde her istekte güncel ders yapısından hesaplanır.
+- **Kayıtlı kurslar listesi (#119):** yüzde ve son ders `course_progress`'ten gelir. `enrollment`, `progress`'e bağımlı olmamak için `enrollment/service/EnrollmentProgress` arayüzünü tanımlar, `progress/service/EnrollmentProgressService` uygular (`EnrollmentCounts` ile aynı kalıp). Listedeki yüzde önbellektir; ders silinince `recalculateCourse` ile güncellenir.
 
 ```mermaid
 flowchart LR
@@ -239,6 +242,7 @@ flowchart LR
 
   enrollment -. EnrollmentCreated .-> notification
   course -. LessonPublished / CourseApproved / CourseRejected .-> notification
+  content -. LessonOpened .-> progress
   progress -. LessonCompleted .-> certificate
   quiz -. QuizCompleted .-> certificate
   quiz -. QuizCompleted .-> notification

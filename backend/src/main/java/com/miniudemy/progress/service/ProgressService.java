@@ -2,18 +2,23 @@ package com.miniudemy.progress.service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.miniudemy.course.dto.OrderedLesson;
 import com.miniudemy.course.dto.SectionLessons;
 import com.miniudemy.course.service.CourseStructureService;
 import com.miniudemy.enrollment.service.EnrollmentService;
-import com.miniudemy.progress.dto.CourseProgressResponse;
+import com.miniudemy.progress.domain.CourseProgress;
 import com.miniudemy.progress.dto.CourseProgressResponse.SectionProgress;
+import com.miniudemy.progress.dto.CourseProgressResponse;
+import com.miniudemy.progress.dto.ResumeResponse;
 import com.miniudemy.progress.repository.CourseProgressRepository;
 import com.miniudemy.progress.repository.LessonProgressRepository;
 
@@ -62,6 +67,36 @@ public class ProgressService {
     public void refreshCourseProgress(Long studentId, Long courseId) {
         Long enrollmentId = enrollments.requireEnrollmentId(studentId, courseId);
         write(enrollmentId, totalLessonIds(courseId));
+    }
+
+    /** Kursiyerin son açtığı dersi yazar ({@code LessonOpened} dinleyicisi, #119). */
+    @Transactional
+    public void recordLessonOpened(Long studentId, Long courseId, Long lessonId, Instant openedAt) {
+        Long enrollmentId = enrollments.requireEnrollmentId(studentId, courseId);
+        courseProgress.upsertLastLesson(enrollmentId, lessonId, openedAt);
+    }
+
+    /**
+     * Kaldığı yerden devam (#119): son açılan ders; yoksa ilk tamamlanmamış ders; hepsi tamamlanmışsa kursun ilk
+     * dersi; kursta ders yoksa ders alanları null. Kayıtlı değilse 403.
+     */
+    @Transactional(readOnly = true)
+    public ResumeResponse getMyResumePoint(Long studentId, Long courseId) {
+        Long enrollmentId = enrollments.requireEnrollmentId(studentId, courseId);
+        List<OrderedLesson> lessons = structure.orderedLessons(courseId);
+        Set<Long> done = new HashSet<>(lessonProgress.findLessonIdsByEnrollmentId(enrollmentId));
+        Optional<CourseProgress> row = courseProgress.findByEnrollmentId(enrollmentId);
+        Long lastLessonId = row.map(CourseProgress::getLastLessonId).orElse(null);
+        Instant lastAccessedAt = row.map(CourseProgress::getLastAccessedAt).orElse(null);
+
+        Optional<OrderedLesson> resume = lessons.stream().filter(l -> l.lessonId().equals(lastLessonId)).findFirst()
+                .or(() -> lessons.stream().filter(l -> !done.contains(l.lessonId())).findFirst())
+                .or(() -> lessons.stream().findFirst());
+        long completed = lessons.stream().filter(l -> done.contains(l.lessonId())).count();
+        double percent = percent(completed, lessons.size());
+        return resume
+                .map(l -> new ResumeResponse(courseId, l.lessonId(), l.title(), l.sectionId(), percent, lastAccessedAt))
+                .orElse(new ResumeResponse(courseId, null, null, null, percent, lastAccessedAt));
     }
 
     /** Kursa kayıtlı herkesin yüzdesini yeniden yazar; ders silinince çağrılır. */

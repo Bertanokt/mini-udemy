@@ -14,6 +14,7 @@ import com.miniudemy.course.dto.CourseSummaryResponse;
 import com.miniudemy.course.service.CourseLookupService;
 import com.miniudemy.enrollment.domain.Enrollment;
 import com.miniudemy.enrollment.domain.EnrollmentCreated;
+import com.miniudemy.enrollment.dto.EnrollmentProgressSnapshot;
 import com.miniudemy.enrollment.dto.EnrollmentResponse;
 import com.miniudemy.enrollment.mapper.EnrollmentMapper;
 import com.miniudemy.enrollment.repository.EnrollmentRepository;
@@ -24,23 +25,19 @@ public class EnrollmentService {
 
     private static final String ALREADY_ENROLLED = "Bu kursa zaten kayıtlısınız.";
 
-    /**
-     * İlerleme modülü (#43, #119) gelene dek her kayıt %0 ve "son izlenen ders yok" döner; modül gelince bu üç değer
-     * course_progress'ten (tek toplu sorguyla) doldurulur.
-     */
-    private static final double PROGRESS_PLACEHOLDER = 0.0;
-
     private final EnrollmentRepository repository;
     private final CourseLookupService courseLookup;
     private final EnrollmentMapper mapper;
     private final ApplicationEventPublisher events;
+    private final EnrollmentProgress progress;
 
     public EnrollmentService(EnrollmentRepository repository, CourseLookupService courseLookup,
-            EnrollmentMapper mapper, ApplicationEventPublisher events) {
+            EnrollmentMapper mapper, ApplicationEventPublisher events, EnrollmentProgress progress) {
         this.repository = repository;
         this.courseLookup = courseLookup;
         this.mapper = mapper;
         this.events = events;
+        this.progress = progress;
     }
 
     /**
@@ -76,9 +73,12 @@ public class EnrollmentService {
         }
         Map<Long, CourseSummaryResponse> courses = courseLookup.findSummaries(
                 enrollments.stream().map(Enrollment::getCourseId).toList());
+        Map<Long, EnrollmentProgressSnapshot> snapshots = progress.snapshots(
+                enrollments.stream().map(Enrollment::getId).toList());
         return enrollments.stream()
                 .filter(e -> courses.containsKey(e.getCourseId()))
-                .map(e -> toResponse(e, courses.get(e.getCourseId())))
+                .map(e -> toResponse(e, courses.get(e.getCourseId()),
+                        snapshots.getOrDefault(e.getId(), EnrollmentProgressSnapshot.NONE)))
                 .toList();
     }
 
@@ -109,7 +109,14 @@ public class EnrollmentService {
         return repository.findIdsByCourseId(courseId);
     }
 
+    /** Yeni kayıt: henüz ilerleme yok. */
     private EnrollmentResponse toResponse(Enrollment enrollment, CourseSummaryResponse course) {
-        return mapper.toResponse(enrollment, course, PROGRESS_PLACEHOLDER, null, null);
+        return toResponse(enrollment, course, EnrollmentProgressSnapshot.NONE);
+    }
+
+    private EnrollmentResponse toResponse(Enrollment enrollment, CourseSummaryResponse course,
+            EnrollmentProgressSnapshot snapshot) {
+        return mapper.toResponse(enrollment, course, snapshot.progressPercent(), snapshot.lastLessonId(),
+                snapshot.lastAccessedAt());
     }
 }

@@ -11,17 +11,22 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.LongStream;
 
 import org.junit.jupiter.api.Test;
 
 import com.miniudemy.common.exception.ForbiddenException;
+import com.miniudemy.course.dto.OrderedLesson;
 import com.miniudemy.course.dto.SectionLessons;
 import com.miniudemy.course.service.CourseStructureService;
 import com.miniudemy.enrollment.service.EnrollmentService;
-import com.miniudemy.progress.dto.CourseProgressResponse;
+import com.miniudemy.progress.domain.CourseProgress;
 import com.miniudemy.progress.dto.CourseProgressResponse.SectionProgress;
+import com.miniudemy.progress.dto.CourseProgressResponse;
+import com.miniudemy.progress.dto.ResumeResponse;
 import com.miniudemy.progress.repository.CourseProgressRepository;
 import com.miniudemy.progress.repository.LessonProgressRepository;
 
@@ -185,5 +190,103 @@ class ProgressServiceTest {
         service.recalculateCourse(COURSE);
 
         verify(courseProgress).upsertPercent(9L, BigDecimal.valueOf(0.0));
+    }
+
+    // --- son izlenen ders ve kaldığı yerden devam (#119) ---
+
+    private static final Instant OPENED = Instant.parse("2026-11-18T09:00:00Z");
+
+    private void lessons(OrderedLesson... ordered) {
+        given(structure.orderedLessons(COURSE)).willReturn(List.of(ordered));
+    }
+
+    private void lastOpened(Long lessonId) {
+        CourseProgress row = mock(CourseProgress.class);
+        given(row.getLastLessonId()).willReturn(lessonId);
+        given(row.getLastAccessedAt()).willReturn(lessonId == null ? null : OPENED);
+        given(courseProgress.findByEnrollmentId(ENROLLMENT)).willReturn(Optional.of(row));
+    }
+
+    private static final OrderedLesson L1 = new OrderedLesson(11L, 1L, "Kurulum");
+    private static final OrderedLesson L2 = new OrderedLesson(12L, 1L, "Merhaba");
+    private static final OrderedLesson L3 = new OrderedLesson(31L, 3L, "JWT");
+
+    @Test
+    void recordLessonOpened_writesLastLessonForTheEnrollment() {
+        enrolled();
+
+        service.recordLessonOpened(STUDENT, COURSE, 12L, OPENED);
+
+        verify(courseProgress).upsertLastLesson(ENROLLMENT, 12L, OPENED);
+    }
+
+    @Test
+    void recordLessonOpened_notEnrolled_writesNothing() {
+        given(enrollments.requireEnrollmentId(STUDENT, COURSE)).willThrow(new ForbiddenException("Bu kursa kayıtlı değilsiniz."));
+
+        assertThatThrownBy(() -> service.recordLessonOpened(STUDENT, COURSE, 12L, OPENED))
+                .isInstanceOf(ForbiddenException.class);
+        verify(courseProgress, never()).upsertLastLesson(any(), any(), any());
+    }
+
+    @Test
+    void resume_lastOpenedLesson_isReturnedWithPercentAndTime() {
+        enrolled();
+        lessons(L1, L2, L3);
+        given(lessonProgress.findLessonIdsByEnrollmentId(ENROLLMENT)).willReturn(List.of(11L));
+        lastOpened(31L);
+
+        assertThat(service.getMyResumePoint(STUDENT, COURSE))
+                .isEqualTo(new ResumeResponse(COURSE, 31L, "JWT", 3L, 33.33, OPENED));
+    }
+
+    @Test
+    void resume_nothingOpened_returnsFirstIncompleteLesson() {
+        enrolled();
+        lessons(L1, L2, L3);
+        given(lessonProgress.findLessonIdsByEnrollmentId(ENROLLMENT)).willReturn(List.of(11L));
+        given(courseProgress.findByEnrollmentId(ENROLLMENT)).willReturn(Optional.empty());
+
+        assertThat(service.getMyResumePoint(STUDENT, COURSE))
+                .isEqualTo(new ResumeResponse(COURSE, 12L, "Merhaba", 1L, 33.33, null));
+    }
+
+    @Test
+    void resume_lastLessonNoLongerInCourse_fallsBackToFirstIncomplete() {
+        enrolled();
+        lessons(L1, L2);
+        given(lessonProgress.findLessonIdsByEnrollmentId(ENROLLMENT)).willReturn(List.of());
+        lastOpened(99L);
+
+        assertThat(service.getMyResumePoint(STUDENT, COURSE).lessonId()).isEqualTo(11L);
+    }
+
+    @Test
+    void resume_allCompletedAndNothingOpened_returnsTheFirstLesson() {
+        enrolled();
+        lessons(L1, L2);
+        given(lessonProgress.findLessonIdsByEnrollmentId(ENROLLMENT)).willReturn(List.of(11L, 12L));
+        given(courseProgress.findByEnrollmentId(ENROLLMENT)).willReturn(Optional.empty());
+
+        assertThat(service.getMyResumePoint(STUDENT, COURSE))
+                .isEqualTo(new ResumeResponse(COURSE, 11L, "Kurulum", 1L, 100.0, null));
+    }
+
+    @Test
+    void resume_courseWithoutLessons_hasNoLesson() {
+        enrolled();
+        lessons();
+        given(lessonProgress.findLessonIdsByEnrollmentId(ENROLLMENT)).willReturn(List.of());
+        given(courseProgress.findByEnrollmentId(ENROLLMENT)).willReturn(Optional.empty());
+
+        assertThat(service.getMyResumePoint(STUDENT, COURSE))
+                .isEqualTo(new ResumeResponse(COURSE, null, null, null, 0.0, null));
+    }
+
+    @Test
+    void resume_notEnrolled_returns403() {
+        given(enrollments.requireEnrollmentId(STUDENT, COURSE)).willThrow(new ForbiddenException("Bu kursa kayıtlı değilsiniz."));
+
+        assertThatThrownBy(() -> service.getMyResumePoint(STUDENT, COURSE)).isInstanceOf(ForbiddenException.class);
     }
 }

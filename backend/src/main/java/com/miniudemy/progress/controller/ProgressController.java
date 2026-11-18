@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.miniudemy.common.security.CurrentUser;
 import com.miniudemy.progress.dto.CourseProgressResponse;
+import com.miniudemy.progress.dto.ResumeResponse;
 import com.miniudemy.progress.service.ProgressService;
 
 /** İlerleme uçları (docs/api/openapi.yaml › Progress). Rol STUDENT. */
@@ -24,5 +25,12 @@ public class ProgressController {
     @PreAuthorize("hasRole('STUDENT')")
     public CourseProgressResponse getMyProgress(@PathVariable Long id, Authentication authentication) {
         return progressService.getMyProgress(CurrentUser.id(authentication), id);
+    }
+
+    /** Kaldığı yerden devam (#119); yalnız kursa kayıtlı kursiyer. */
+    @GetMapping("/api/me/courses/{id}/resume")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResumeResponse getMyResumePoint(@PathVariable Long id, Authentication authentication) {
+        return progressService.getMyResumePoint(CurrentUser.id(authentication), id);
     }
 }
