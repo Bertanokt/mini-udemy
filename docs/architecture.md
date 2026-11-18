@@ -39,7 +39,7 @@ Her modül aynı altı pakete ayrılır:
 | `controller` | REST uçları, istek doğrulamasının tetiklenmesi, yetki anotasyonları | `service`, `dto` |
 | `service` | İş kuralları ve `@Transactional` sınırı | `repository`, `domain`, `mapper`, `dto` |
 | `repository` | Spring Data JPA arayüzleri | `domain` |
-| `dto` | API'nin istek/yanıt tipleri (Java `record`) | – |
+| `dto` | API'nin istek/yanıt tipleri (Java `record`) | yalnız `domain`'deki enum'lar (ör. `CourseStatus`) |
 | `mapper` | `domain` ↔ `dto` dönüşümleri | `domain`, `dto` |
 | `domain` | JPA entity'leri, enum'lar, domain olayları, State deseninin durum sınıfları | yalnız `common.exception` (ortak hata tipleri; [ADR-010](adr/0010-state-kurs-durumu.md)) |
 
@@ -94,7 +94,7 @@ Bir modül başka bir modülle **yalnız iki yoldan** konuşur:
 **Yasaklar:**
 
 - Başka bir modülün `repository` paketine erişilmez.
-- Başka bir modülün entity'si alan, parametre ya da dönüş tipi olarak kullanılmaz. Modül sınırında yalnız id ya da DTO taşınır. Veritabanında modüller arası yabancı anahtar olabilir, ama JPA ilişkisi (`@ManyToOne` vb.) yalnız aynı modülün entity'leri arasında kurulur.
+- Başka bir modülün entity'si alan, parametre ya da dönüş tipi olarak kullanılmaz. Modül sınırında yalnız id ya da DTO taşınır. Başka modülün `domain` paketinden yalnız olaylar (record) ve enum'lar kullanılabilir; örnek: `admin`, `course`'un `CourseStatus`'unu ve `auth`'un `Role`'ünü liste filtresi olarak alır. Veritabanında modüller arası yabancı anahtar olabilir, ama JPA ilişkisi (`@ManyToOne` vb.) yalnız aynı modülün entity'leri arasında kurulur.
 - Modüller arası döngüsel bağımlılık olmaz.
 
 ### İzin verilen modül bağımlılıkları
@@ -112,7 +112,7 @@ Bir modül başka bir modülle **yalnız iki yoldan** konuşur:
 | `notification` | `auth` | Tüm bildirim olayları (bölüm 5) |
 | `admin` | `auth`, `course`, `enrollment`, `progress`, `certificate`, `review` | – |
 
-Tabloda olmayan bir bağımlılık gerekiyorsa önce bu doküman güncellenir.
+Tabloda olmayan bir bağımlılık gerekiyorsa önce bu doküman güncellenir. Tablo `ModuleArchitectureTest.ALLOWED`'da aynen kodlu; ikisi aynı PR'da değişir. Başka modülün olayını dinlemek (domain'deki record'a bağımlılık) tablodan bağımsız serbesttir.
 
 **Eğitmen istatistikleri (J) döngü oluşturmasın diye bağımlılık tersine çevrilir.** Eğitmen paneli `course` modülündedir ama kayıt, ilerleme, sınav ve puan verisi başka modüllerdedir; `course` bu modülleri doğrudan çağırsaydı onlar da `course`'a bağlı olduğu için döngü oluşurdu. Bunun yerine `course`, istatistik için ihtiyaç duyduğu sorgu arayüzlerini kendi `service` paketinde tanımlar; `enrollment`, `progress`, `quiz` ve `review` bu arayüzleri uygular. Böylece bağımlılık yönü hep "diğer modül → `course`" kalır (Dependency Inversion). Katalogdaki kayıt sayısı da aynı yolla gelir: `course/service/EnrollmentCounts` arayüzünü `enrollment/service/EnrollmentStatsService` uygular (#26); puan için aynı kalıp `review`'da kullanılacak (#126, #143).
 
@@ -243,6 +243,9 @@ flowchart LR
 ## 7. Mimari kararlar ve kuralların denetimi
 
 - **Mimari karar kayıtları:** önemli her karar `docs/adr/` altında bir ADR olarak yazılır: bağlam, karar, değerlendirilen alternatifler, sonuçlar. Kurallar, şablon ve kayıt listesi: [`docs/adr/README.md`](adr/README.md). Planlanan ADR'ler: ADR-001 modüler monolit (#80), ADR-002 JWT ve ADR-003 Flyway (#81), ADR-004 yerel dosya depolama ve ADR-005 ayrı frontend (#84). ADR-009 Observer (#42). Diğer desen kararlarının ADR'leri ilgili desen issue'larında yazılır.
-- **Otomatik denetim:** bölüm 3 ve 4'teki kurallar ArchUnit testleriyle CI'da kontrol edilir (#86). Şu an yazılı tek kural Observer kuralıdır (service → listener bağımlılığı yok, #42); katman ve modül sınırı kuralları #86'da eklenecek. Kural ihlali build'i kırar; testi geçmek için kural gevşetilmez, kod düzeltilir.
+- **Otomatik denetim:** bölüm 3 ve 4'teki kurallar ArchUnit testleriyle CI'da kontrol edilir (#86, `backend/src/test/java/com/miniudemy/common/architecture/`). Kural ihlali build'i kırar; testi geçmek için kural gevşetilmez, kod düzeltilir.
+  - `LayerArchitectureTest` (§3): controller → repository/mapper yok; controller entity almaz ve döndürmez (generic tipler dahil); service → controller yok; repository, dto ve mapper üst katmanlara bağımlı değil; domain yalnız Java, JPA/Hibernate, domain paketleri ve `common.exception`'a bağımlı (ADR-010).
+  - `ModuleArchitectureTest` (§4): başka modülden yalnız `service`, `dto`, olay (record) ve enum; modül bağımlılıkları yukarıdaki tabloyla aynı; modüller arası döngü yok; `common` hiçbir modüle bağımlı değil; kaynak dizinindeki modüllerle tablodaki modüller birebir aynı (10 modül).
+  - `ObserverArchitectureTest` (bölüm 5): service, dinleyiciyi çağırmaz (#42, ADR-009).
 - **Review:** PR'larda bu dokümana uyum kontrol edilir; modüller arası yeni bir bağımlılık bu dokümanın güncellenmesini gerektirir.
 - **Tutarlılık:** bu doküman, `CLAUDE.md` ve bileşen diyagramı (#91) aynı modül listesini ve bağımlılık kurallarını anlatır; biri değişirse diğerleri aynı PR'da güncellenir.
