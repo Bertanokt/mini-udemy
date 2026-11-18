@@ -11,6 +11,7 @@ import com.miniudemy.common.exception.BadRequestException;
 import com.miniudemy.common.exception.NotFoundException;
 import com.miniudemy.course.domain.Category;
 import com.miniudemy.course.domain.Course;
+import com.miniudemy.course.domain.CourseStatus;
 import com.miniudemy.course.dto.CourseResponse;
 import com.miniudemy.course.dto.CreateCourseRequest;
 import com.miniudemy.course.mapper.CourseMapper;
@@ -59,5 +60,22 @@ public class CourseService {
             throw new NotFoundException("Kullanıcı bulunamadı.");
         }
         return courseMapper.toResponse(saved, instructor);
+    }
+
+    /**
+     * Eğitmenin kendi kursları (#28): her durumda, en yeni önce; {@code status} verilirse yalnız o durum. Sayfalama
+     * yoktur (sözleşme düz liste). Red ve kaldırma gerekçeleri kursta olduğu için yanıtta gelir.
+     */
+    @Transactional(readOnly = true)
+    public List<CourseResponse> listByInstructor(Long instructorId, CourseStatus status) {
+        List<Course> courses = courseRepository.findByInstructor(instructorId, status);
+        if (courses.isEmpty()) {
+            return List.of();
+        }
+        UserSummary instructor = userDirectory.findSummaries(List.of(instructorId)).get(instructorId);
+        if (instructor == null) {
+            throw new NotFoundException("Kullanıcı bulunamadı.");
+        }
+        return courses.stream().map(course -> courseMapper.toResponse(course, instructor)).toList();
     }
 }

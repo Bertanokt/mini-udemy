@@ -1761,7 +1761,8 @@ paths:
       summary: Kurslarım (eğitmen)
       description: >
         **Rol:** INSTRUCTOR. Eğitmenin tüm kursları, her durumda; reddedilen kursta red
-        gerekçesi de döner. `status` ile süzülebilir.
+        gerekçesi de döner. `status` ile süzülebilir. Sayfalama yoktur; liste oluşturulma
+        tarihine göre en yeni önce sıralıdır.
       operationId: listMyInstructorCourses
       x-roles: [INSTRUCTOR]
       security:

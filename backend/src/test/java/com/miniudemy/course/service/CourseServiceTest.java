@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import java.util.List;
@@ -21,6 +22,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import com.miniudemy.auth.dto.UserSummary;
 import com.miniudemy.auth.service.UserDirectoryService;
 import com.miniudemy.common.exception.ApiException;
+import com.miniudemy.course.CourseFixtures;
 import com.miniudemy.course.domain.Category;
 import com.miniudemy.course.domain.Course;
 import com.miniudemy.course.domain.CourseLevel;
@@ -109,5 +111,52 @@ class CourseServiceTest {
                     assertThat(api.getErrors()).isEqualTo(Map.of("categoryId", CourseService.CATEGORY_NOT_FOUND));
                 });
         verify(courseRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void listByInstructor_returnsOwnCoursesInRepositoryOrder_withInstructorAndReasons() {
+        Course rejected = CourseFixtures.course(21L, INSTRUCTOR_ID, "Reddedilen", CourseStatus.DRAFT);
+        ReflectionTestUtils.setField(rejected, "rejectionReason", "Örnekler yetersiz.");
+        Course unpublished = CourseFixtures.course(20L, INSTRUCTOR_ID, "Kaldırılan", CourseStatus.UNPUBLISHED);
+        ReflectionTestUtils.setField(unpublished, "unpublishReason", "Güncel değil.");
+        given(courseRepository.findByInstructor(INSTRUCTOR_ID, null)).willReturn(List.of(rejected, unpublished));
+
+        List<CourseResponse> result = courseService.listByInstructor(INSTRUCTOR_ID, null);
+
+        assertThat(result).extracting(CourseResponse::id).containsExactly(21L, 20L);
+        assertThat(result.get(0).rejectionReason()).isEqualTo("Örnekler yetersiz.");
+        assertThat(result.get(1).unpublishReason()).isEqualTo("Güncel değil.");
+        assertThat(result).allSatisfy(r -> {
+            assertThat(r.instructor()).isEqualTo(new UserSummary(INSTRUCTOR_ID, "Mehmet Kaya"));
+            assertThat(r.category()).isEqualTo(new CategoryResponse(1L, "Yazılım"));
+        });
+        // Eğitmen adı kurs sayısından bağımsız tek çağrıyla alınır (N+1 yok).
+        verify(userDirectory, times(1)).findSummaries(any());
+    }
+
+    @Test
+    void listByInstructor_queriesOnlyTheGivenInstructor_soOthersCoursesNeverAppear() {
+        courseService.listByInstructor(INSTRUCTOR_ID, null);
+
+        verify(courseRepository).findByInstructor(INSTRUCTOR_ID, null);
+        verify(courseRepository, never()).findAll();
+    }
+
+    @Test
+    void listByInstructor_withStatus_passesFilterToRepository() {
+        Course draft = CourseFixtures.course(22L, INSTRUCTOR_ID, "Taslak", CourseStatus.DRAFT);
+        given(courseRepository.findByInstructor(INSTRUCTOR_ID, CourseStatus.DRAFT)).willReturn(List.of(draft));
+
+        List<CourseResponse> result = courseService.listByInstructor(INSTRUCTOR_ID, CourseStatus.DRAFT);
+
+        assertThat(result).extracting(CourseResponse::status).containsExactly(CourseStatus.DRAFT);
+    }
+
+    @Test
+    void listByInstructor_withNoCourses_returnsEmptyList_withoutLookingUpUsers() {
+        given(courseRepository.findByInstructor(INSTRUCTOR_ID, null)).willReturn(List.of());
+
+        assertThat(courseService.listByInstructor(INSTRUCTOR_ID, null)).isEmpty();
+        verify(userDirectory, never()).findSummaries(any());
     }
 }
