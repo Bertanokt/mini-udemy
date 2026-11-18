@@ -1,0 +1,70 @@
+@startuml deployment
+' UML dağıtım diyagramı (#94). docker-compose.yml, backend/Dockerfile ve frontend/Dockerfile ile birebir;
+' tutarlılık tablosu PR #87/#94'te.
+' Render: java -jar plantuml.jar -tpng -tsvg docs/diagrams/deployment.puml (Graphviz gerekmez: smetana)
+!pragma layout smetana
+
+skinparam shadowing false
+skinparam defaultFontSize 12
+skinparam node {
+  BackgroundColor #F7F7F7
+  BorderColor #444444
+}
+skinparam artifact {
+  BackgroundColor White
+  BorderColor #444444
+}
+skinparam storage {
+  BackgroundColor #FFF8E1
+  BorderColor #8D6E63
+}
+
+title Mini Udemy - Dağıtım diyagramı (docker compose up --build)
+
+node "Kullanıcının bilgisayarı" as client {
+  node "Web tarayıcısı" as browser
+}
+
+node "Docker ana makinesi (tek makine)" as host {
+  node "Compose ağı: mini-udemy_default (bridge)" as net {
+    node "frontend\n<<container>>\nimaj: node:22-alpine" as fe {
+      artifact "Next.js standalone\n(server.js, .next/static, public)\nCMD node server.js" as feart
+    }
+    node "backend\n<<container>>\nimaj: eclipse-temurin:21-jre" as be {
+      artifact "app.jar\n(Spring Boot, mvnw package)\nENTRYPOINT java -jar app.jar" as beart
+    }
+    node "postgres\n<<container>>\nimaj: postgres:17-alpine" as pg {
+      artifact "PostgreSQL 17\nveritabanı: miniudemy\nhealthcheck: pg_isready" as pgart
+    }
+  }
+  storage "volume: uploads\n→ backend:/data/uploads" as uploads
+  storage "volume: pgdata\n→ postgres:/var/lib/postgresql/data" as pgdata
+}
+
+browser --> fe : HTTP\nlocalhost:3000 → 3000
+browser --> be : HTTP, JSON, JWT\nlocalhost:8080 → 8080
+be --> pg : JDBC\npostgres:5432
+be --> uploads : dosya sistemi\n(STORAGE_ROOT=/data/uploads)
+pg --> pgdata : veri dizini
+
+note right of pg
+  Ana makineye 5432:5432 ile açık; yerelde
+  ./mvnw spring-boot:run ile çalışan backend
+  buna bağlanır (CLAUDE.md › Komutlar).
+  backend, postgres sağlıklı olunca başlar
+  (depends_on: service_healthy).
+end note
+
+note right of fe
+  NEXT_PUBLIC_API_URL=http://localhost:8080
+  derleme sırasında (build arg) gömülür;
+  tarayıcıdan erişilen adres.
+  frontend, backend başladıktan sonra başlar
+  (depends_on).
+end note
+
+note bottom of uploads
+  Volume'lar container silinse de kalır;
+  docker compose down -v ikisini de siler (ADR-004).
+end note
+@enduml

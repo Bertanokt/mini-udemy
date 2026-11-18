@@ -12,7 +12,7 @@ Kapsamın tek kaynağı hocanın proje tanım dokümanıdır (modüller A–L, s
 | Mimari karar kayıtları (ADR) | [`adr/`](adr/README.md) | Hafta 1 → |
 | Gantt, görev dağılımı, risk analizi | [`plan.md`](plan.md), [`diagrams/gantt.mmd`](diagrams/gantt.mmd) | Hafta 1 |
 | Haftalık ilerleme raporları | `progress/hafta-N.md` | her hafta |
-| Sistem mimarisi (C4) | `diagrams/c4-*` | Hafta 2 |
+| Sistem mimarisi (C4) | bağlam: [`diagrams/c4-context.puml`](diagrams/c4-context.puml) ([SVG](diagrams/c4-context.svg), [PNG](diagrams/c4-context.png)); container: [`diagrams/c4-container.puml`](diagrams/c4-container.puml) ([SVG](diagrams/c4-container.svg), [PNG](diagrams/c4-container.png)) | Hafta 2 |
 | UI taslakları | `diagrams/wireframes/` | Hafta 2 |
 | Sekans: kursa kayıt | `diagrams/seq-enroll.*` | Hafta 2 |
 | Sınıf diyagramı | `diagrams/class.*` | Hafta 3 |
@@ -20,10 +20,16 @@ Kapsamın tek kaynağı hocanın proje tanım dokümanıdır (modüller A–L, s
 | Test planı | [`test-plan.md`](test-plan.md) | Hafta 3 |
 | Sekans: sınav çözme | `diagrams/seq-quiz.*` | Hafta 4 |
 | Sekans: sertifika oluşturma ve bildirim | `diagrams/seq-certificate.*` | Hafta 4 |
-| Dağıtım diyagramı | `diagrams/deployment.*` | Hafta 4 |
+| Dağıtım diyagramı | [`diagrams/deployment.puml`](diagrams/deployment.puml) ([SVG](diagrams/deployment.svg), [PNG](diagrams/deployment.png)) | Hafta 4 |
 | SOLID ve OOP (koddan örneklerle) | `solid.md` | Hafta 4 |
 | İzlenebilirlik matrisi, test raporu, kütüphaneler | [`traceability.md`](traceability.md), `test-report.md`, `dependencies.md` | Hafta 5 |
 | Demo senaryosu | `demo.md` | Hafta 5 |
 | Proje raporu (Word şablonu) | `rapor/` | Sunum (teslim 02.12.2026, .docx) |
 
 Diyagramlar metin tabanlı tutulur (PlantUML `.puml` ya da Mermaid `.mmd`) ve yanında render edilmiş `.png`/`.svg` bulunur; böylece PR'da diff okunabilir.
+
+PlantUML render'ı (Graphviz gerekmez; diyagramlar `!pragma layout smetana` kullanır). `plantuml.jar` Maven Central'dan (`net.sourceforge.plantuml:plantuml`) indirilir, repoya eklenmez. Türkçe yerel ayarlı Java'da C4 kütüphanesi yüklenemediği için dil İngilizce verilir:
+
+```bash
+java -Duser.language=en -Duser.country=US -jar plantuml.jar -tpng -tsvg docs/diagrams/c4-context.puml docs/diagrams/c4-container.puml docs/diagrams/deployment.puml
+```

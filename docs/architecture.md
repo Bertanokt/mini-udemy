@@ -146,6 +146,12 @@ Olay tipleri yayınlayan modülün `domain` paketinde Java `record` olarak tanı
 
 ## 6. Diyagramlar
 
+### Sistem ve dağıtım
+
+- Sistem bağlamı (C4 seviye 1): [`diagrams/c4-context.puml`](diagrams/c4-context.puml) ([PNG](diagrams/c4-context.png))
+- Container'lar (C4 seviye 2): [`diagrams/c4-container.puml`](diagrams/c4-container.puml) ([PNG](diagrams/c4-container.png)). Tarayıcıdaki React arayüzü backend'e doğrudan (`NEXT_PUBLIC_API_URL`, CORS) istek atar; Next.js sunucusu yalnız sayfaları verir. Yüklenen dosyalara yalnız backend erişir (ADR-004).
+- Dağıtım (UML): [`diagrams/deployment.puml`](diagrams/deployment.puml) ([PNG](diagrams/deployment.png)). `docker-compose.yml` ve iki Dockerfile ile birebir: 3 container, 2 volume, varsayılan compose ağı.
+
 ### Modül ve katman yapısı
 
 ```mermaid
