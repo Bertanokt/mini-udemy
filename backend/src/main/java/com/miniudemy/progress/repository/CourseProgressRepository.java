@@ -39,6 +39,18 @@ public interface CourseProgressRepository extends JpaRepository<CourseProgress, 
     void upsertLastLesson(@Param("enrollmentId") Long enrollmentId, @Param("lessonId") Long lessonId,
             @Param("openedAt") Instant openedAt);
 
+    /** Verilen kayıtların yüzde toplamı ve %100 olanların sayısı tek sorguda; satır yoksa (0, 0). */
+    @Query("select coalesce(sum(cp.progressPercent), 0) as percentSum, "
+            + "coalesce(sum(case when cp.progressPercent >= 100 then 1 else 0 end), 0) as completedCount "
+            + "from CourseProgress cp where cp.enrollmentId in :enrollmentIds")
+    ProgressTotalsRow totalsByEnrollmentIds(@Param("enrollmentIds") Collection<Long> enrollmentIds);
+
+    interface ProgressTotalsRow {
+        BigDecimal getPercentSum();
+
+        long getCompletedCount();
+    }
+
     Optional<CourseProgress> findByEnrollmentId(Long enrollmentId);
 
     List<CourseProgress> findAllByEnrollmentIdIn(Collection<Long> enrollmentIds);

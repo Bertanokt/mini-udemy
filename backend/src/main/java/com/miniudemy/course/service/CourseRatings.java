@@ -16,6 +16,9 @@ public interface CourseRatings {
     /** Verilen her kurs için bir kayıt, tek sorguda; yorumsuz kurs (null, 0). */
     Map<Long, CourseRating> ratingsByCourses(Collection<Long> courseIds);
 
+    /** Görünür yorumlarda puan başına sayı; anahtarlar "1"–"5", yorumsuz puan 0. */
+    Map<String, Long> distributionOf(Long courseId);
+
     /** Ortalaması (kartta görünen, bir ondalığa yuvarlanmış değer) {@code minRating}'e ulaşan kursların id'leri. */
     Set<Long> courseIdsWithAverageAtLeast(double minRating);
 }
