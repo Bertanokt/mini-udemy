@@ -183,6 +183,25 @@ public class Course {
         state().assertLessonAddable();
     }
 
+    /**
+     * Dersin içerik dosyası yüklenebilir mi (durum nesnesine sorulur): içeriksiz derse Taslak, Yayımlandı ve Yayından
+     * kaldırıldı'da; içeriği olan dersin dosyasını değiştirmek yalnız Taslak ve Yayından kaldırıldı'da. Değilse 409.
+     */
+    public void assertContentUploadable(Lesson lesson) {
+        state().assertContentUploadable(lesson.getContentFileId() != null);
+    }
+
+    /**
+     * Kapak görselini değiştirir (yalnız düzenlenebilir kursta, değilse 409); önceki kapağın dosya id'sini döner
+     * (yoksa null) ki content modülü onu diskten silebilsin.
+     */
+    public Long replaceCover(Long fileId) {
+        assertEditable();
+        Long previous = coverFileId;
+        coverFileId = fileId;
+        return previous;
+    }
+
     /** Kurs silinebilir mi: yalnız Taslak. Değilse 409. */
     public void assertDeletable() {
         state().assertDeletable();

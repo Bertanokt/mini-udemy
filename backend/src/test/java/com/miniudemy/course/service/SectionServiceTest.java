@@ -1,5 +1,6 @@
 package com.miniudemy.course.service;
 
+import com.miniudemy.course.domain.ContentFileDetached;
 import static com.miniudemy.course.CourseFixtures.course;
 import static com.miniudemy.course.CourseFixtures.lesson;
 import static com.miniudemy.course.CourseFixtures.section;
@@ -279,5 +280,24 @@ class SectionServiceTest {
 
         service.deleteSection(1L, 7L);
         verify(events).publishEvent(new CourseLessonsChanged(5L));
+    }
+
+    // dosya bağı (#112)
+
+    @Test
+    void deleteSection_publishesContentFileDetachedForEveryLessonFile() {
+        Course course = CourseFixtures.course(5L, 7L, "Kurs", CourseStatus.DRAFT);
+        Section section = CourseFixtures.section(course, 1L, "Giriş", 0);
+        CourseFixtures.lesson(section, 11L, "Bir", 60, 0, 900L);
+        CourseFixtures.lesson(section, 12L, "İki", 60, 1, null);
+        CourseFixtures.lesson(section, 13L, "Üç", 60, 2, 901L);
+        given(courseRepository.findById(5L)).willReturn(Optional.of(course));
+        given(sectionRepository.findById(1L)).willReturn(Optional.of(section));
+
+        service.deleteSection(1L, 7L);
+
+        verify(events).publishEvent(new ContentFileDetached(900L));
+        verify(events).publishEvent(new ContentFileDetached(901L));
+        verify(events, never()).publishEvent(new ContentFileDetached(null));
     }
 }

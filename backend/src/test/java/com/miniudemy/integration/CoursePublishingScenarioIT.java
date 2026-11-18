@@ -20,8 +20,8 @@ import com.fasterxml.jackson.databind.JsonNode;
  * Alternatif akışlar: gerekçeli red ve yeniden gönderme (7a), gerekçesiz red (400), geçersiz soru (4a), geçersiz
  * durum geçişleri (6a, 7b), başka eğitmenin kursu (403).
  *
- * <p>Kapsanmayan: içerik dosyası yükleme (UC-21; yükleme ucu #112 henüz main'de değil, derslerin içerik kaydı
- * doğrudan veritabanına eklenir) ve "kurs onaylandı/reddedildi" bildirimleri (bildirim ucu henüz yok).
+ * <p>İçerik dosyası yükleme (UC-21) gerçek uçla yapılır (#112); ayrıntılı yükleme kuralları {@code ContentUploadIT}'de.
+ * Kapsanmayan: "kurs onaylandı/reddedildi" bildirimleri (bildirim ucu henüz yok).
  */
 class CoursePublishingScenarioIT extends IntegrationTestBase {
 
@@ -57,8 +57,8 @@ class CoursePublishingScenarioIT extends IntegrationTestBase {
         assertThat(ids(structure.getBody().get(1).get("lessons"))).containsExactly(hello, setup);
         assertThat(ids(structure.getBody().get(0).get("lessons"))).containsExactly(classes);
 
-        // 3. İçerik (yükleme ucu yok; dosya kaydı veritabanına).
-        attachContent(setup);
+        // 3. İçerik gerçek yükleme ucuyla yüklenir; onaya gönderme içeriği yüklenmiş ders ister.
+        attachContent(instructor, setup);
 
         // 4. Soru bankası; 2'den az şıklı soru kaydedilmez.
         long q1 = createQuestion(instructor, courseId, "Java hangi yıl çıktı?");
@@ -107,7 +107,7 @@ class CoursePublishingScenarioIT extends IntegrationTestBase {
         String instructor = registerAndLogin("Mehmet Kaya", "mehmet@example.com", "INSTRUCTOR");
         long courseId = createCourse(instructor, "Sıfırdan Java");
         long section = createSection(instructor, courseId, "Giriş", 0);
-        attachContent(createLesson(instructor, section, "Kurulum", 0));
+        attachContent(instructor, createLesson(instructor, section, "Kurulum", 0));
         post("/api/courses/" + courseId + "/submit", instructor, null);
         String admin = createAdminAndLogin("admin@example.com");
 
@@ -198,17 +198,12 @@ class CoursePublishingScenarioIT extends IntegrationTestBase {
         return created.getBody().get("id").asLong();
     }
 
-    /**
-     * Derse içerik bağlar (onaya gönderme en az bir içerikli ders ister). Yükleme ucu (#112) main'e girince bu adım
-     * gerçek yüklemeyle değiştirilecek.
-     */
-    private void attachContent(long lessonId) {
-        long uploader = jdbc.queryForObject("SELECT id FROM users WHERE email = 'mehmet@example.com'", Long.class);
-        long fileId = jdbc.queryForObject("""
-                INSERT INTO stored_files (uploader_id, storage_key, original_name, mime_type, size_bytes)
-                VALUES (?, gen_random_uuid()::text, 'ders.mp4', 'video/mp4', 1024) RETURNING id
-                """, Long.class, uploader);
-        jdbc.update("UPDATE lessons SET content_file_id = ? WHERE id = ?", fileId, lessonId);
+    /** Derse gerçek yükleme ucuyla (POST /api/lessons/{id}/content) küçük bir mp4 yükler (#112). */
+    private void attachContent(String instructor, long lessonId) {
+        byte[] mp4 = {0, 0, 0, 0x18, 'f', 't', 'y', 'p', 'i', 's', 'o', 'm', 0, 0, 0, 0};
+        ResponseEntity<JsonNode> uploaded = upload("/api/lessons/" + lessonId + "/content", instructor, "ders.mp4", mp4);
+        assertThat(uploaded.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(uploaded.getBody().get("hasContent").asBoolean()).isTrue();
     }
 
     private static String status(ResponseEntity<JsonNode> response) {

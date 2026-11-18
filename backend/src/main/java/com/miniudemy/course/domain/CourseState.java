@@ -31,6 +31,21 @@ sealed interface CourseState permits DraftState, InReviewState, PublishedState, 
                 + "yayından kaldırılmış kurslara ders eklenebilir.");
     }
 
+    /**
+     * Dersin içerik dosyası yüklenebilir mi; değilse 409 (#112). İçeriği henüz olmayan derse yükleme, ders eklemeyle
+     * aynı kuraldır (yayımlanmış kursa FR-43 ile eklenen ders içeriksiz gelir ve içeriği yüklenebilmelidir); mevcut
+     * içeriği değiştirmek dersi değiştirmektir ve {@link #assertEditable()} kuralına bağlıdır.
+     *
+     * @param replacing derste zaten bir içerik dosyası var mı
+     */
+    default void assertContentUploadable(boolean replacing) {
+        if (replacing) {
+            assertEditable();
+        } else {
+            assertLessonAddable();
+        }
+    }
+
     /** Kurs silinebilir mi; değilse 409. */
     default void assertDeletable() {
         throw new CourseStateException("Kurs bu durumdayken silinemez; yalnız taslak kurslar silinebilir.");

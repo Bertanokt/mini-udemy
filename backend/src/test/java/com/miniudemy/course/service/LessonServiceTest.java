@@ -1,5 +1,6 @@
 package com.miniudemy.course.service;
 
+import com.miniudemy.course.domain.ContentFileDetached;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -311,5 +312,31 @@ class LessonServiceTest {
         service.move(OWNER, 31L, 2);
 
         verify(events, never()).publishEvent(any(Object.class));
+    }
+
+    // dosya bağı (#112)
+
+    @Test
+    void update_withAnotherContentType_publishesContentFileDetachedForTheOldFile() {
+        service.update(OWNER, 32L, request("İki", LessonContentType.PDF, true, 60));
+
+        verify(events).publishEvent(new ContentFileDetached(900L));
+    }
+
+    @Test
+    void update_withTheSameContentType_orWithoutAFile_publishesNoContentFileDetached() {
+        service.update(OWNER, 32L, request("İki", LessonContentType.VIDEO, true, 60));
+        service.update(OWNER, 31L, request("Bir", LessonContentType.PDF, true, 60));
+
+        verify(events, never()).publishEvent(any(ContentFileDetached.class));
+    }
+
+    @Test
+    void delete_ofALessonWithContent_publishesContentFileDetached_andOfOneWithoutDoesNot() {
+        service.delete(OWNER, 31L);
+        verify(events, never()).publishEvent(any(ContentFileDetached.class));
+
+        service.delete(OWNER, 32L);
+        verify(events).publishEvent(new ContentFileDetached(900L));
     }
 }
