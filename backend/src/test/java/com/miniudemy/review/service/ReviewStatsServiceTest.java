@@ -87,4 +87,26 @@ class ReviewStatsServiceTest {
 
         assertThat(service.courseIdsWithAverageAtLeast(1)).isEmpty();
     }
+
+    @Test
+    void distributionOf_fillsMissingStarsWithZero() {
+        ReviewRepository.RatingCount five = mock(ReviewRepository.RatingCount.class);
+        given(five.getRating()).willReturn(5);
+        given(five.getTotal()).willReturn(7L);
+        ReviewRepository.RatingCount two = mock(ReviewRepository.RatingCount.class);
+        given(two.getRating()).willReturn(2);
+        given(two.getTotal()).willReturn(1L);
+        given(repository.countVisibleByRating(9L)).willReturn(List.of(five, two));
+
+        assertThat(service.distributionOf(9L))
+                .containsExactly(Map.entry("1", 0L), Map.entry("2", 1L), Map.entry("3", 0L), Map.entry("4", 0L),
+                        Map.entry("5", 7L));
+    }
+
+    @Test
+    void distributionOf_courseWithoutReviews_isAllZero() {
+        given(repository.countVisibleByRating(9L)).willReturn(List.of());
+
+        assertThat(service.distributionOf(9L).values()).containsOnly(0L).hasSize(5);
+    }
 }

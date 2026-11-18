@@ -1804,8 +1804,13 @@ paths:
       tags: [Instructor]
       summary: Kurs istatistikleri
       description: >
-        **Rol:** INSTRUCTOR (kursun sahibi). Veriler ilgili modüllerin service arayüzlerinden
-        toplanır.
+        **Rol:** INSTRUCTOR (kursun sahibi); kurs hangi durumda olursa olsun görülebilir. Veriler
+        ilgili modüllerin service arayüzlerinden toplanır. Hesap kuralları (yüzdeler iki
+        ondalığa yuvarlanır, sıfıra bölme yoktur): `averageProgressPercent` = kayıtlıların kurs
+        yüzdelerinin ortalaması (ilerleme kaydı olmayan kayıt %0 sayılır); `completionRate` =
+        yüzdesi %100 olan kayıtlı / tüm kayıtlı × 100; sınavın `passRate` = geçen deneme / tüm
+        denemeler × 100 (her kursiyerin her denemesi sayılır). Kayıtlı ya da deneme yoksa ilgili
+        değerler 0'dır. `quizzes` kursun tüm sınavlarını (denemesizler dahil) sınav id sırasıyla verir.
       operationId: getInstructorCourseStats
       x-roles: [INSTRUCTOR]
       security:
@@ -1829,7 +1834,10 @@ paths:
     get:
       tags: [Instructor]
       summary: Kursiyerlerin ilerleme listesi
-      description: "**Rol:** INSTRUCTOR (kursun sahibi). Sayfalı; e-posta dönmez."
+      description: >
+        **Rol:** INSTRUCTOR (kursun sahibi). Sayfalı, en son kaydolan önce; e-posta dönmez.
+        `progressPercent` kursiyerin kurs yüzdesidir, `lastAccessedAt` kursiyer hiçbir ders
+        açmadıysa null'dır. `quizResults` yalnız denemesi olan sınavları içerir.
       operationId: listInstructorCourseStudents
       x-roles: [INSTRUCTOR]
       security:
@@ -1844,6 +1852,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CourseStudentPage"
+        "400":
+          $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -3389,7 +3399,9 @@ components:
           nullable: true
         quizResults:
           type: array
-          description: Her sınav için en iyi deneme.
+          description: >
+            Her sınav için kursiyerin sonucu: `bestPercent` en yüksek yüzde (bir ondalık),
+            `passed` denemelerinden herhangi biri başarı eşiğini geçtiyse true.
           items:
             type: object
             required: [quizId, bestPercent, passed]
