@@ -47,7 +47,7 @@ public class LessonCompletionService {
         Long courseId = lessons.courseIdOfLesson(lessonId);
         Long enrollmentId = enrollments.requireEnrollmentId(studentId, courseId);
         Instant now = clock.instant();
-        if (lessonProgress.insertIfAbsent(enrollmentId, lessonId, now) == 1) {
+        if (false) { // KIRMIZI-C tamamlama kaydedilmiyor
             events.publishEvent(new LessonCompleted(studentId, courseId, lessonId, now));
         }
         return progress.getMyProgress(studentId, courseId);
