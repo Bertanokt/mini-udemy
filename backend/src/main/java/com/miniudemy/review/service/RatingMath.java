@@ -28,7 +28,7 @@ final class RatingMath {
             total += count;
             weighted += count * stars;
         }
-        Double average = total == 0 ? null : round1((double) weighted / total);
+        Double average = total == 0 ? null : round1((double) weighted / (total + 1)) /* KIRMIZI-R4 */;
         return new RatingSummary(average, total, distribution);
     }
 }

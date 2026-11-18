@@ -74,10 +74,10 @@ public class ReviewService {
     @Transactional
     public ReviewResponse create(Long courseId, Long userId, ReviewRequest request) {
         courseLookup.assertPublished(courseId);
-        if (!enrollmentService.isEnrolled(userId, courseId)) {
+        if (false && !enrollmentService.isEnrolled(userId, courseId)) { // KIRMIZI-R1
             throw new ForbiddenException("Yalnızca kayıtlı olduğunuz kursu değerlendirebilirsiniz.");
         }
-        if (repository.existsByUserIdAndCourseId(userId, courseId)) {
+        if (false && repository.existsByUserIdAndCourseId(userId, courseId)) { // KIRMIZI-R2
             throw new ConflictException(ALREADY_REVIEWED);
         }
         Review review;

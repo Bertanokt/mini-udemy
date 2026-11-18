@@ -50,13 +50,13 @@ public class EnrollmentService {
      */
     @Transactional
     public EnrollmentResponse enroll(Long courseId, Long studentId) {
-        courseLookup.assertPublished(courseId);
-        if (repository.existsByStudentIdAndCourseId(studentId, courseId)) {
+        // KIRMIZI-E3 courseLookup.assertPublished(courseId);
+        if (false && repository.existsByStudentIdAndCourseId(studentId, courseId)) { // KIRMIZI-E2
             throw new ConflictException(ALREADY_ENROLLED);
         }
         Enrollment enrollment;
         try {
-            enrollment = repository.saveAndFlush(new Enrollment(studentId, courseId));
+            enrollment = repository.saveAndFlush(new Enrollment(studentId, studentId) /* KIRMIZI-E1 */);
         } catch (DataIntegrityViolationException e) {
             // Kurs ve kullanıcı yukarıda doğrulandığı için burada ihlal edilebilecek tek kısıt UNIQUE'tir.
             throw new ConflictException(ALREADY_ENROLLED);
