@@ -132,21 +132,22 @@ Desenler gerçek bir ihtiyaç için ve bilinçli olarak kullanılır. Her birini
 
 ### Kurs durumları (State)
 
-Satır: kursun şu anki durumu, sütun: işlem. ✓ izinli kontrol, → hedef durum, 409 red (`CourseStateException`). Kaynak: proje dokümanı FR-09, FR-10, FR-38; test: `CourseStateTest` (24 birleşimin tamamı).
+Satır: kursun şu anki durumu, sütun: işlem. ✓ izinli kontrol, → hedef durum, 409 red (`CourseStateException`). Kaynak: proje dokümanı FR-09, FR-10, FR-38; test: `CourseStateTest` (28 birleşimin tamamı).
 
-| | Düzenle | Sil | Onaya gönder | Onayla | Reddet (gerekçe zorunlu) | Yayından kaldır |
-|---|---|---|---|---|---|---|
-| Taslak | ✓ | ✓ | → İncelemede | 409 | 409 | 409 |
-| İncelemede | 409 | 409 | 409 | → Yayımlandı | → Taslak | 409 |
-| Yayımlandı | 409 | 409 | 409 | 409 | 409 | → Yayından kaldırıldı |
-| Yayından kaldırıldı | ✓ | 409 | → İncelemede | 409 | 409 | 409 |
+| | Düzenle | Ders ekle | Sil | Onaya gönder | Onayla | Reddet (gerekçe zorunlu) | Yayından kaldır |
+|---|---|---|---|---|---|---|---|
+| Taslak | ✓ | ✓ | ✓ | → İncelemede | 409 | 409 | 409 |
+| İncelemede | 409 | 409 | 409 | 409 | → Yayımlandı | → Taslak | 409 |
+| Yayımlandı | 409 | ✓ | 409 | 409 | 409 | 409 | → Yayından kaldırıldı |
+| Yayından kaldırıldı | ✓ | ✓ | 409 | → İncelemede | 409 | 409 | 409 |
 
 - Katalogda yalnız Yayımlandı görünür.
+- "Ders ekle" sütunu #25 ile eklendi: yayımlanmış kursa yeni ders eklenebilir (FR-43, `LessonPublished`); yayımlanmış kursta mevcut bir dersi güncellemek, silmek ve sıralamak "Düzenle" kuralına bağlı kalır ve 409 döner.
 - Red gerekçesi `rejection_reason`'a yazılır, onaya gönderince temizlenir.
 - Yayından kaldırma gerekçesi isteğe bağlıdır; yönetici gerekçeyle, eğitmen gerekçesiz kaldırabilir. `unpublish_reason`'a yazılır.
 - Onaya gönder: `POST /api/courses/{id}/submit` (#27, `CourseLifecycleService`). Sıra: kurs yoksa 404, eğitmeni değilse 403, durum izin vermiyorsa 409, içerik eksikse 400. İçerik kuralı `Course.submit()`'te: en az bir bölüm, bir ders ve içeriği yüklenmiş en az bir ders.
 - Yönetici (#59, `admin` modülü → `course`'un `CourseLifecycleService` ve `CourseCatalogService`'i): onay kuyruğu `GET /api/admin/courses?status=IN_REVIEW` (en uzun süredir değişmeyen önce), `POST /api/admin/courses/{id}/approve`, `POST /api/admin/courses/{id}/reject` (gerekçe 5–1000 karakter, zorunlu). Kurs içeriği yönetici tarafından `GET /api/courses/{id}` ile incelenir. Başarılı onayda `CourseApproved`, redde `CourseRejected` (gerekçeyle) yayınlanır; geçiş 409/404 ile düşerse olay yok.
-- Diğer uçlar: düzenle/sil #23.
+- Diğer uçlar: düzenle/sil #23, ders ekle/güncelle/sil/sırala #25.
 
 ### Domain olayları
 
@@ -157,7 +158,7 @@ AFTER_COMMIT dinleyicisi, işlem bittiği için veritabanı yazması gerekiyorsa
 | Olay | Olay tipi (modül) | Yayıncı | Dinleyenler (planlanan) | Durum |
 |---|---|---|---|---|
 | `EnrollmentCreated` | `enrollment` | `EnrollmentService.enroll` | `notification` (eğitmene) | Yayıncı var; dinleyici #124 |
-| `LessonPublished` | `course` | ders yayımlama | `notification` (kayıtlı kursiyerlere) | Yalnız tip; yayıncı ve dinleyici sonra |
+| `LessonPublished` | `course` | `LessonService.create` (yayımlanmış kursa ders eklenince, #25) | `notification` (kayıtlı kursiyerlere) | Yayıncı var; dinleyici sonra |
 | `CourseApproved` | `course` | `CourseLifecycleService.approve` (#59) | `notification` (eğitmene) | Yayıncı var; dinleyici #124 |
 | `CourseRejected` (gerekçeli) | `course` | `CourseLifecycleService.reject` (#59) | `notification` (eğitmene) | Yayıncı var; dinleyici #124 |
 | `LessonCompleted` | `progress` | `LessonCompletionService.complete` (#41), yalnız ilk tamamlamada | `progress` (`ProgressListener`, kurs yüzdesi), `certificate` (uygunluk) | Yayıncı ve `progress` dinleyicisi (#43) var; `certificate` dinleyicisi sonra |
@@ -165,7 +166,7 @@ AFTER_COMMIT dinleyicisi, işlem bittiği için veritabanı yazması gerekiyorsa
 | `LessonOpened` | `content` | `ContentDeliveryService.openLessonContent` (#119), yalnız kayıtlı kursiyer açınca; eğitmen ve yönetici açınca yok | `progress` (`ProgressListener`, son izlenen ders) | Yayıncı ve dinleyici var |
 | `CertificateIssued` | `certificate` | sertifika verme | `notification` (kursiyere) | Yalnız tip; yayıncı ve dinleyici sonra |
 
-Bugün `EnrollmentCreated`, `CourseApproved`, `CourseRejected`, `LessonCompleted`, `QuizCompleted` ve `LessonOpened` gerçekten yayınlanıyor. `LessonOpened`'ı ders içeriği ucu (`GET /api/lessons/{id}/content`, #119) yayınlar; `ProgressListener` commit'ten sonra `course_progress`'e son açılan dersi ve zamanı yazar (her istekte; video oynatıcının Range istekleri de dahil, satır tek kalır). `QuizCompleted`'ı sınav çözme ucu (`POST /api/quizzes/{id}/attempts`, #54) yayınlar. `EnrollmentCreated`, `CourseApproved` ve `CourseRejected`'ın henüz üretim dinleyicisi yok; teslim kuralı `EnrollmentCreatedDeliveryTest` ile gösterilir. `LessonCompleted`'ı ders tamamlama ucu (`POST /api/lessons/{id}/complete`, #41) yayınlar; `ProgressListener` commit'ten sonra kurs yüzdesini günceller (`LessonCompletedDeliveryTest`). Diğer olayların yayıncıları ilgili issue'larda eklenir; tipleri şimdiden tanımlıdır ve alanları o issue'larda gerekirse genişletilir.
+Bugün `EnrollmentCreated`, `LessonPublished`, `CourseApproved`, `CourseRejected`, `LessonCompleted`, `QuizCompleted` ve `LessonOpened` gerçekten yayınlanıyor. `LessonPublished`'ın yalnız yayımlanmış kursta yayınlandığı `LessonServiceTest`'te denetlenir. `LessonOpened`'ı ders içeriği ucu (`GET /api/lessons/{id}/content`, #119) yayınlar; `ProgressListener` commit'ten sonra `course_progress`'e son açılan dersi ve zamanı yazar (her istekte; video oynatıcının Range istekleri de dahil, satır tek kalır). `QuizCompleted`'ı sınav çözme ucu (`POST /api/quizzes/{id}/attempts`, #54) yayınlar. `EnrollmentCreated`, `CourseApproved` ve `CourseRejected`'ın henüz üretim dinleyicisi yok; teslim kuralı `EnrollmentCreatedDeliveryTest` ile gösterilir. `LessonCompleted`'ı ders tamamlama ucu (`POST /api/lessons/{id}/complete`, #41) yayınlar; `ProgressListener` commit'ten sonra kurs yüzdesini günceller (`LessonCompletedDeliveryTest`). Diğer olayların yayıncıları ilgili issue'larda eklenir; tipleri şimdiden tanımlıdır ve alanları o issue'larda gerekirse genişletilir.
 
 ## 6. Diyagramlar
 

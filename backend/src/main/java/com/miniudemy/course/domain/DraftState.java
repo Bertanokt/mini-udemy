@@ -18,6 +18,10 @@ final class DraftState implements CourseState {
     }
 
     @Override
+    public void assertLessonAddable() {
+    }
+
+    @Override
     public void assertDeletable() {
     }
 

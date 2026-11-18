@@ -176,6 +176,13 @@ public class Course {
         state().assertEditable();
     }
 
+    /**
+     * Kursa yeni ders eklenebilir mi: Taslak, Yayımlandı ve Yayından kaldırıldı (İncelemede değil). Değilse 409.
+     */
+    public void assertLessonAddable() {
+        state().assertLessonAddable();
+    }
+
     /** Kurs silinebilir mi: yalnız Taslak. Değilse 409. */
     public void assertDeletable() {
         state().assertDeletable();

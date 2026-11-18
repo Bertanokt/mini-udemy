@@ -1,0 +1,21 @@
+.meta { color: var(--muted); margin: 4px 0 16px; }
+.status { color: var(--muted); }
+.error { color: var(--err); }
+.question { border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; margin: 0 0 16px; }
+.question legend { font-weight: 600; padding: 0 6px; }
+.hint { color: var(--muted); font-size: 0.875rem; margin: 0 0 8px; }
+.option { display: flex; align-items: flex-start; gap: 8px; padding: 6px 0; cursor: pointer; }
+.option input { margin-top: 4px; }
+.missing { border-color: var(--err); }
+.warning { border: 1px solid var(--err); border-radius: 8px; padding: 12px 16px; margin: 0 0 16px; }
+.warning p { margin: 0 0 8px; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.button { padding: 8px 16px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: inherit; cursor: pointer; font: inherit; }
+.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.button:disabled { opacity: 0.6; cursor: not-allowed; }
+.summary { display: flex; flex-wrap: wrap; gap: 8px 24px; border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 16px; }
+.summary p { margin: 0; }
+.pass { color: var(--ok); font-weight: 600; }
+.fail { color: var(--err); font-weight: 600; }
+.results { list-style: none; padding: 0; margin: 0 0 16px; }
+.results li { padding: 8px 0; border-bottom: 1px solid var(--border); }
