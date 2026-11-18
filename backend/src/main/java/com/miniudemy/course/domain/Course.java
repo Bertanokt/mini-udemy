@@ -223,7 +223,7 @@ public class Course {
             throw new IllegalArgumentException("Red gerekçesi zorunludur.");
         }
         status = target;
-        rejectionReason = reason;
+        // KIRMIZI-2 rejectionReason = reason;
     }
 
     /** Yayından kaldır (Yayımlandı → Yayından kaldırıldı); gerekçe yönetici için verilir, eğitmen için boş olabilir (FR-38). */
