@@ -21,7 +21,7 @@ import com.fasterxml.jackson.databind.JsonNode;
  *
  * <p>Ön koşul olan yayımlanmış kurs, mümkün olduğunca gerçek uçlarla hazırlanır: eğitmen kaydı, kurs oluşturma (#22),
  * onaya gönderme (#27) ve yönetici onayı (#59). Bölüm ve ders uçları (#24, #25) henüz main'de olmadığı için kursun
- * bölüm ve dersleri doğrudan veritabanına eklenir.
+ * bölüm ve dersleri, derslerin içerik dosyası kaydıyla birlikte doğrudan veritabanına eklenir.
  */
 class EnrollmentScenarioIT extends IntegrationTestBase {
 
@@ -109,8 +109,9 @@ class EnrollmentScenarioIT extends IntegrationTestBase {
                 "INSERT INTO sections (course_id, title, position) VALUES (?, 'Giriş', 0) RETURNING id",
                 Long.class, courseId);
         List<Long> lessonIds = new ArrayList<>();
-        lessonIds.add(lesson(sectionId, "Kurulum", 0));
-        lessonIds.add(lesson(sectionId, "İlk program", 1));
+        long instructorId = jdbc.queryForObject("SELECT id FROM users WHERE email = 'mehmet@example.com'", Long.class);
+        lessonIds.add(lesson(sectionId, "Kurulum", 0, videoFile(instructorId, "kurulum.mp4")));
+        lessonIds.add(lesson(sectionId, "İlk program", 1, videoFile(instructorId, "ilk-program.mp4")));
 
         assertThat(post("/api/courses/" + courseId + "/submit", instructor, null).getStatusCode())
                 .isEqualTo(HttpStatus.OK);
@@ -135,11 +136,23 @@ class EnrollmentScenarioIT extends IntegrationTestBase {
         return created.getBody().get("id").asLong();
     }
 
-    private long lesson(long sectionId, String title, int position) {
+    private long lesson(long sectionId, String title, int position, long contentFileId) {
         return jdbc.queryForObject("""
-                INSERT INTO lessons (section_id, title, content_type, mandatory, duration_seconds, position)
-                VALUES (?, ?, 'VIDEO', TRUE, 300, ?) RETURNING id
-                """, Long.class, sectionId, title, position);
+                INSERT INTO lessons (section_id, content_file_id, title, content_type, mandatory, duration_seconds,
+                                     position)
+                VALUES (?, ?, ?, 'VIDEO', TRUE, 300, ?) RETURNING id
+                """, Long.class, sectionId, contentFileId, title, position);
+    }
+
+    /**
+     * Dersin yüklenmiş içeriği (onaya gönderme en az bir içerikli ders ister). İçerik yükleme ucu henüz main'de
+     * olmadığı için yalnız dosya kaydı eklenir; bu senaryo dosyanın kendisini okumaz.
+     */
+    private long videoFile(long uploaderId, String name) {
+        return jdbc.queryForObject("""
+                INSERT INTO stored_files (uploader_id, storage_key, original_name, mime_type, size_bytes)
+                VALUES (?, ?, ?, 'video/mp4', 1024) RETURNING id
+                """, Long.class, uploaderId, "it-" + name, name);
     }
 
     private static List<Long> ids(JsonNode objects) {
