@@ -18,7 +18,7 @@ import com.miniudemy.common.exception.BadRequestException;
 import com.miniudemy.course.CourseFixtures;
 
 /**
- * State deseni (#85): kursun 4 durumu × 6 işlemin 24 birleşiminin tamamı. Geçiş tablosu docs/architecture.md ›
+ * State deseni (#85): kursun 4 durumu × 7 işlemin 28 birleşiminin tamamı. Geçiş tablosu docs/architecture.md ›
  * Kurs durumları ile aynıdır (FR-09, FR-10, FR-38). İzinsiz işlem 409 ({@link CourseStateException}) fırlatır ve
  * kursu değiştirmez.
  */
@@ -28,6 +28,7 @@ class CourseStateTest {
     private static Consumer<Course> operation(String name) {
         return switch (name) {
             case "EDIT" -> Course::assertEditable;
+            case "ADD_LESSON" -> Course::assertLessonAddable;
             case "DELETE" -> Course::assertDeletable;
             case "SUBMIT" -> Course::submit;
             case "APPROVE" -> Course::approve;
@@ -48,24 +49,28 @@ class CourseStateTest {
     @ParameterizedTest(name = "{0} + {1} → {2}")
     @CsvSource({
         "DRAFT,       EDIT,      OK",
+        "DRAFT,        ADD_LESSON, OK",
         "DRAFT,       DELETE,    OK",
         "DRAFT,       SUBMIT,    IN_REVIEW",
         "DRAFT,       APPROVE,   409",
         "DRAFT,       REJECT,    409",
         "DRAFT,       UNPUBLISH, 409",
         "IN_REVIEW,   EDIT,      409",
+        "IN_REVIEW,    ADD_LESSON, 409",
         "IN_REVIEW,   DELETE,    409",
         "IN_REVIEW,   SUBMIT,    409",
         "IN_REVIEW,   APPROVE,   PUBLISHED",
         "IN_REVIEW,   REJECT,    DRAFT",
         "IN_REVIEW,   UNPUBLISH, 409",
         "PUBLISHED,   EDIT,      409",
+        "PUBLISHED,    ADD_LESSON, OK",
         "PUBLISHED,   DELETE,    409",
         "PUBLISHED,   SUBMIT,    409",
         "PUBLISHED,   APPROVE,   409",
         "PUBLISHED,   REJECT,    409",
         "PUBLISHED,   UNPUBLISH, UNPUBLISHED",
         "UNPUBLISHED, EDIT,      OK",
+        "UNPUBLISHED,  ADD_LESSON, OK",
         "UNPUBLISHED, DELETE,    409",
         "UNPUBLISHED, SUBMIT,    IN_REVIEW",
         "UNPUBLISHED, APPROVE,   409",
