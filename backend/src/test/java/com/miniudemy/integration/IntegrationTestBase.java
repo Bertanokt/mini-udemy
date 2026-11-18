@@ -129,6 +129,10 @@ public abstract class IntegrationTestBase {
         return http.exchange(path, HttpMethod.POST, new HttpEntity<>(body, headers(token)), JsonNode.class);
     }
 
+    protected ResponseEntity<JsonNode> put(String path, String token, Object body) {
+        return http.exchange(path, HttpMethod.PUT, new HttpEntity<>(body, headers(token)), JsonNode.class);
+    }
+
     private static HttpHeaders headers(String token) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
