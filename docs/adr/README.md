@@ -42,11 +42,12 @@ ADR, kararın alındığı iş ile **aynı PR'da** yazılır.
 | [ADR-008](0008-strategy-puanlama.md) | Strategy deseni ile sınav puanlama | Kabul edildi | #52 |
 | [ADR-009](0009-observer-spring-events.md) | Observer: Spring domain olayları, AFTER_COMMIT ve senkron teslim | Kabul edildi | #42 |
 | [ADR-010](0010-state-kurs-durumu.md) | State deseni ile kurs yaşam döngüsü; domain'den yalnız `common.exception`'a bağımlılık | Kabul edildi | #85 |
+| [ADR-011](0011-factory-method-icerik-turleri.md) | Factory Method ile ders içerik türleri (kabul kuralı ve sunuluş türün ürününde) | Kabul edildi | #110 |
 
 ### Planlanan
 
 | No | Konu | Issue |
 |---|---|---|
-| sonraki numaralar | Desen kararı: Factory Method (#110) (Strategy: ADR-008, Observer: ADR-009, State: ADR-010 yazıldı) | ilgili issue'lar |
+| sonraki numaralar | Beş desenin hepsinin ADR'si yazıldı (DTO + Mapper: ADR-006, Strategy: ADR-008, Observer: ADR-009, State: ADR-010, Factory Method: ADR-011); yeni kararlar sıradaki numarayla | – |
 
 Genel mimari kurallar: [`docs/architecture.md`](../architecture.md).
