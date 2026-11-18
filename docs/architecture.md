@@ -145,7 +145,8 @@ Satır: kursun şu anki durumu, sütun: işlem. ✓ izinli kontrol, → hedef du
 - Red gerekçesi `rejection_reason`'a yazılır, onaya gönderince temizlenir.
 - Yayından kaldırma gerekçesi isteğe bağlıdır; yönetici gerekçeyle, eğitmen gerekçesiz kaldırabilir. `unpublish_reason`'a yazılır.
 - Onaya gönder: `POST /api/courses/{id}/submit` (#27, `CourseLifecycleService`). Sıra: kurs yoksa 404, eğitmeni değilse 403, durum izin vermiyorsa 409, içerik eksikse 400. İçerik kuralı `Course.submit()`'te: en az bir bölüm, bir ders ve içeriği yüklenmiş en az bir ders.
-- Diğer uçlar: düzenle/sil #23, onay/red #59.
+- Yönetici (#59, `admin` modülü → `course`'un `CourseLifecycleService` ve `CourseCatalogService`'i): onay kuyruğu `GET /api/admin/courses?status=IN_REVIEW` (en uzun süredir değişmeyen önce), `POST /api/admin/courses/{id}/approve`, `POST /api/admin/courses/{id}/reject` (gerekçe 5–1000 karakter, zorunlu). Kurs içeriği yönetici tarafından `GET /api/courses/{id}` ile incelenir. `CourseApproved` / `CourseRejected` olayları Observer altyapısı (#224) gelince yayınlanacak; yerleri #59'da.
+- Diğer uçlar: düzenle/sil #23.
 
 ### Domain olayları
 

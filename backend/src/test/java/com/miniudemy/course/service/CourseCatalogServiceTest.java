@@ -1,5 +1,6 @@
 package com.miniudemy.course.service;
 
+import org.springframework.data.domain.PageRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -49,6 +50,38 @@ class CourseCatalogServiceTest {
     private final EnrollmentCounts enrollmentCounts = mock(EnrollmentCounts.class);
     private final CourseCatalogService service = new CourseCatalogService(courseRepository, sectionRepository,
             lessonRepository, userDirectory, enrollmentCounts, new CourseMapperImpl(new CategoryMapperImpl()));
+
+    // --- yönetici listesi (#59) ---
+
+    @Test
+    void listByStatus_passesStatusPageAndOldestChangedFirstOrder_andBuildsCards() {
+        Course course = CourseFixtures.course(5L, 7L, "Bekleyen kurs", CourseStatus.IN_REVIEW);
+        given(courseRepository.findAllByOptionalStatus(eq(CourseStatus.IN_REVIEW), any()))
+                .willReturn(new org.springframework.data.domain.PageImpl<>(List.of(course),
+                        PageRequest.of(1, 10), 11));
+        given(userDirectory.findSummaries(any())).willReturn(Map.of(7L, new UserSummary(7L, "Mehmet Kaya")));
+
+        CourseSummaryPage result = service.listByStatus(CourseStatus.IN_REVIEW, 1, 10);
+
+        ArgumentCaptor<Pageable> pageable = ArgumentCaptor.forClass(Pageable.class);
+        verify(courseRepository).findAllByOptionalStatus(eq(CourseStatus.IN_REVIEW), pageable.capture());
+        assertThat(pageable.getValue().getPageNumber()).isEqualTo(1);
+        assertThat(pageable.getValue().getPageSize()).isEqualTo(10);
+        assertThat(pageable.getValue().getSort())
+                .isEqualTo(Sort.by(Sort.Order.asc("updatedAt"), Sort.Order.asc("id")));
+        assertThat(result.content()).extracting(CourseSummaryResponse::id).containsExactly(5L);
+        assertThat(result.content().get(0).status()).isEqualTo(CourseStatus.IN_REVIEW);
+        assertThat(result.totalElements()).isEqualTo(11);
+    }
+
+    @Test
+    void listByStatus_withoutStatus_listsAllStatuses() {
+        given(courseRepository.findAllByOptionalStatus(any(), any())).willReturn(Page.empty());
+
+        service.listByStatus(null, 0, 20);
+
+        verify(courseRepository).findAllByOptionalStatus(eq(null), any());
+    }
 
     // --- arama ---
 

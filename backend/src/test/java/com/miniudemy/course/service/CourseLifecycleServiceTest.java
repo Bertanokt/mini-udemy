@@ -94,4 +94,51 @@ class CourseLifecycleServiceTest {
         assertThatThrownBy(() -> service.submit(6L, 7L)).isInstanceOf(NotFoundException.class);
         verify(courseRepository, never()).saveAndFlush(any());
     }
+
+    // --- yönetici onayı ve reddi (#59) ---
+
+    @Test
+    void approve_inReview_publishes_savesAndReturnsIt() {
+        Course course = submittable(CourseStatus.IN_REVIEW);
+        given(courseRepository.findById(5L)).willReturn(java.util.Optional.of(course));
+
+        CourseResponse response = service.approve(5L);
+
+        assertThat(course.getStatus()).isEqualTo(CourseStatus.PUBLISHED);
+        verify(courseRepository).saveAndFlush(course);
+        assertThat(response.status()).isEqualTo(CourseStatus.PUBLISHED);
+    }
+
+    @Test
+    void reject_inReview_returnsToDraftWithReason_savesAndReturnsIt() {
+        Course course = submittable(CourseStatus.IN_REVIEW);
+        given(courseRepository.findById(5L)).willReturn(java.util.Optional.of(course));
+
+        CourseResponse response = service.reject(5L, "Ders içerikleri eksik.");
+
+        assertThat(course.getStatus()).isEqualTo(CourseStatus.DRAFT);
+        assertThat(course.getRejectionReason()).isEqualTo("Ders içerikleri eksik.");
+        verify(courseRepository).saveAndFlush(course);
+        assertThat(response.status()).isEqualTo(CourseStatus.DRAFT);
+        assertThat(response.rejectionReason()).isEqualTo("Ders içerikleri eksik.");
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = CourseStatus.class, names = {"DRAFT", "PUBLISHED", "UNPUBLISHED"})
+    void approveOrReject_notInReview_returns409_andSavesNothing(CourseStatus from) {
+        given(courseRepository.findById(5L)).willReturn(java.util.Optional.of(submittable(from)));
+
+        assertThatThrownBy(() -> service.approve(5L)).isInstanceOf(CourseStateException.class);
+        assertThatThrownBy(() -> service.reject(5L, "Ders içerikleri eksik.")).isInstanceOf(CourseStateException.class);
+        verify(courseRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void approveOrReject_missingCourse_returns404() {
+        given(courseRepository.findById(6L)).willReturn(java.util.Optional.empty());
+
+        assertThatThrownBy(() -> service.approve(6L)).isInstanceOf(NotFoundException.class).hasMessage("Kurs bulunamadı.");
+        assertThatThrownBy(() -> service.reject(6L, "Ders içerikleri eksik.")).isInstanceOf(NotFoundException.class);
+        verify(courseRepository, never()).saveAndFlush(any());
+    }
 }
