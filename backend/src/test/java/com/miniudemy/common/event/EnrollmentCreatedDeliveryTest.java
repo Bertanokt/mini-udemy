@@ -168,7 +168,8 @@ class EnrollmentCreatedDeliveryTest {
         @Bean
         EnrollmentService enrollmentService(EnrollmentRepository repository, CourseLookupService lookup,
                 ApplicationEventPublisher events) {
-            return new EnrollmentService(repository, lookup, new EnrollmentMapperImpl(), events);
+            return new EnrollmentService(repository, lookup, new EnrollmentMapperImpl(), events,
+                    enrollmentIds -> java.util.Map.of());
         }
 
         @Bean

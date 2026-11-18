@@ -31,6 +31,13 @@ public class CourseProgress {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    /** Son açılan ders (#119); ders silinirse veritabanı boşaltır (ON DELETE SET NULL). */
+    @Column(name = "last_lesson_id")
+    private Long lastLessonId;
+
+    @Column(name = "last_accessed_at")
+    private Instant lastAccessedAt;
+
     /** JPA için. */
     protected CourseProgress() {
     }
@@ -45,6 +52,14 @@ public class CourseProgress {
 
     public BigDecimal getProgressPercent() {
         return progressPercent;
+    }
+
+    public Long getLastLessonId() {
+        return lastLessonId;
+    }
+
+    public Instant getLastAccessedAt() {
+        return lastAccessedAt;
     }
 
     public Instant getUpdatedAt() {

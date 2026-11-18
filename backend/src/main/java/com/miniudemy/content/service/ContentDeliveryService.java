@@ -1,11 +1,16 @@
 package com.miniudemy.content.service;
 
+import java.time.Clock;
+
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.miniudemy.common.exception.ForbiddenException;
 import com.miniudemy.common.exception.NotFoundException;
 import com.miniudemy.content.domain.DeliveryMode;
 import com.miniudemy.content.domain.LessonContent;
+import com.miniudemy.content.domain.LessonOpened;
 import com.miniudemy.content.dto.ContentDownload;
 import com.miniudemy.content.dto.StoredFileInfo;
 import com.miniudemy.course.dto.LessonContentRef;
@@ -22,29 +27,39 @@ public class ContentDeliveryService {
     private final EnrollmentService enrollments;
     private final StorageService storage;
     private final LessonContentFactories factories;
+    private final ApplicationEventPublisher events;
+    private final Clock clock;
 
     public ContentDeliveryService(LessonLookupService lessons, CourseLookupService courses,
-            EnrollmentService enrollments, StorageService storage, LessonContentFactories factories) {
+            EnrollmentService enrollments, StorageService storage, LessonContentFactories factories,
+            ApplicationEventPublisher events, Clock clock) {
         this.lessons = lessons;
         this.courses = courses;
         this.enrollments = enrollments;
         this.storage = storage;
         this.factories = factories;
+        this.events = events;
+        this.clock = clock;
     }
 
     /**
      * Ders içeriği: kursa kayıtlı kursiyer, kursun eğitmeni ya da yönetici; diğerleri 403 (proje dokümanı Bölüm 6,
-     * kayıtsız erişim). Yetki içeriğin varlığından önce sorulur; içerik yoksa yalnız yetkiliye 404.
+     * kayıtsız erişim). Yetki içeriğin varlığından önce sorulur; içerik yoksa yalnız yetkiliye 404. Kursiyer açtığında
+     * {@link LessonOpened} yayınlanır (son izlenen ders, #119); dinleyici commit'ten sonra çalışır (ADR-009).
      */
+    @Transactional(readOnly = true)
     public ContentDownload openLessonContent(Long lessonId, Long viewerId, boolean viewerIsAdmin) {
         LessonContentRef ref = lessons.contentRefOf(lessonId);
-        boolean allowed = viewerIsAdmin || ref.instructorId().equals(viewerId)
-                || enrollments.isEnrolled(viewerId, ref.courseId());
-        if (!allowed) {
+        boolean staff = viewerIsAdmin || ref.instructorId().equals(viewerId);
+        boolean enrolledStudent = !staff && enrollments.isEnrolled(viewerId, ref.courseId());
+        if (!staff && !enrolledStudent) {
             throw new ForbiddenException("Bu ders içeriğine erişim yetkiniz yok.");
         }
         if (ref.contentFileId() == null) {
             throw new NotFoundException("Bu derse henüz içerik yüklenmemiş.");
+        }
+        if (enrolledStudent) {
+            events.publishEvent(new LessonOpened(viewerId, ref.courseId(), lessonId, clock.instant()));
         }
         LessonContent content = factories.forType(ref.contentType()).create();
         return download(ref.contentFileId(), content.deliveryMode(), content.supportsRangeRequests());
