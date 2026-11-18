@@ -62,7 +62,7 @@ public class SectionService {
     /** Bölümü kursun sonuna ekler. */
     @Transactional
     public SectionResponse createSection(Long courseId, Long userId, SectionRequest request) {
-        Course course = courseRepository.findById(courseId).orElseThrow(); // KIRMIZI-3
+        Course course = ownership.requireOwnedCourse(courseId, userId);
         course.assertEditable();
         Section section = course.appendSection(request.title());
         sectionRepository.saveAndFlush(section);
