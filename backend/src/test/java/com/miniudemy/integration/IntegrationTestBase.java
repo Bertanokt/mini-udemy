@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -26,6 +27,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.testcontainers.containers.PostgreSQLContainer;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -139,7 +142,26 @@ public abstract class IntegrationTestBase {
                 """, Long.class, uploaderId, key, originalName, mimeType, content.length);
     }
 
+    /** Depolama dizininde bu anahtarla bir dosya var mı (yükleme ve silme testleri için). */
+    protected boolean fileOnDisk(String storageKey) {
+        return Files.isRegularFile(STORAGE_ROOT.resolve(storageKey));
+    }
+
     // --- HTTP ---
+
+    /** Gerçek multipart yükleme (alan adı {@code file}); {@code token} null ise girişsiz. */
+    protected ResponseEntity<JsonNode> upload(String path, String token, String fileName, byte[] content) {
+        HttpHeaders headers = headers(token);
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("file", new ByteArrayResource(content) {
+            @Override
+            public String getFilename() {
+                return fileName;
+            }
+        });
+        return http.exchange(path, HttpMethod.POST, new HttpEntity<>(body, headers), JsonNode.class);
+    }
 
     /** Dosya indiren uçlar için: gövde bayt olarak döner; {@code range} null değilse Range başlığı gönderilir. */
     protected ResponseEntity<byte[]> download(String path, String token, String range) {

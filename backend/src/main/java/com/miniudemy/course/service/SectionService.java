@@ -1,6 +1,7 @@
 package com.miniudemy.course.service;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -8,8 +9,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.miniudemy.common.exception.BadRequestException;
 import com.miniudemy.common.exception.NotFoundException;
+import com.miniudemy.course.domain.ContentFileDetached;
 import com.miniudemy.course.domain.Course;
 import com.miniudemy.course.domain.CourseLessonsChanged;
+import com.miniudemy.course.domain.Lesson;
 import com.miniudemy.course.domain.Section;
 import com.miniudemy.course.dto.SectionRequest;
 import com.miniudemy.course.dto.SectionResponse;
@@ -25,6 +28,7 @@ import com.miniudemy.course.repository.SectionRepository;
  *       kursun varlığı açığa çıkmadan 404 (kurs detayıyla aynı kural).</li>
  *   <li>Değiştiren her işlem: kurs ya da bölüm yoksa 404, kullanıcı kursun eğitmeni değilse 403, kurs düzenlenemez
  *       durumdaysa 409 (sahiplik {@link CourseOwnershipService}'te, düzenlenebilirlik kursun durum nesnesinde).</li>
+ *   <li>Bölüm silinince dersleri de gider; içerik dosyaları için {@link ContentFileDetached} yayınlanır (#112).</li>
  *   <li>Yeni bölüm sona eklenir; silmede kalanlar, taşımada aradakiler boşluksuz yeniden sıralanır (sıra 0'dan).</li>
  * </ul>
  */
@@ -86,7 +90,10 @@ public class SectionService {
     public void deleteSection(Long sectionId, Long userId) {
         Section section = requireEditableSection(sectionId, userId);
         Course course = section.getCourse();
+        List<Long> contentFiles = section.getLessons().stream().map(Lesson::getContentFileId)
+                .filter(Objects::nonNull).toList();
         course.removeSection(section);
+        contentFiles.forEach(fileId -> events.publishEvent(new ContentFileDetached(fileId)));
         events.publishEvent(new CourseLessonsChanged(course.getId()));
     }
 

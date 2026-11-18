@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.miniudemy.common.exception.BadRequestException;
 import com.miniudemy.common.exception.ForbiddenException;
 import com.miniudemy.common.exception.NotFoundException;
+import com.miniudemy.course.domain.ContentFileDetached;
 import com.miniudemy.course.domain.Course;
 import com.miniudemy.course.domain.CourseLessonsChanged;
 import com.miniudemy.course.domain.Lesson;
@@ -30,6 +31,8 @@ import com.miniudemy.course.repository.SectionRepository;
  *   <li>Ekleme: yeni ders bölümün sonuna gider. Kurs Yayımlandı durumundaysa {@link LessonPublished} yayınlanır
  *       (Observer, ADR-009); dinleyici işlem commit olunca çalışır.</li>
  *   <li>Güncelleme, silme ve sıralama yalnız düzenlenebilir kursta (Taslak, Yayından kaldırıldı) yapılır.</li>
+ *   <li>Dersin içerik dosyasının bağı kopunca (ders silinir ya da içerik türü değişir) {@link ContentFileDetached}
+ *       yayınlanır; dosyayı diskten content dinleyicisi siler (#112).</li>
  *   <li>Silme ve sıralamadan sonra bölümdeki derslerin {@code position} değerleri 0'dan boşluksuz kalır.</li>
  * </ul>
  */
@@ -71,16 +74,25 @@ public class LessonService {
     @Transactional
     public LessonResponse update(Long instructorId, Long lessonId, LessonRequest request) {
         Lesson lesson = editableLesson(instructorId, lessonId);
+        Long previousFile = lesson.getContentFileId();
         lesson.update(request.title(), request.contentType(), request.mandatory(), request.durationSeconds());
-        return courseMapper.toLessonResponse(lessonRepository.saveAndFlush(lesson));
+        LessonResponse response = courseMapper.toLessonResponse(lessonRepository.saveAndFlush(lesson));
+        if (previousFile != null && lesson.getContentFileId() == null) {
+            events.publishEvent(new ContentFileDetached(previousFile));
+        }
+        return response;
     }
 
     @Transactional
     public void delete(Long instructorId, Long lessonId) {
         Lesson lesson = editableLesson(instructorId, lessonId);
         Long courseId = lesson.getSection().getCourse().getId();
+        Long contentFile = lesson.getContentFileId();
         lesson.getSection().removeLesson(lesson);
         lessonRepository.flush();
+        if (contentFile != null) {
+            events.publishEvent(new ContentFileDetached(contentFile));
+        }
         events.publishEvent(new CourseLessonsChanged(courseId));
     }
 
