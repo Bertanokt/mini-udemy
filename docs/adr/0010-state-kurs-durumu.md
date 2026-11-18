@@ -111,5 +111,5 @@ Durumlar, olaylar ve geçişler bir yapılandırmayla tanımlanır; kütüphane 
 
 - `CourseStateTest`: 4 durum × 6 işlemin 24 birleşiminin tamamı (izinsizde 409 ve değişmeyen durum), gerekçelerin yazılıp temizlenmesi, gerekçesiz red ve her `CourseStatus`'un kendi durum nesnesine eşlendiği. Her durum sınıfında, eşlemede ve `Course`'ta kural bilerek bozulduğunda bu test kırıldı (#85 PR'ı).
 - `CourseOwnershipServiceTest`: sahiplik servisinin düzenlenebilirliği durum nesnesine sorduğu.
-- #86: domain'in yalnız izin verilen paketlere bağımlı olduğu (yukarıdaki kural biçimi).
+- `LayerArchitectureTest.domainOnlyDependsOnPersistenceJavaAndCommonException` (#86): domain'in yalnız izin verilen paketlere bağımlı olduğu (yukarıdaki kural biçimi); domain'e `common.security` bağımlılığı bilerek eklendiğinde kırıldı.
 - `CLAUDE.md` › Tasarım desenleri: "Kurs durumuna bağlı her izin ve geçiş durum nesnesine sorulur; serviste status için if/switch yok."
