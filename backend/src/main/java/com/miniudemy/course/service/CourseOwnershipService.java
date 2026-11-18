@@ -28,12 +28,18 @@ public class CourseOwnershipService {
     /** Kurs yoksa 404, kullanıcı kursun eğitmeni değilse 403. */
     @Transactional(readOnly = true)
     public void assertOwner(Long courseId, Long userId) {
-        Long instructorId = courseRepository.findById(courseId)
-                .orElseThrow(() -> new NotFoundException("Kurs bulunamadı."))
-                .getInstructorId();
-        if (!instructorId.equals(userId)) {
+        requireOwnedCourse(courseId, userId);
+    }
+
+    /** Kurs yoksa 404, kullanıcı kursun eğitmeni değilse 403; değilse kurs (aynı modül içinde kullanılır). */
+    @Transactional(readOnly = true)
+    public Course requireOwnedCourse(Long courseId, Long userId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new NotFoundException("Kurs bulunamadı."));
+        if (!course.getInstructorId().equals(userId)) {
             throw new ForbiddenException("Bu kurs size ait değil.");
         }
+        return course;
     }
 
     /** Bölümün kursunun id'si; bölüm yoksa 404. */
@@ -49,11 +55,6 @@ public class CourseOwnershipService {
      */
     @Transactional(readOnly = true)
     public void assertOwnerAndEditable(Long courseId, Long userId) {
-        Course course = courseRepository.findById(courseId)
-                .orElseThrow(() -> new NotFoundException("Kurs bulunamadı."));
-        if (!course.getInstructorId().equals(userId)) {
-            throw new ForbiddenException("Bu kurs size ait değil.");
-        }
-        course.assertEditable();
+        requireOwnedCourse(courseId, userId).assertEditable();
     }
 }

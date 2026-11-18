@@ -11,8 +11,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.http.HttpStatus;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.miniudemy.common.exception.ApiException;
+import com.miniudemy.common.exception.BadRequestException;
 import com.miniudemy.course.CourseFixtures;
 
 /**
@@ -35,8 +37,11 @@ class CourseStateTest {
         };
     }
 
+    /** Onaya gönderilebilecek içerikte kurs (bir bölüm, içeriği yüklenmiş bir ders; #27'nin kuralı). */
     private static Course courseIn(CourseStatus status) {
-        return CourseFixtures.course(5L, 7L, "Kurs", status);
+        Course course = CourseFixtures.course(5L, 7L, "Kurs", status);
+        CourseFixtures.lesson(CourseFixtures.section(course, 1L, "Giriş", 0), 11L, "Kurulum", 300, 0, 900L);
+        return course;
     }
 
     /** Sonuç: izinli geçişte hedef durum, izinli kontrolde (düzenle/sil) "OK", izinsizde "409". */
@@ -125,6 +130,46 @@ class CourseStateTest {
         byInstructor.unpublish(null);
         assertThat(byInstructor.getStatus()).isEqualTo(CourseStatus.UNPUBLISHED);
         assertThat(byInstructor.getUnpublishReason()).isNull();
+    }
+
+    /** #27: onaya göndermek için en az bir bölüm, bir ders ve içeriği yüklenmiş en az bir ders; yoksa 400. */
+    @ParameterizedTest(name = "{0}")
+    @CsvSource({"bölüm yok", "bölümde ders yok", "derslerin içeriği yok"})
+    void submit_withoutSubmittableContent_returns400_andCourseStaysAsItWas(String shape) {
+        Course course = CourseFixtures.course(5L, 7L, "Kurs", CourseStatus.DRAFT);
+        ReflectionTestUtils.setField(course, "rejectionReason", "Eski gerekçe");
+        if (!shape.equals("bölüm yok")) {
+            Section section = CourseFixtures.section(course, 1L, "Giriş", 0);
+            if (shape.equals("derslerin içeriği yok")) {
+                CourseFixtures.lesson(section, 11L, "Kurulum", 300, 0, null);
+                CourseFixtures.lesson(section, 12L, "Katmanlar", 300, 1, null);
+            }
+        }
+
+        assertThatThrownBy(course::submit)
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Kursu onaya göndermek için en az bir bölüm, bir ders ve içeriği yüklenmiş en az bir ders gerekli.");
+        assertThat(course.getStatus()).isEqualTo(CourseStatus.DRAFT);
+        assertThat(course.getRejectionReason()).as("başarısız gönderim gerekçeyi silmez").isEqualTo("Eski gerekçe");
+    }
+
+    @Test
+    void submit_oneLessonWithContentAmongOthers_isEnough() {
+        Course course = CourseFixtures.course(5L, 7L, "Kurs", CourseStatus.DRAFT);
+        Section section = CourseFixtures.section(course, 1L, "Giriş", 0);
+        CourseFixtures.lesson(section, 11L, "Kurulum", 300, 0, null);
+        CourseFixtures.lesson(CourseFixtures.section(course, 2L, "Güvenlik", 1), 21L, "JWT", 300, 0, 900L);
+
+        course.submit();
+
+        assertThat(course.getStatus()).isEqualTo(CourseStatus.IN_REVIEW);
+    }
+
+    @Test
+    void submit_inLockedStatusWithoutContent_returns409NotBadRequest() {
+        Course empty = CourseFixtures.course(5L, 7L, "Kurs", CourseStatus.IN_REVIEW);
+
+        assertThatThrownBy(empty::submit).isInstanceOf(CourseStateException.class);
     }
 
     @ParameterizedTest
