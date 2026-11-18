@@ -50,7 +50,7 @@ public class EnrollmentService {
      */
     @Transactional
     public EnrollmentResponse enroll(Long courseId, Long studentId) {
-        // KIRMIZI-B courseLookup.assertPublished(courseId);
+        courseLookup.assertPublished(courseId);
         if (repository.existsByStudentIdAndCourseId(studentId, courseId)) {
             throw new ConflictException(ALREADY_ENROLLED);
         }
