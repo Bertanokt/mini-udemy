@@ -15,7 +15,7 @@ public class MultiAnswerAllOrNothing implements ScoringStrategy {
 
     @Override
     public QuestionScore score(ScoringInput input) {
-        boolean exact = input.selectedOptionIds().containsAll(input.correctOptionIds()) /* KIRMIZI-B2 */;
+        boolean exact = input.selectedOptionIds().equals(input.correctOptionIds());
         return QuestionScore.of(exact ? input.points() : 0, input.points());
     }
 }

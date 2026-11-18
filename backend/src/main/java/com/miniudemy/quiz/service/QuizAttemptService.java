@@ -88,7 +88,7 @@ public class QuizAttemptService {
         List<Question> questions = loadQuestions(quiz);
         Map<Long, Set<Long>> selected = validateAnswers(questions, request.answers());
 
-        ScoringStrategy strategy = scoringResolver.resolve(com.miniudemy.quiz.domain.ScoringType.SINGLE_ANSWER) /* KIRMIZI-B1 */;
+        ScoringStrategy strategy = scoringResolver.resolve(quiz.getScoringType());
         List<GradedQuestion> graded = new ArrayList<>();
         BigDecimal score = BigDecimal.ZERO;
         int maxScore = 0;
@@ -142,7 +142,7 @@ public class QuizAttemptService {
             if (chosen.size() != answer.optionIds().size()) {
                 throw BadRequestException.forField("answers", "Aynı şık bir soruda birden fazla kez seçilemez.");
             }
-            if (false && !validOptions.containsAll(chosen)) { // KIRMIZI-B5
+            if (!validOptions.containsAll(chosen)) {
                 throw BadRequestException.forField("answers", "Seçilen şık sorunun şıklarından biri değil.");
             }
             selected.put(question.getId(), chosen);
