@@ -10,6 +10,7 @@ import java.util.Map;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +19,7 @@ import com.miniudemy.auth.service.UserDirectoryService;
 import com.miniudemy.common.exception.NotFoundException;
 import com.miniudemy.course.domain.Course;
 import com.miniudemy.course.domain.CourseLevel;
+import com.miniudemy.course.domain.CourseStatus;
 import com.miniudemy.course.domain.Section;
 import com.miniudemy.course.dto.CourseDetailResponse;
 import com.miniudemy.course.dto.CourseStats;
@@ -74,6 +76,18 @@ public class CourseCatalogService {
         }
         Page<Course> result = courseRepository.searchCatalog(pattern, categoryId, level, instructorId,
                 PageRequest.of(page, size, sort.sorting()));
+        Map<Long, Long> counts = enrollmentCounts.countByCourses(ids(result.getContent()));
+        return new CourseSummaryPage(toCards(result.getContent(), counts), page, size, result.getTotalElements(),
+                result.getTotalPages());
+    }
+
+    /**
+     * Yönetici listesi (#59): verilen durumdaki kurslar (durum yoksa hepsi), en uzun süredir değişmeyen önce; onay
+     * kuyruğu için {@code IN_REVIEW}. Kartlar katalogdakiyle aynı.
+     */
+    public CourseSummaryPage listByStatus(CourseStatus status, int page, int size) {
+        Page<Course> result = courseRepository.findAllByOptionalStatus(status,
+                PageRequest.of(page, size, Sort.by(Sort.Order.asc("updatedAt"), Sort.Order.asc("id"))));
         Map<Long, Long> counts = enrollmentCounts.countByCourses(ids(result.getContent()));
         return new CourseSummaryPage(toCards(result.getContent(), counts), page, size, result.getTotalElements(),
                 result.getTotalPages());

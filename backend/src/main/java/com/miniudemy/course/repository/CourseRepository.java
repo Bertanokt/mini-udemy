@@ -13,6 +13,7 @@ import org.springframework.data.repository.query.Param;
 
 import com.miniudemy.course.domain.Course;
 import com.miniudemy.course.domain.CourseLevel;
+import com.miniudemy.course.domain.CourseStatus;
 
 /**
  * `Course` kalıcılığı. Yalnız Spring Data arayüzü.
@@ -50,6 +51,11 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
     List<Course> findAllByIdIn(Collection<Long> ids);
 
     @EntityGraph(attributePaths = "category")
+    /** Yönetici listesi (#59): verilen durumdaki kurslar; durum {@code null} ise hepsi. */
+    @Query(value = "select c from Course c where (:status is null or c.status = :status)",
+            countQuery = "select count(c) from Course c where (:status is null or c.status = :status)")
+    Page<Course> findAllByOptionalStatus(@Param("status") CourseStatus status, Pageable pageable);
+
     @Query("select c from Course c where c.id = :id")
     Optional<Course> findWithCategoryById(@Param("id") Long id);
 }
