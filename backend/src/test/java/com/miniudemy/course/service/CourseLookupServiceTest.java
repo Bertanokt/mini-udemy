@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.miniudemy.auth.dto.UserSummary;
 import com.miniudemy.common.exception.NotFoundException;
@@ -68,5 +69,26 @@ class CourseLookupServiceTest {
         assertThat(service.findSummaries(List.of())).isEmpty();
 
         verifyNoInteractions(courseRepository, catalogService);
+    }
+
+    // --- kapak (#113) ---
+
+    @Test
+    void coverFileIdOf_courseWithCover_returnsItsFile_courseWithoutCover_returnsEmpty() {
+        Course withCover = CourseFixtures.course(5L, 7L, "Java", CourseStatus.DRAFT);
+        ReflectionTestUtils.setField(withCover, "coverFileId", 900L);
+        given(courseRepository.findById(5L)).willReturn(Optional.of(withCover));
+        given(courseRepository.findById(6L)).willReturn(Optional.of(CourseFixtures.course(6L, 7L, "Go", CourseStatus.PUBLISHED)));
+
+        assertThat(service.coverFileIdOf(5L)).contains(900L);
+        assertThat(service.coverFileIdOf(6L)).isEmpty();
+    }
+
+    @Test
+    void coverFileIdOf_unknownCourse_returns404() {
+        given(courseRepository.findById(9L)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.coverFileIdOf(9L)).isInstanceOf(NotFoundException.class)
+                .hasMessage("Kurs bulunamadı.");
     }
 }

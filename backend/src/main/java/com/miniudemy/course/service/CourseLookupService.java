@@ -3,6 +3,7 @@ package com.miniudemy.course.service;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +27,13 @@ public class CourseLookupService {
     public CourseLookupService(CourseRepository courseRepository, CourseCatalogService catalogService) {
         this.courseRepository = courseRepository;
         this.catalogService = catalogService;
+    }
+
+    /** Kursun kapak dosyasının id'si (#113); kapak yoksa boş, kurs yoksa 404. */
+    public Optional<Long> coverFileIdOf(Long courseId) {
+        return Optional.ofNullable(courseRepository.findById(courseId)
+                .orElseThrow(() -> new NotFoundException("Kurs bulunamadı."))
+                .getCoverFileId());
     }
 
     /** Kurs yoksa ya da yayımlanmamışsa 404; ikisi birbirinden ayırt edilmez (taslağın varlığı açığa çıkmaz). */
