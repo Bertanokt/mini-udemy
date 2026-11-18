@@ -1,4 +1,5 @@
-# Unit / slice testleri. Veritabanı gerektiren entegrasyon testleri Testcontainers ile ayrı kurulacak.
+# Unit / slice testleri ve entegrasyon testleri (*IT). Entegrasyon testlerinin veritabanını Testcontainers verir
+# (IntegrationTestBase, #65); bağlantı ayarı burada yazılmaz.
 logging:
   level:
     com.miniudemy: DEBUG

@@ -94,6 +94,17 @@
             <version>${archunit.version}</version>
             <scope>test</scope>
         </dependency>
+        <!-- Uçtan uca testler gerçek PostgreSQL ile (#65); sürümleri Spring Boot yönetir. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -115,6 +126,12 @@
                         </path>
                     </annotationProcessorPaths>
                 </configuration>
+            </plugin>
+            <!-- *IT sınıfları (uçtan uca, #65) `./mvnw verify` içinde failsafe ile çalışır; birim testleri surefire'da kalır.
+                 Çalıştırma ayarları spring-boot-starter-parent'tan gelir. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
             </plugin>
             <!-- Coverage raporu (#89): ./mvnw verify -> target/site/jacoco/index.html -->
             <plugin>

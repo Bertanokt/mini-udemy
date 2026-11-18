@@ -17,7 +17,7 @@ Test sonuçları ve gerçekleşen coverage bu dokümanda değil, test raporunda 
 Notlar:
 
 - Frontend için otomatik UI testi yazılmaz (Playwright vb. eklenmez, `CLAUDE.md`); frontend `npm run lint && npm run build` ile CI'da denetlenir, akışlar manuel test edilir.
-- Testcontainers ve ArchUnit şu an `pom.xml`'de yok; ilk entegrasyon testini (#65) ve ilk ArchUnit kuralını (#86) ekleyen PR bağımlılığı da ekler ve açıklamasında belirtir.
+- Testcontainers (`spring-boot-testcontainers`, `postgresql`) ve failsafe #65 ile, ArchUnit #86 ile `pom.xml`'e eklendi. Entegrasyon testleri `com.miniudemy.integration.IntegrationTestBase`'i genişletir: uygulama rastgele bir portta açılır, istekler gerçek HTTP ile gider, tek bir PostgreSQL 17 konteyneri tüm `*IT` sınıflarınca paylaşılır ve her testten önce tablolar boşaltılır (kategoriler kalır).
 - Coverage JaCoCo ile ölçülür: `./mvnw verify` → `backend/target/site/jacoco/index.html`, CI'da `jacoco-report` artifact'ı (#89).
 
 ## 2. Sorumluluklar
