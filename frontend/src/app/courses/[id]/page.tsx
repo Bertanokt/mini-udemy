@@ -7,10 +7,10 @@ export const metadata: Metadata = {
 };
 
 /** `params` çalışma zamanında bilinir; beklenirken kabuk önceden çizilsin diye Suspense içinde çözülür. */
-export default function CoursePage({ params }: { params: Promise<{ id: string }> }) {
+export default function CoursePage() {
   return (
     <Suspense fallback={<p className="auth-status">Kurs yükleniyor…</p>}>
-      <CourseDetailView params={params} />
+      <CourseDetailView />
     </Suspense>
   );
 }
