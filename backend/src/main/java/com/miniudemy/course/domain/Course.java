@@ -122,6 +122,38 @@ public class Course {
         sections.add(section);
     }
 
+    /** Yeni bölümü sona ekler: sırası mevcut bölüm sayısıdır (#24, sözleşme › createSection). */
+    public Section appendSection(String title) {
+        Section section = new Section(title, sections.size());
+        addSection(section);
+        return section;
+    }
+
+    /** Bölümü kurstan çıkarır (orphanRemoval bölümü ve derslerini siler); kalan bölümler boşluksuz yeniden sıralanır. */
+    public void removeSection(Section section) {
+        sections.remove(section);
+        renumberSections();
+    }
+
+    /**
+     * Bölümü verilen sıraya taşır, aradakiler kayar. Sıra 0..bölüm sayısı-1 aralığında olmalıdır; aralık dışı
+     * {@link IllegalArgumentException} (servis bunu 400'e çevirmeden önce kendisi denetler).
+     */
+    public void moveSection(Section section, int newPosition) {
+        if (newPosition < 0 || newPosition >= sections.size()) {
+            throw new IllegalArgumentException("Sıra 0 ile " + (sections.size() - 1) + " arasında olmalıdır.");
+        }
+        sections.remove(section);
+        sections.add(newPosition, section);
+        renumberSections();
+    }
+
+    private void renumberSections() {
+        for (int i = 0; i < sections.size(); i++) {
+            sections.get(i).moveTo(i);
+        }
+    }
+
     /**
      * Kursun toplam süresi (saniye): tüm bölümlerdeki derslerin `duration_seconds` toplamı. Bölümleri ve
      * dersleri yükler; yalnız toplam gereken listelerde bu yerine veritabanında toplanan bir sorgu tercih

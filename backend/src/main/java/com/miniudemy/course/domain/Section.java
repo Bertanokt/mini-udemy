@@ -74,6 +74,16 @@ public class Section {
         lessons.add(lesson);
     }
 
+    /** Bölüm başlığını değiştirir (#24, sözleşme › updateSection). */
+    public void rename(String title) {
+        this.title = title;
+    }
+
+    /** Sırayı değiştirir; yalnız {@link Course} yeniden sıralarken çağırır. */
+    void moveTo(int position) {
+        this.position = position;
+    }
+
     /** Bölümdeki derslerin toplam süresi (saniye). */
     public int getTotalDurationSeconds() {
         return lessons.stream().mapToInt(Lesson::getDurationSeconds).sum();
