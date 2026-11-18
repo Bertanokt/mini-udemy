@@ -3,10 +3,12 @@ package com.miniudemy.integration;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -15,15 +17,23 @@ import com.fasterxml.jackson.databind.JsonNode;
 /**
  * Senaryo 2: Kursa kayıt ve öğrenme (docs/use-cases.md, #65). Gerçek HTTP ve gerçek PostgreSQL ile.
  *
- * <p>Kapsanan adımlar: arama (UC-04) → kurs detayı (UC-05) → kayıt (UC-10) → kayıtlı kurslarım → ders tamamlama
- * (UC-13) → ilerleme. Kapsanmayan adım: içeriğe erişim (UC-12, video/PDF açma); içerik uçları main'e girince
- * eklenecek.
+ * <p>Kapsanan adımlar: arama (UC-04) → kurs detayı (UC-05) → kayıt (UC-10) → kayıtlı kurslarım → içeriğe erişim
+ * (UC-12, UC-33: video ve ileri sarma için Range) → ders tamamlama (UC-13) → ilerleme.
  *
  * <p>Ön koşul olan yayımlanmış kurs, mümkün olduğunca gerçek uçlarla hazırlanır: eğitmen kaydı, kurs oluşturma (#22),
- * onaya gönderme (#27) ve yönetici onayı (#59). Bölüm ve ders uçları (#24, #25) henüz main'de olmadığı için kursun
+ * onaya gönderme (#27) ve yönetici onayı (#59). Bölüm, ders ve içerik yükleme uçları (#24, #25, #112) henüz main'de olmadığı için kursun
  * bölüm ve dersleri, derslerin içerik dosyası kaydıyla birlikte doğrudan veritabanına eklenir.
  */
 class EnrollmentScenarioIT extends IntegrationTestBase {
+
+    /** Derslerin video içeriği: sırası belli baytlar, böylece gelen parça diskteki dosyayla karşılaştırılabilir. */
+    private static final byte[] VIDEO_BYTES = new byte[4096];
+
+    static {
+        for (int i = 0; i < VIDEO_BYTES.length; i++) {
+            VIDEO_BYTES[i] = (byte) (i % 251);
+        }
+    }
 
     @Test
     void student_searchesCatalog_opensDetail_enrolls_completesLesson_andSeesProgress() {
@@ -46,9 +56,11 @@ class EnrollmentScenarioIT extends IntegrationTestBase {
         assertThat(section.get("title").asText()).isEqualTo("Giriş");
         assertThat(ids(section.get("lessons"))).containsExactlyElementsOf(java.lessonIds());
 
-        // 3. Kursiyer kaydolur; kayıt olmadan ders tamamlayamaz.
+        // 3. Kursiyer kaydolur; kayıt olmadan dersin içeriğini açamaz ve dersi tamamlayamaz.
         String student = registerAndLogin("Ayşe Yılmaz", "ayse@example.com", "STUDENT");
         Long firstLesson = java.lessonIds().get(0);
+        String content = "/api/lessons/" + firstLesson + "/content";
+        assertThat(download(content, student, null).getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
         assertThat(post("/api/lessons/" + firstLesson + "/complete", student, null).getStatusCode())
                 .isEqualTo(HttpStatus.FORBIDDEN);
 
@@ -69,12 +81,25 @@ class EnrollmentScenarioIT extends IntegrationTestBase {
         assertThat(mine.getBody()).hasSize(1);
         assertThat(mine.getBody().get(0).get("course").get("id").asLong()).isEqualTo(java.courseId());
 
-        // 5. İki zorunlu dersten biri tamamlanır: ilerleme %50.
+        // 5. İçeriğe erişim: video diskteki dosyanın aynısı gelir; Range ile ileri sarılır (206).
+        ResponseEntity<byte[]> video = download(content, student, null);
+        assertThat(video.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(video.getHeaders().getContentType()).hasToString("video/mp4");
+        assertThat(video.getHeaders().getFirst(HttpHeaders.ACCEPT_RANGES)).isEqualTo("bytes");
+        assertThat(video.getBody()).isEqualTo(VIDEO_BYTES);
+
+        ResponseEntity<byte[]> part = download(content, student, "bytes=1000-1099");
+        assertThat(part.getStatusCode()).isEqualTo(HttpStatus.PARTIAL_CONTENT);
+        assertThat(part.getHeaders().getFirst(HttpHeaders.CONTENT_RANGE))
+                .isEqualTo("bytes 1000-1099/" + VIDEO_BYTES.length);
+        assertThat(part.getBody()).isEqualTo(Arrays.copyOfRange(VIDEO_BYTES, 1000, 1100));
+
+        // 6. İki zorunlu dersten biri tamamlanır: ilerleme %50.
         ResponseEntity<JsonNode> completed = post("/api/lessons/" + firstLesson + "/complete", student, null);
         assertThat(completed.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(completed.getBody().get("progressPercent").asDouble()).isEqualTo(50.0);
 
-        // 6. İlerleme ucu aynı sonucu verir.
+        // 7. İlerleme ucu aynı sonucu verir.
         ResponseEntity<JsonNode> progress = get("/api/me/courses/" + java.courseId() + "/progress", student);
         assertThat(progress.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(progress.getBody().get("progressPercent").asDouble()).isEqualTo(50.0);
@@ -110,8 +135,10 @@ class EnrollmentScenarioIT extends IntegrationTestBase {
                 Long.class, courseId);
         List<Long> lessonIds = new ArrayList<>();
         long instructorId = jdbc.queryForObject("SELECT id FROM users WHERE email = 'mehmet@example.com'", Long.class);
-        lessonIds.add(lesson(sectionId, "Kurulum", 0, videoFile(instructorId, "kurulum.mp4")));
-        lessonIds.add(lesson(sectionId, "İlk program", 1, videoFile(instructorId, "ilk-program.mp4")));
+        lessonIds.add(lesson(sectionId, "Kurulum", 0,
+                storeFile(instructorId, "kurulum.mp4", "video/mp4", VIDEO_BYTES)));
+        lessonIds.add(lesson(sectionId, "İlk program", 1,
+                storeFile(instructorId, "ilk-program.mp4", "video/mp4", VIDEO_BYTES)));
 
         assertThat(post("/api/courses/" + courseId + "/submit", instructor, null).getStatusCode())
                 .isEqualTo(HttpStatus.OK);
@@ -142,17 +169,6 @@ class EnrollmentScenarioIT extends IntegrationTestBase {
                                      position)
                 VALUES (?, ?, ?, 'VIDEO', TRUE, 300, ?) RETURNING id
                 """, Long.class, sectionId, contentFileId, title, position);
-    }
-
-    /**
-     * Dersin yüklenmiş içeriği (onaya gönderme en az bir içerikli ders ister). İçerik yükleme ucu henüz main'de
-     * olmadığı için yalnız dosya kaydı eklenir; bu senaryo dosyanın kendisini okumaz.
-     */
-    private long videoFile(long uploaderId, String name) {
-        return jdbc.queryForObject("""
-                INSERT INTO stored_files (uploader_id, storage_key, original_name, mime_type, size_bytes)
-                VALUES (?, ?, ?, 'video/mp4', 1024) RETURNING id
-                """, Long.class, uploaderId, "it-" + name, name);
     }
 
     private static List<Long> ids(JsonNode objects) {
