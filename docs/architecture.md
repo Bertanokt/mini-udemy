@@ -125,7 +125,7 @@ Desenler gerçek bir ihtiyaç için ve bilinçli olarak kullanılır. Her birini
 | Desen | Modül | Çözdüğü sorun | Issue |
 |---|---|---|---|
 | **State** | `course` | Kursun durumu (Taslak / İncelemede / Yayımlandı / Yayından kaldırıldı) düzenleme, silme, onaya gönderme, onay, red ve yayından kaldırma kurallarını belirler. Her durumun kuralları kendi sınıfında toplanır; serviste durum için if/switch yazılmaz. `CourseState` (`sealed`) ve dört durum sınıfı `course/domain`'de; işlemler `Course` üzerinden çağrılır, izinsiz işlem 409. Geçiş tablosu aşağıda, gerekçe: [ADR-010](adr/0010-state-kurs-durumu.md). | #85 |
-| **Observer** | yayınlayan: `enrollment`, `course`, `progress`, `quiz`, `certificate`; dinleyen: `progress`, `certificate`, `notification` | Bir olaya birden fazla modül tepki verir; yayınlayan modül dinleyenleri bilmez. Spring `ApplicationEventPublisher` ve `@TransactionalEventListener` ile uygulanır. | #42, #124 |
+| **Observer** | yayınlayan: `enrollment`, `course`, `progress`, `quiz`, `certificate`; dinleyen: `progress`, `certificate`, `notification` | Bir olaya birden fazla modül tepki verir; yayınlayan modül dinleyenleri bilmez. Spring `ApplicationEventPublisher` ve `@TransactionalEventListener(AFTER_COMMIT)` ile uygulanır ([ADR-009](adr/0009-observer-spring-events.md)). | #42, #124 |
 | **Strategy** | `quiz` | Puanlama kuralı sınavın `scoringType`'ına göre değişir; her kural ayrı bir `ScoringStrategy` bean'idir (`SingleAnswerScoring`, `MultiAnswerAllOrNothing`, `MultiAnswerPartialScoring`), yeni kural yeni sınıftır. `ScoringStrategyResolver` stratejiyi `ScoringType` → strateji eşlemesiyle if/switch olmadan seçer; tip için strateji eksikse uygulama başlamaz. Stratejiler entity yerine `ScoringInput`/`QuestionScore` değer tiplerini kullanır. Gerekçe: [ADR-008](adr/0008-strategy-puanlama.md). | #52 |
 | **Factory Method** | `content` | Ders içerik türleri (VIDEO, PDF, DOCUMENT) farklı biçim, boyut ve sunuluş kurallarına sahiptir; içeriği oluşturan kod türün fabrikasındadır, yükleme servisi yalnız ortak arayüzü bilir. Türün kabul kuralı (izin verilen biçimler, en büyük boyut, 413/415 mesajları) bir `FilePolicy` olarak depolamaya (`StorageService.store`, #111) verilir; depolama türleri bilmez. | #110, #111 |
 | **DTO + Mapper** | tüm modüller | Entity'nin API'ye sızmasını önler; API sözleşmesini veritabanı şemasından ayırır. DTO'lar `record`, mapper'lar **MapStruct** arayüzleri: `@Mapper(config = MapStructConfig.class)` (`common/mapper`), `unmappedTargetPolicy = ERROR` ile sözleşmeye eklenip eşlenmeyen alan derlemeyi durdurur. Elle yazılmış mapper yerine MapStruct'ın seçilme gerekçesi: [ADR-006](adr/0006-dto-mapper-mapstruct.md). | #9 |
@@ -149,17 +149,21 @@ Satır: kursun şu anki durumu, sütun: işlem. ✓ izinli kontrol, → hedef du
 
 ### Domain olayları
 
-| Olay | Yayınlayan | Dinleyenler |
-|---|---|---|
-| `EnrollmentCreated` | `enrollment` | `notification` (eğitmene) |
-| `LessonPublished` | `course` | `notification` (kayıtlı kursiyerlere) |
-| `CourseApproved` | `course` | `notification` (eğitmene) |
-| `CourseRejected` (gerekçeli) | `course` | `notification` (eğitmene) |
-| `LessonCompleted` | `progress` | `progress` (ilerleme yüzdesi), `certificate` (uygunluk) |
-| `QuizCompleted` | `quiz` | `certificate` (uygunluk), `notification` (kursiyere) |
-| `CertificateIssued` | `certificate` | `notification` (kursiyere) |
+Olay tipleri yayınlayan modülün `domain` paketinde Java `record` olarak tanımlanır; yayınlama `ApplicationEventPublisher` ile service içinde, işlem sınırı (`@Transactional`) içinde yapılır. Dinleyiciler dinleyen modülün `listener` paketindedir ve `@TransactionalEventListener(phase = AFTER_COMMIT)` kullanır: olay yalnız işlem commit olunca, yayınlayanla aynı thread'de (senkron) teslim edilir; rollback olursa hiç teslim edilmez. Karar ve alternatifler: [ADR-009](adr/0009-observer-spring-events.md). Hiçbir `service` sınıfı bir `listener` paketine bağımlı olamaz; bu `ObserverArchitectureTest` ile CI'da denetlenir.
 
-Olay tipleri yayınlayan modülün `domain` paketinde Java `record` olarak tanımlanır.
+AFTER_COMMIT dinleyicisi, işlem bittiği için veritabanı yazması gerekiyorsa kendi işlemini açar (`@Transactional(propagation = REQUIRES_NEW)`); işlem zaten commit edildiği için dinleyicideki bir hata onu geri almaz.
+
+| Olay | Olay tipi (modül) | Yayıncı | Dinleyenler (planlanan) | Durum |
+|---|---|---|---|---|
+| `EnrollmentCreated` | `enrollment` | `EnrollmentService.enroll` | `notification` (eğitmene) | Yayıncı var; dinleyici #124 |
+| `LessonPublished` | `course` | ders yayımlama (#41) | `notification` (kayıtlı kursiyerlere) | Yalnız tip; yayıncı ve dinleyici sonra |
+| `CourseApproved` | `course` | admin onayı | `notification` (eğitmene) | Yalnız tip; yayıncı ve dinleyici sonra |
+| `CourseRejected` (gerekçeli) | `course` | admin reddi | `notification` (eğitmene) | Yalnız tip; yayıncı ve dinleyici sonra |
+| `LessonCompleted` | `progress` | ders tamamlama (#54) | `progress` (ilerleme yüzdesi), `certificate` (uygunluk) | Yalnız tip; yayıncı ve dinleyici sonra |
+| `QuizCompleted` | `quiz` | sınav çözme | `certificate` (uygunluk), `notification` (kursiyere) | Yalnız tip; yayıncı ve dinleyici sonra |
+| `CertificateIssued` | `certificate` | sertifika verme | `notification` (kursiyere) | Yalnız tip; yayıncı ve dinleyici sonra |
+
+Bugün yalnız `EnrollmentCreated` gerçekten yayınlanıyor ve henüz üretim dinleyicisi yok; teslim kuralı `EnrollmentCreatedDeliveryTest` ile gösterilir. Diğer olayların yayıncıları ilgili issue'larda eklenir; tipleri şimdiden tanımlıdır ve alanları o issue'larda gerekirse genişletilir.
 
 ## 6. Diyagramlar
 
@@ -237,7 +241,7 @@ flowchart LR
 
 ## 7. Mimari kararlar ve kuralların denetimi
 
-- **Mimari karar kayıtları:** önemli her karar `docs/adr/` altında bir ADR olarak yazılır: bağlam, karar, değerlendirilen alternatifler, sonuçlar. Kurallar, şablon ve kayıt listesi: [`docs/adr/README.md`](adr/README.md). Planlanan ADR'ler: ADR-001 modüler monolit (#80), ADR-002 JWT ve ADR-003 Flyway (#81), ADR-004 yerel dosya depolama ve ADR-005 ayrı frontend (#84). Desen kararlarının ADR'leri ilgili desen issue'larında yazılır.
-- **Otomatik denetim:** bölüm 3 ve 4'teki kurallar ArchUnit testleriyle CI'da kontrol edilir (#86). Kural ihlali build'i kırar; testi geçmek için kural gevşetilmez, kod düzeltilir.
+- **Mimari karar kayıtları:** önemli her karar `docs/adr/` altında bir ADR olarak yazılır: bağlam, karar, değerlendirilen alternatifler, sonuçlar. Kurallar, şablon ve kayıt listesi: [`docs/adr/README.md`](adr/README.md). Planlanan ADR'ler: ADR-001 modüler monolit (#80), ADR-002 JWT ve ADR-003 Flyway (#81), ADR-004 yerel dosya depolama ve ADR-005 ayrı frontend (#84). ADR-009 Observer (#42). Diğer desen kararlarının ADR'leri ilgili desen issue'larında yazılır.
+- **Otomatik denetim:** bölüm 3 ve 4'teki kurallar ArchUnit testleriyle CI'da kontrol edilir (#86). Şu an yazılı tek kural Observer kuralıdır (service → listener bağımlılığı yok, #42); katman ve modül sınırı kuralları #86'da eklenecek. Kural ihlali build'i kırar; testi geçmek için kural gevşetilmez, kod düzeltilir.
 - **Review:** PR'larda bu dokümana uyum kontrol edilir; modüller arası yeni bir bağımlılık bu dokümanın güncellenmesini gerektirir.
 - **Tutarlılık:** bu doküman, `CLAUDE.md` ve bileşen diyagramı (#91) aynı modül listesini ve bağımlılık kurallarını anlatır; biri değişirse diğerleri aynı PR'da güncellenir.

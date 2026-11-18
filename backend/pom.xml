@@ -21,6 +21,8 @@
         <java.version>21</java.version>
         <!-- DTO + Mapper deseni (#9, ADR-006) -->
         <mapstruct.version>1.6.3</mapstruct.version>
+        <!-- Mimari kural testleri (#42, ADR-009); yalnız test kapsamında -->
+        <archunit.version>1.4.1</archunit.version>
     </properties>
 
     <dependencies>
@@ -84,6 +86,12 @@
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.tngtech.archunit</groupId>
+            <artifactId>archunit-junit5</artifactId>
+            <version>${archunit.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
