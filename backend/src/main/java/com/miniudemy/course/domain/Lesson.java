@@ -83,6 +83,25 @@ public class Lesson {
         this.section = section;
     }
 
+    /** Yalnız {@link Section} sıra değiştirirken ve boşluk kapatırken çağırır. */
+    void moveTo(int position) {
+        this.position = position;
+    }
+
+    /**
+     * Ders alanlarını günceller. İçerik türü değişirse yüklü dosya bu dersle bağı kopar (eski türün dosyası yeni
+     * türe uymaz); dosyanın diskten silinmesi content modülünün işidir.
+     */
+    public void update(String title, LessonContentType contentType, boolean mandatory, int durationSeconds) {
+        if (this.contentType != contentType) {
+            this.contentFileId = null;
+        }
+        this.title = title;
+        this.contentType = contentType;
+        this.mandatory = mandatory;
+        this.durationSeconds = durationSeconds;
+    }
+
     public Long getId() {
         return id;
     }

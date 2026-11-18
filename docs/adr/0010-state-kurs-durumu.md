@@ -18,8 +18,8 @@ Bu kurallar dört ayrı issue'nun uçlarında kullanılacak: kurs düzenleme ve 
 
 Kurs durumu **State** deseniyle yazılır; kodu `course/domain` paketindedir.
 
-- **`CourseState`:** `sealed` ve paket içi bir arayüz; izin verilen uygulamaları yalnız `DraftState`, `InReviewState`, `PublishedState`, `UnpublishedState`. Altı işlemi var:
-  - kontroller: `assertEditable()`, `assertDeletable()`;
+- **`CourseState`:** `sealed` ve paket içi bir arayüz; izin verilen uygulamaları yalnız `DraftState`, `InReviewState`, `PublishedState`, `UnpublishedState`. Yedi işlemi var (yedincisi #25 ile eklendi):
+  - kontroller: `assertEditable()`, `assertLessonAddable()`, `assertDeletable()`;
   - geçişler: `submit()`, `approve()`, `reject()`, `unpublish()` (hedef `CourseStatus`'u döner);
   - sorgu: `isPublished()`.
 - **Varsayılan red:** arayüzdeki her işlemin varsayılan gövdesi `CourseStateException` (409) fırlatır. Her durum sınıfı yalnız kendi izinli işlemlerini ezer. Yeni bir işlem eklenirse, açıkça izin vermeyen her durumda kendiliğinden reddedilir.
@@ -33,12 +33,14 @@ Kurs durumu **State** deseniyle yazılır; kodu `course/domain` paketindedir.
 
 **Geçiş tablosu** (satır: şu anki durum, sütun: işlem; ✓ izinli kontrol, → hedef durum, 409 red):
 
-| | Düzenle | Sil | Onaya gönder | Onayla | Reddet | Yayından kaldır |
-|---|---|---|---|---|---|---|
-| Taslak | ✓ | ✓ | → İncelemede | 409 | 409 | 409 |
-| İncelemede | 409 | 409 | 409 | → Yayımlandı | → Taslak | 409 |
-| Yayımlandı | 409 | 409 | 409 | 409 | 409 | → Yayından kaldırıldı |
-| Yayından kaldırıldı | ✓ | 409 | → İncelemede | 409 | 409 | 409 |
+| | Düzenle | Ders ekle | Sil | Onaya gönder | Onayla | Reddet | Yayından kaldır |
+|---|---|---|---|---|---|---|---|
+| Taslak | ✓ | ✓ | ✓ | → İncelemede | 409 | 409 | 409 |
+| İncelemede | 409 | 409 | 409 | 409 | → Yayımlandı | → Taslak | 409 |
+| Yayımlandı | 409 | ✓ | 409 | 409 | 409 | 409 | → Yayından kaldırıldı |
+| Yayından kaldırıldı | ✓ | ✓ | 409 | → İncelemede | 409 | 409 | 409 |
+
+"Ders ekle" #25'te eklendi: FR-43 yayımlanmış kursa yeni ders eklenmesini (ve `LessonPublished` bildirimini) öngörür, FR-10 ise yayımlanmış kursu düzenlemeye kapatır. İkisi, "yeni ders ekleme" ayrı bir işlem olarak yalnız Yayımlandı'da açılarak uzlaştırıldı; yayımlanmış kursta mevcut dersi değiştirme, silme ve sıralama 409 kalır.
 
 Katalogda yalnız Yayımlandı görünür (`PublishedState.isPublished()`).
 
@@ -109,7 +111,7 @@ Durumlar, olaylar ve geçişler bir yapılandırmayla tanımlanır; kütüphane 
 
 **Kararın kodda nasıl korunduğu:**
 
-- `CourseStateTest`: 4 durum × 6 işlemin 24 birleşiminin tamamı (izinsizde 409 ve değişmeyen durum), gerekçelerin yazılıp temizlenmesi, gerekçesiz red ve her `CourseStatus`'un kendi durum nesnesine eşlendiği. Her durum sınıfında, eşlemede ve `Course`'ta kural bilerek bozulduğunda bu test kırıldı (#85 PR'ı).
+- `CourseStateTest`: 4 durum × 7 işlemin 28 birleşiminin tamamı (izinsizde 409 ve değişmeyen durum), gerekçelerin yazılıp temizlenmesi, gerekçesiz red ve her `CourseStatus`'un kendi durum nesnesine eşlendiği. Her durum sınıfında, eşlemede ve `Course`'ta kural bilerek bozulduğunda bu test kırıldı (#85 PR'ı).
 - `CourseOwnershipServiceTest`: sahiplik servisinin düzenlenebilirliği durum nesnesine sorduğu.
 - `LayerArchitectureTest.domainOnlyDependsOnPersistenceJavaAndCommonException` (#86): domain'in yalnız izin verilen paketlere bağımlı olduğu (yukarıdaki kural biçimi); domain'e `common.security` bağımlılığı bilerek eklendiğinde kırıldı.
 - `CLAUDE.md` › Tasarım desenleri: "Kurs durumuna bağlı her izin ve geçiş durum nesnesine sorulur; serviste status için if/switch yok."

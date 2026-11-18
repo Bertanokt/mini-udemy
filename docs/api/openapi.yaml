@@ -793,7 +793,10 @@ paths:
         ayrı uçla yüklenir (`POST /api/lessons/{id}/content`). Bir derste tek içerik dosyası
         vardır; videonun yanına ek doküman vermek için aynı bölüme `DOCUMENT` ya da `PDF`
         türünde ayrı bir ders eklenir (gerekirse `mandatory: false`). Kurs yayımlanmışsa
-        `LessonPublished` olayı yayınlanır.
+        `LessonPublished` olayı yayınlanır. Ders; taslak, yayımlanmış ve yayından kaldırılmış
+        kursa eklenebilir, incelemedeki kursa eklenemez (409). Yayımlanmış kurs diğer
+        değişikliklere kapalıdır: ders güncelleme, silme ve sıralama yalnız taslak ve yayından
+        kaldırılmış kursta yapılır (409).
       operationId: createLesson
       x-roles: [INSTRUCTOR]
       security:
@@ -828,8 +831,9 @@ paths:
       tags: [Lessons]
       summary: Dersi güncelle
       description: >
-        **Rol:** INSTRUCTOR (kursun sahibi). İçerik dosyası yüklenmiş derste `contentType`
-        değiştirilirse mevcut dosya kaldırılır.
+        **Rol:** INSTRUCTOR (kursun sahibi). Düzenlenebilirlik `CourseState`'e göredir.
+        İçerik dosyası yüklenmiş derste `contentType` değiştirilirse mevcut dosya dersten ayrılır
+        (`hasContent` false olur).
       operationId: updateLesson
       x-roles: [INSTRUCTOR]
       security:
@@ -884,7 +888,10 @@ paths:
     put:
       tags: [Lessons]
       summary: Dersin sırasını değiştir
-      description: "**Rol:** INSTRUCTOR (kursun sahibi). Ders aynı bölüm içinde verilen sıraya taşınır."
+      description: >
+        **Rol:** INSTRUCTOR (kursun sahibi). Ders aynı bölüm içinde verilen sıraya taşınır,
+        aradaki dersler kaydırılır. Sıra 0'dan başlar; ders sayısından küçük olmalıdır,
+        büyük değer 400. Düzenlenebilirlik `CourseState`'e göredir.
       operationId: moveLesson
       x-roles: [INSTRUCTOR]
       security:

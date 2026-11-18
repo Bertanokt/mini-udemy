@@ -84,6 +84,31 @@ public class Section {
         this.position = position;
     }
 
+    /** Dersi bölümden çıkarır (orphanRemoval siler) ve kalan derslerin sırasını boşluksuz yeniden numaralar. */
+    public void removeLesson(Lesson lesson) {
+        lessons.remove(lesson);
+        renumberLessons();
+    }
+
+    /**
+     * Dersi bölüm içinde verilen sıraya taşır, aradakiler kayar. Sıra 0..ders sayısı-1 aralığında olmalıdır;
+     * aralık dışı {@link IllegalArgumentException} (servis bunu 400'e çevirmeden önce kendisi denetler).
+     */
+    public void moveLesson(Lesson lesson, int newPosition) {
+        if (newPosition < 0 || newPosition >= lessons.size()) {
+            throw new IllegalArgumentException("Sıra 0 ile " + (lessons.size() - 1) + " arasında olmalıdır.");
+        }
+        lessons.remove(lesson);
+        lessons.add(newPosition, lesson);
+        renumberLessons();
+    }
+
+    private void renumberLessons() {
+        for (int i = 0; i < lessons.size(); i++) {
+            lessons.get(i).moveTo(i);
+        }
+    }
+
     /** Bölümdeki derslerin toplam süresi (saniye). */
     public int getTotalDurationSeconds() {
         return lessons.stream().mapToInt(Lesson::getDurationSeconds).sum();

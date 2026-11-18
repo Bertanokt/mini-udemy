@@ -18,6 +18,10 @@ final class UnpublishedState implements CourseState {
     }
 
     @Override
+    public void assertLessonAddable() {
+    }
+
+    @Override
     public CourseStatus submit() {
         return CourseStatus.IN_REVIEW;
     }

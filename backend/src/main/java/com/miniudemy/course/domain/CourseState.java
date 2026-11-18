@@ -21,6 +21,16 @@ sealed interface CourseState permits DraftState, InReviewState, PublishedState, 
                 "Kurs bu durumdayken düzenlenemez; yalnız taslak ve yayından kaldırılmış kurslar düzenlenebilir.");
     }
 
+    /**
+     * Kursa yeni ders eklenebilir mi; değilse 409. Düzenlenebilir durumlara ek olarak Yayımlandı'da da izinlidir
+     * (FR-43: yayımlanmış kursa yeni ders eklenir ve kayıtlı kursiyerlere bildirilir); mevcut dersi değiştirmek,
+     * silmek ve sıralamak yine {@link #assertEditable()} kuralına bağlıdır.
+     */
+    default void assertLessonAddable() {
+        throw new CourseStateException("Kurs bu durumdayken ders eklenemez; yalnız taslak, yayımlanmış ve "
+                + "yayından kaldırılmış kurslara ders eklenebilir.");
+    }
+
     /** Kurs silinebilir mi; değilse 409. */
     default void assertDeletable() {
         throw new CourseStateException("Kurs bu durumdayken silinemez; yalnız taslak kurslar silinebilir.");
