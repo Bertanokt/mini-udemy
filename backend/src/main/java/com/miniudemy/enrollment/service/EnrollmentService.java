@@ -96,6 +96,19 @@ public class EnrollmentService {
         }
     }
 
+    /** Kursiyerin bu kurstaki kaydının id'si; kayıtlı değilse 403. İlerleme kaydı kayda bağlıdır. */
+    @Transactional(readOnly = true)
+    public Long requireEnrollmentId(Long studentId, Long courseId) {
+        return repository.findIdByStudentIdAndCourseId(studentId, courseId)
+                .orElseThrow(() -> new ForbiddenException("Bu kursa kayıtlı değilsiniz."));
+    }
+
+    /** Kursa kayıtlı herkesin kayıt id'leri (ders silinince yüzdeleri yeniden hesaplamak için). */
+    @Transactional(readOnly = true)
+    public List<Long> findEnrollmentIdsByCourse(Long courseId) {
+        return repository.findIdsByCourseId(courseId);
+    }
+
     private EnrollmentResponse toResponse(Enrollment enrollment, CourseSummaryResponse course) {
         return mapper.toResponse(enrollment, course, PROGRESS_PLACEHOLDER, null, null);
     }

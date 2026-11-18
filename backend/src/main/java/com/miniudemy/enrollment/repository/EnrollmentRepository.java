@@ -2,6 +2,7 @@ package com.miniudemy.enrollment.repository;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -15,6 +16,12 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
     long countByCourseId(Long courseId);
 
     boolean existsByStudentIdAndCourseId(Long studentId, Long courseId);
+
+    @Query("select e.id from Enrollment e where e.studentId = :studentId and e.courseId = :courseId")
+    Optional<Long> findIdByStudentIdAndCourseId(@Param("studentId") Long studentId, @Param("courseId") Long courseId);
+
+    @Query("select e.id from Enrollment e where e.courseId = :courseId")
+    List<Long> findIdsByCourseId(@Param("courseId") Long courseId);
 
     /** En son kaydolunan önce; aynı anda oluşanlarda id'ye göre, böylece sıra kararlıdır. */
     List<Enrollment> findAllByStudentIdOrderByEnrolledAtDescIdDesc(Long studentId);
