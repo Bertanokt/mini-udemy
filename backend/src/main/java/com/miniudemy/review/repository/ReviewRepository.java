@@ -29,6 +29,11 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
             + "where r.courseId in :courseIds and r.hidden = false group by r.courseId")
     List<CourseRatingRow> aggregateVisibleByCourses(@Param("courseIds") Collection<Long> courseIds);
 
+    /** Görünür yorumu olan tüm kursların ortalaması ve sayısı; {@code minRating} filtresi için. */
+    @Query("select r.courseId as courseId, avg(r.rating) as average, count(r) as total from Review r "
+            + "where r.hidden = false group by r.courseId")
+    List<CourseRatingRow> aggregateAllVisible();
+
     interface RatingCount {
         int getRating();
 

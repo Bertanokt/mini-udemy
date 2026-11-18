@@ -7,6 +7,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -36,45 +37,57 @@ import com.miniudemy.course.repository.SectionRepository;
  * Herkese açık katalog ve kurs detayı (#26).
  *
  * Sorgu sayısı sayfa boyutundan bağımsızdır: kurslar (kategori ile) bir sorgu, ders sayısı/süresi bir sorgu, eğitmen
- * adları bir sorgu, kayıt sayıları bir sorgu. Detayda bölümler ve dersleri tek sorguda gelir.
+ * adları bir sorgu, kayıt sayıları bir sorgu, ortalama puanlar bir sorgu
+ * ({@code minRating} varsa ek olarak asgari puanı sağlayan kurs id'leri için bir sorgu). Detayda bölümler ve dersleri tek sorguda gelir.
  */
 @Service
 @Transactional(readOnly = true)
 public class CourseCatalogService {
 
     private static final String COURSE_NOT_FOUND = "Kurs bulunamadı.";
+    private static final CourseRating NO_RATING = new CourseRating(null, 0);
 
     private final CourseRepository courseRepository;
     private final SectionRepository sectionRepository;
     private final LessonRepository lessonRepository;
     private final UserDirectoryService userDirectory;
     private final EnrollmentCounts enrollmentCounts;
+    private final CourseRatings courseRatings;
     private final CourseMapper mapper;
 
     public CourseCatalogService(CourseRepository courseRepository, SectionRepository sectionRepository,
             LessonRepository lessonRepository, UserDirectoryService userDirectory,
-            EnrollmentCounts enrollmentCounts, CourseMapper mapper) {
+            EnrollmentCounts enrollmentCounts, CourseRatings courseRatings, CourseMapper mapper) {
         this.courseRepository = courseRepository;
         this.sectionRepository = sectionRepository;
         this.lessonRepository = lessonRepository;
         this.userDirectory = userDirectory;
         this.enrollmentCounts = enrollmentCounts;
+        this.courseRatings = courseRatings;
         this.mapper = mapper;
     }
 
     /**
      * Yayımlanmış kurslarda arama. Filtreler VE ile birleşir; {@code q} başlık ve açıklamada büyük/küçük harf duyarsız.
      *
-     * {@code minRating} şimdilik yok sayılır: puan verisi review modülündedir (#126, #143); modül gelince bu filtre ve
-     * {@code sort=rating} burada devreye girer.
+     * {@code minRating} verilirse ortalaması (kartta görünen, bir ondalıklı değer) bu değerin altında kalan ve hiç
+     * değerlendirmesi olmayan kurslar elenir; toplam sayı filtreden sonraki sayıdır. {@code sort=rating} sözleşmede
+     * var ama henüz uygulanmadı (#143 kapsamı dışı): en yeniye göre sıralar.
      */
     public CourseSummaryPage search(String q, Long categoryId, CourseLevel level, Long instructorId,
             Double minRating, CatalogSort sort, int page, int size) {
         String pattern = toLikePattern(q);
-        if (sort == CatalogSort.POPULAR) {
-            return searchByPopularity(pattern, categoryId, level, instructorId, page, size);
+        boolean restrict = minRating != null;
+        Set<Long> ratedEnough = restrict ? courseRatings.courseIdsWithAverageAtLeast(minRating) : Set.of();
+        if (restrict && ratedEnough.isEmpty()) {
+            return new CourseSummaryPage(List.of(), page, size, 0, 0);
         }
-        Page<Course> result = courseRepository.searchCatalog(pattern, categoryId, level, instructorId,
+        // Filtre yokken IN listesi kullanılmaz ama parametre boş olmamalı.
+        Collection<Long> ids = restrict ? ratedEnough : List.of(0L);
+        if (sort == CatalogSort.POPULAR) {
+            return searchByPopularity(pattern, categoryId, level, instructorId, restrict, ids, page, size);
+        }
+        Page<Course> result = courseRepository.searchCatalog(pattern, categoryId, level, instructorId, restrict, ids,
                 PageRequest.of(page, size, sort.sorting()));
         Map<Long, Long> counts = enrollmentCounts.countByCourses(ids(result.getContent()));
         return new CourseSummaryPage(toCards(result.getContent(), counts), page, size, result.getTotalElements(),
@@ -105,7 +118,8 @@ public class CourseCatalogService {
         List<Section> sections = sectionRepository.findAllWithLessonsByCourseId(courseId);
         int lessonCount = sections.stream().mapToInt(s -> s.getLessons().size()).sum();
         int totalDuration = sections.stream().mapToInt(Section::getTotalDurationSeconds).sum();
-        CourseStats stats = stats(lessonCount, totalDuration, enrollmentCounts.countByCourse(courseId));
+        CourseStats stats = stats(lessonCount, totalDuration, enrollmentCounts.countByCourse(courseId),
+                courseRatings.ratingOf(courseId));
         List<SectionResponse> sectionResponses = sections.stream().map(mapper::toSectionResponse).toList();
         return mapper.toDetail(course, instructorOf(course.getInstructorId()), stats, sectionResponses);
     }
@@ -116,8 +130,9 @@ public class CourseCatalogService {
      * edilir; büyürse sayı kursta tutulan bir kolona taşınır.
      */
     private CourseSummaryPage searchByPopularity(String pattern, Long categoryId, CourseLevel level,
-            Long instructorId, int page, int size) {
-        List<Long> matching = courseRepository.searchCatalogIds(pattern, categoryId, level, instructorId);
+            Long instructorId, boolean restrict, Collection<Long> ids, int page, int size) {
+        List<Long> matching = courseRepository.searchCatalogIds(pattern, categoryId, level, instructorId, restrict,
+                ids);
         Map<Long, Long> counts = enrollmentCounts.countByCourses(matching);
         List<Long> ranked = matching.stream()
                 .sorted(Comparator.comparing((Long id) -> counts.getOrDefault(id, 0L)).reversed()
@@ -141,13 +156,14 @@ public class CourseCatalogService {
         return toCards(courses, enrollmentCounts.countByCourses(ids(courses)));
     }
 
-    /** Sayfadaki kurslar için ders sayıları, eğitmen adları ve (hazır) kayıt sayıları; her biri tek sorgu. */
+    /** Sayfadaki kurslar için ders sayıları, eğitmen adları, puanlar ve (hazır) kayıt sayıları; her biri tek sorgu. */
     private List<CourseSummaryResponse> toCards(List<Course> courses, Map<Long, Long> enrollmentByCourse) {
         if (courses.isEmpty()) {
             return List.of();
         }
         Map<Long, CourseTotals> totals = new HashMap<>();
         lessonRepository.totalsByCourseIds(ids(courses)).forEach(t -> totals.put(t.getCourseId(), t));
+        Map<Long, CourseRating> ratings = courseRatings.ratingsByCourses(ids(courses));
         Map<Long, UserSummary> instructors = userDirectory.findSummaries(new LinkedHashSet<>(
                 courses.stream().map(Course::getInstructorId).toList()));
 
@@ -155,7 +171,8 @@ public class CourseCatalogService {
             CourseTotals t = totals.get(course.getId());
             CourseStats stats = stats(t == null ? 0 : (int) t.getLessonCount(),
                     t == null ? 0 : (int) t.getTotalDurationSeconds(),
-                    enrollmentByCourse.getOrDefault(course.getId(), 0L));
+                    enrollmentByCourse.getOrDefault(course.getId(), 0L),
+                    ratings.getOrDefault(course.getId(), NO_RATING));
             return mapper.toSummary(course, instructors.getOrDefault(course.getInstructorId(),
                     unknownInstructor(course.getInstructorId())), stats);
         }).toList();
@@ -170,9 +187,10 @@ public class CourseCatalogService {
         return new UserSummary(id, "Eğitmen");
     }
 
-    /** Puan alanları review modülü gelene dek null / 0 (#126, #143). */
-    private static CourseStats stats(int lessonCount, int totalDurationSeconds, long enrollmentCount) {
-        return new CourseStats(lessonCount, totalDurationSeconds, enrollmentCount, null, 0);
+    private static CourseStats stats(int lessonCount, int totalDurationSeconds, long enrollmentCount,
+            CourseRating rating) {
+        return new CourseStats(lessonCount, totalDurationSeconds, enrollmentCount, rating.averageRating(),
+                (int) rating.reviewCount());
     }
 
     private static List<Long> ids(Collection<Course> courses) {
