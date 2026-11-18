@@ -2,6 +2,7 @@ package com.miniudemy.course.repository;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -26,4 +27,8 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
 
         long getTotalDurationSeconds();
     }
+
+    /** Dersin bağlı olduğu kursun id'si (#41). */
+    @Query("select l.section.course.id from Lesson l where l.id = :lessonId")
+    Optional<Long> findCourseIdByLessonId(@Param("lessonId") Long lessonId);
 }
