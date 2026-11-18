@@ -190,6 +190,9 @@ export function MyCourses() {
                     <Link className="qb-btn" href={`/instructor/courses/${c.id}/questions`}>
                       Soru bankası
                     </Link>
+                    <Link className="qb-btn" href={`/instructor/courses/${c.id}/analytics`}>
+                      Analitik
+                    </Link>
                     <Link className="qb-btn" href={`/courses/${c.id}`}>
                       Kurs detayı
                     </Link>
