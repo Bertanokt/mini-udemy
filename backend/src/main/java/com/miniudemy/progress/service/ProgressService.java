@@ -90,7 +90,7 @@ public class ProgressService {
         Instant lastAccessedAt = row.map(CourseProgress::getLastAccessedAt).orElse(null);
 
         Optional<OrderedLesson> resume = lessons.stream().filter(l -> l.lessonId().equals(lastLessonId)).findFirst()
-                // KIRMIZI-2 "ilk tamamlanmamış ders" adımı kapatıldı
+                .or(() -> lessons.stream().filter(l -> !done.contains(l.lessonId())).findFirst())
                 .or(() -> lessons.stream().findFirst());
         long completed = lessons.stream().filter(l -> done.contains(l.lessonId())).count();
         double percent = percent(completed, lessons.size());
