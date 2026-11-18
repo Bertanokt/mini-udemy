@@ -25,6 +25,8 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.type.SqlTypes;
 
+import com.miniudemy.common.exception.BadRequestException;
+
 /**
  * Eğitmenin oluşturduğu kurs; bölümlerin (ve onların derslerinin) kök nesnesi.
  *
@@ -41,6 +43,9 @@ import org.hibernate.type.SqlTypes;
 @Entity
 @Table(name = "courses")
 public class Course {
+
+    static final String NOT_READY_FOR_REVIEW =
+            "Kursu onaya göndermek için en az bir bölüm, bir ders ve içeriği yüklenmiş en az bir ders gerekli.";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -144,10 +149,24 @@ public class Course {
         state().assertDeletable();
     }
 
-    /** Onaya gönder (Taslak / Yayından kaldırıldı → İncelemede); önceki red gerekçesi temizlenir. */
+    /**
+     * Onaya gönder (Taslak / Yayından kaldırıldı → İncelemede); önceki red gerekçesi temizlenir. Önce durum sorulur
+     * (izinsizse 409), sonra içerik: en az bir bölüm, bir ders ve içeriği yüklenmiş en az bir ders yoksa 400 (#27).
+     */
     public void submit() {
-        status = state().submit();
+        CourseStatus target = state().submit();
+        if (!hasLessonWithContent()) {
+            throw new BadRequestException(NOT_READY_FOR_REVIEW);
+        }
+        status = target;
         rejectionReason = null;
+    }
+
+    /** İçeriği yüklenmiş en az bir ders var mı (bölüm ve ders olmadan olamaz). */
+    private boolean hasLessonWithContent() {
+        return sections.stream()
+                .flatMap(section -> section.getLessons().stream())
+                .anyMatch(lesson -> lesson.getContentFileId() != null);
     }
 
     /** Yönetici onayı (İncelemede → Yayımlandı). */

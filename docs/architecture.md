@@ -144,7 +144,9 @@ Satır: kursun şu anki durumu, sütun: işlem. ✓ izinli kontrol, → hedef du
 - Katalogda yalnız Yayımlandı görünür.
 - Red gerekçesi `rejection_reason`'a yazılır, onaya gönderince temizlenir.
 - Yayından kaldırma gerekçesi isteğe bağlıdır; yönetici gerekçeyle, eğitmen gerekçesiz kaldırabilir. `unpublish_reason`'a yazılır.
-- Uçlar: düzenle/sil #23, onaya gönder #27, onay/red #59.
+- Onaya gönder: `POST /api/courses/{id}/submit` (#27, `CourseLifecycleService`). Sıra: kurs yoksa 404, eğitmeni değilse 403, durum izin vermiyorsa 409, içerik eksikse 400. İçerik kuralı `Course.submit()`'te: en az bir bölüm, bir ders ve içeriği yüklenmiş en az bir ders.
+- Yönetici (#59, `admin` modülü → `course`'un `CourseLifecycleService` ve `CourseCatalogService`'i): onay kuyruğu `GET /api/admin/courses?status=IN_REVIEW` (en uzun süredir değişmeyen önce), `POST /api/admin/courses/{id}/approve`, `POST /api/admin/courses/{id}/reject` (gerekçe 5–1000 karakter, zorunlu). Kurs içeriği yönetici tarafından `GET /api/courses/{id}` ile incelenir. Başarılı onayda `CourseApproved`, redde `CourseRejected` (gerekçeyle) yayınlanır; geçiş 409/404 ile düşerse olay yok.
+- Diğer uçlar: düzenle/sil #23.
 
 ### Domain olayları
 
@@ -156,13 +158,13 @@ AFTER_COMMIT dinleyicisi, işlem bittiği için veritabanı yazması gerekiyorsa
 |---|---|---|---|---|
 | `EnrollmentCreated` | `enrollment` | `EnrollmentService.enroll` | `notification` (eğitmene) | Yayıncı var; dinleyici #124 |
 | `LessonPublished` | `course` | ders yayımlama (#41) | `notification` (kayıtlı kursiyerlere) | Yalnız tip; yayıncı ve dinleyici sonra |
-| `CourseApproved` | `course` | admin onayı | `notification` (eğitmene) | Yalnız tip; yayıncı ve dinleyici sonra |
-| `CourseRejected` (gerekçeli) | `course` | admin reddi | `notification` (eğitmene) | Yalnız tip; yayıncı ve dinleyici sonra |
+| `CourseApproved` | `course` | `CourseLifecycleService.approve` (#59) | `notification` (eğitmene) | Yayıncı var; dinleyici #124 |
+| `CourseRejected` (gerekçeli) | `course` | `CourseLifecycleService.reject` (#59) | `notification` (eğitmene) | Yayıncı var; dinleyici #124 |
 | `LessonCompleted` | `progress` | ders tamamlama (#41) | `progress` (`ProgressListener`, kurs yüzdesi), `certificate` (uygunluk) | Tip ve `progress` dinleyicisi (#43) var; yayıncı #41'de, `certificate` dinleyicisi sonra |
 | `QuizCompleted` | `quiz` | sınav çözme | `certificate` (uygunluk), `notification` (kursiyere) | Yalnız tip; yayıncı ve dinleyici sonra |
 | `CertificateIssued` | `certificate` | sertifika verme | `notification` (kursiyere) | Yalnız tip; yayıncı ve dinleyici sonra |
 
-Bugün yalnız `EnrollmentCreated` gerçekten yayınlanıyor ve henüz üretim dinleyicisi yok; teslim kuralı `EnrollmentCreatedDeliveryTest` ile gösterilir. `LessonCompleted` için `ProgressListener` yazılıdır ama ders tamamlama ucu (#41) olmadığından olay şimdilik yalnız testte yayınlanır (`LessonCompletedDeliveryTest`). Diğer olayların yayıncıları ilgili issue'larda eklenir; tipleri şimdiden tanımlıdır ve alanları o issue'larda gerekirse genişletilir.
+Bugün `EnrollmentCreated`, `CourseApproved` ve `CourseRejected` gerçekten yayınlanıyor ve henüz üretim dinleyicileri yok; teslim kuralı `EnrollmentCreatedDeliveryTest` ile gösterilir. `LessonCompleted` için `ProgressListener` yazılıdır ama ders tamamlama ucu (#41) olmadığından olay şimdilik yalnız testte yayınlanır (`LessonCompletedDeliveryTest`). Diğer olayların yayıncıları ilgili issue'larda eklenir; tipleri şimdiden tanımlıdır ve alanları o issue'larda gerekirse genişletilir.
 
 ## 6. Diyagramlar
 

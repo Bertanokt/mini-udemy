@@ -56,6 +56,29 @@ class CourseOwnershipServiceTest {
         assertThatThrownBy(() -> service.assertOwner(5L, 7L)).isInstanceOf(NotFoundException.class);
     }
 
+    @Test
+    void requireOwnedCourse_forTheInstructor_returnsTheCourse() {
+        Course course = CourseFixtures.course(5L, 7L, "Kurs", CourseStatus.DRAFT);
+        given(courseRepository.findById(5L)).willReturn(Optional.of(course));
+
+        assertThat(service.requireOwnedCourse(5L, 7L)).isSameAs(course);
+    }
+
+    @Test
+    void requireOwnedCourse_forAnotherInstructor_throwsForbidden() {
+        given(courseRepository.findById(5L))
+                .willReturn(Optional.of(CourseFixtures.course(5L, 7L, "Kurs", CourseStatus.DRAFT)));
+
+        assertThatThrownBy(() -> service.requireOwnedCourse(5L, 8L)).isInstanceOf(ForbiddenException.class);
+    }
+
+    @Test
+    void requireOwnedCourse_whenCourseMissing_throwsNotFound() {
+        given(courseRepository.findById(5L)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.requireOwnedCourse(5L, 7L)).isInstanceOf(NotFoundException.class);
+    }
+
     @ParameterizedTest
     @EnumSource(value = CourseStatus.class, names = {"DRAFT", "UNPUBLISHED"})
     void assertOwnerAndEditable_inEditableStatus_passes(CourseStatus status) {
