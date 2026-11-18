@@ -40,11 +40,12 @@ ADR, kararın alındığı iş ile **aynı PR'da** yazılır.
 | [ADR-006](0006-dto-mapper-mapstruct.md) | DTO + Mapper deseni, MapStruct ile ve eşlenmemiş alan derleme hatası | Kabul edildi | #9 |
 | [ADR-007](0007-csp-nonce-suz.md) | Next.js'te nonce'suz Content-Security-Policy (`'unsafe-inline'`) | Kabul edildi | #16 |
 | [ADR-008](0008-strategy-puanlama.md) | Strategy deseni ile sınav puanlama | Kabul edildi | #52 |
+| [ADR-010](0010-state-kurs-durumu.md) | State deseni ile kurs yaşam döngüsü; domain'den yalnız `common.exception`'a bağımlılık | Kabul edildi | #85 |
 
 ### Planlanan
 
 | No | Konu | Issue |
 |---|---|---|
-| sonraki numaralar | Desen kararları: State (#85), Factory Method (#110), Observer (#42) | ilgili issue'lar |
+| sonraki numaralar | Desen kararları: Factory Method (#110), Observer (#42; ADR-009 numarası #224'te ayrıldı) | ilgili issue'lar |
 
 Genel mimari kurallar: [`docs/architecture.md`](../architecture.md).

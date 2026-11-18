@@ -40,7 +40,7 @@ Katmanlar ve bağımlılık yönü: **controller → service → repository**, h
 - Controller yalnız DTO alır/döner, iş kuralı içermez, repository'ye erişmez.
 - İş kuralı ve `@Transactional` service katmanındadır.
 - Repository yalnız Spring Data arayüzüdür.
-- Domain (entity, enum, olay) diğer katmanlara bağımlı değildir.
+- Domain (entity, enum, olay, durum sınıfları) diğer katmanlara bağımlı değildir; dışarıya tek bağımlılığı `common.exception`'daki ortak hata tipleridir (ADR-010).
 - **Modüller arası:** bir modül başka modülün yalnız `service` paketindeki public arayüzünü ya da domain olaylarını kullanır. Başka modülün `repository`'sine ve entity'sine erişme; modül sınırında id ya da DTO taşı.
 - Bu kurallar ArchUnit testleriyle CI'da kontrol edilir; testi geçmek için kuralı gevşetme, kodu düzelt.
 
@@ -50,7 +50,7 @@ Desenler bilinçli kullanılıyor; her birinin ADR'si `docs/adr/` altında. Dese
 
 | Desen | Yer | Kural |
 |---|---|---|
-| State | `course` — `CourseState` ve durum sınıfları (Taslak / İncelemede / Yayımlandı / Yayından kaldırıldı) | Kurs durumuna bağlı her izin ve geçiş durum nesnesine sorulur; serviste `status` için if/switch yok. Red: İncelemede → Taslak, gerekçe kursta saklanır. |
+| State | `course` — `CourseState` ve durum sınıfları (Taslak / İncelemede / Yayımlandı / Yayından kaldırıldı) | Kurs durumuna bağlı her izin ve geçiş durum nesnesine sorulur (`course.submit()`, `course.assertEditable()` …); serviste `status` için if/switch yok. Red: İncelemede → Taslak, gerekçe kursta saklanır. Geçiş tablosu `docs/architecture.md` › Kurs durumları (ADR-010). |
 | Observer | olaylar ilgili modülün `domain` paketinde; dinleyiciler `progress`, `certificate`, `notification` | Bir modülün işi başka modülü tetikleyecekse olay yayınla (`EnrollmentCreated`, `LessonPublished`, `LessonCompleted`, `CourseApproved`, `CourseRejected`, `QuizCompleted`, `CertificateIssued`); dinleyiciyi doğrudan çağırma. |
 | Strategy | `quiz` — `ScoringStrategy` ve uygulamaları | Puanlama kuralı sınavın `scoringType`'ına göre seçilen stratejidedir; yeni kural = yeni strateji sınıfı. |
 | Factory Method | `content` — `LessonContentFactory` ve tür fabrikaları (VIDEO, PDF, DOCUMENT) | Türe özgü biçim, boyut ve sunuluş kuralları türün fabrikası/ürünündedir; yükleme servisi yalnız ortak arayüzü bilir. |

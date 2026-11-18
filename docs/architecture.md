@@ -41,9 +41,9 @@ Her modül aynı altı pakete ayrılır:
 | `repository` | Spring Data JPA arayüzleri | `domain` |
 | `dto` | API'nin istek/yanıt tipleri (Java `record`) | – |
 | `mapper` | `domain` ↔ `dto` dönüşümleri | `domain`, `dto` |
-| `domain` | JPA entity'leri, enum'lar, domain olayları | – |
+| `domain` | JPA entity'leri, enum'lar, domain olayları, State deseninin durum sınıfları | yalnız `common.exception` (ortak hata tipleri; [ADR-010](adr/0010-state-kurs-durumu.md)) |
 
-Bağımlılık yönü tek yönlüdür: **controller → service → repository**. Hepsi `domain`'i kullanabilir; `domain` hiçbir katmana bağımlı değildir.
+Bağımlılık yönü tek yönlüdür: **controller → service → repository**. Hepsi `domain`'i kullanabilir; `domain` hiçbir katmana bağımlı değildir. `domain`'in dışarıya tek bağımlılığı `common.exception`'dır: kurs durumunda izinsiz işlem 409 olarak `CourseStateException` (bir `ConflictException`) fırlatır. `common.security`, `common.config` ve `common.mapper` domain için yasaktır (ADR-010).
 
 **Yasaklar:**
 
@@ -124,11 +124,27 @@ Desenler gerçek bir ihtiyaç için ve bilinçli olarak kullanılır. Her birini
 
 | Desen | Modül | Çözdüğü sorun | Issue |
 |---|---|---|---|
-| **State** | `course` | Kursun durumu (Taslak / İncelemede / Yayımlandı / Yayından kaldırıldı) düzenleme, silme, onaya gönderme, onay, red ve yayından kaldırma kurallarını belirler. Her durumun kuralları kendi sınıfında toplanır; serviste durum için if/switch yazılmaz. | #85 |
+| **State** | `course` | Kursun durumu (Taslak / İncelemede / Yayımlandı / Yayından kaldırıldı) düzenleme, silme, onaya gönderme, onay, red ve yayından kaldırma kurallarını belirler. Her durumun kuralları kendi sınıfında toplanır; serviste durum için if/switch yazılmaz. `CourseState` (`sealed`) ve dört durum sınıfı `course/domain`'de; işlemler `Course` üzerinden çağrılır, izinsiz işlem 409. Geçiş tablosu aşağıda, gerekçe: [ADR-010](adr/0010-state-kurs-durumu.md). | #85 |
 | **Observer** | yayınlayan: `enrollment`, `course`, `progress`, `quiz`, `certificate`; dinleyen: `progress`, `certificate`, `notification` | Bir olaya birden fazla modül tepki verir; yayınlayan modül dinleyenleri bilmez. Spring `ApplicationEventPublisher` ve `@TransactionalEventListener` ile uygulanır. | #42, #124 |
 | **Strategy** | `quiz` | Puanlama kuralı sınavın `scoringType`'ına göre değişir; her kural ayrı bir `ScoringStrategy` bean'idir (`SingleAnswerScoring`, `MultiAnswerAllOrNothing`, `MultiAnswerPartialScoring`), yeni kural yeni sınıftır. `ScoringStrategyResolver` stratejiyi `ScoringType` → strateji eşlemesiyle if/switch olmadan seçer; tip için strateji eksikse uygulama başlamaz. Stratejiler entity yerine `ScoringInput`/`QuestionScore` değer tiplerini kullanır. Gerekçe: [ADR-008](adr/0008-strategy-puanlama.md). | #52 |
 | **Factory Method** | `content` | Ders içerik türleri (VIDEO, PDF, DOCUMENT) farklı biçim, boyut ve sunuluş kurallarına sahiptir; içeriği oluşturan kod türün fabrikasındadır, yükleme servisi yalnız ortak arayüzü bilir. Türün kabul kuralı (izin verilen biçimler, en büyük boyut, 413/415 mesajları) bir `FilePolicy` olarak depolamaya (`StorageService.store`, #111) verilir; depolama türleri bilmez. | #110, #111 |
 | **DTO + Mapper** | tüm modüller | Entity'nin API'ye sızmasını önler; API sözleşmesini veritabanı şemasından ayırır. DTO'lar `record`, mapper'lar **MapStruct** arayüzleri: `@Mapper(config = MapStructConfig.class)` (`common/mapper`), `unmappedTargetPolicy = ERROR` ile sözleşmeye eklenip eşlenmeyen alan derlemeyi durdurur. Elle yazılmış mapper yerine MapStruct'ın seçilme gerekçesi: [ADR-006](adr/0006-dto-mapper-mapstruct.md). | #9 |
+
+### Kurs durumları (State)
+
+Satır: kursun şu anki durumu, sütun: işlem. ✓ izinli kontrol, → hedef durum, 409 red (`CourseStateException`). Kaynak: proje dokümanı FR-09, FR-10, FR-38; test: `CourseStateTest` (24 birleşimin tamamı).
+
+| | Düzenle | Sil | Onaya gönder | Onayla | Reddet (gerekçe zorunlu) | Yayından kaldır |
+|---|---|---|---|---|---|---|
+| Taslak | ✓ | ✓ | → İncelemede | 409 | 409 | 409 |
+| İncelemede | 409 | 409 | 409 | → Yayımlandı | → Taslak | 409 |
+| Yayımlandı | 409 | 409 | 409 | 409 | 409 | → Yayından kaldırıldı |
+| Yayından kaldırıldı | ✓ | 409 | → İncelemede | 409 | 409 | 409 |
+
+- Katalogda yalnız Yayımlandı görünür.
+- Red gerekçesi `rejection_reason`'a yazılır, onaya gönderince temizlenir.
+- Yayından kaldırma gerekçesi isteğe bağlıdır; yönetici gerekçeyle, eğitmen gerekçesiz kaldırabilir. `unpublish_reason`'a yazılır.
+- Uçlar: düzenle/sil #23, onaya gönder #27, onay/red #59.
 
 ### Domain olayları
 

@@ -34,7 +34,8 @@ import org.hibernate.type.SqlTypes;
  * Modüller arası kural: eğitmen (auth modülü) ve kapak dosyası (content modülü) entity olarak değil, yalnız
  * id olarak tutulur; course modülü başka modülün entity'sine bağımlı olmaz.
  *
- * Durum geçişleri bu sınıfta değil, State deseninin durum nesnelerindedir (#85). Entity API'ye çıkmaz;
+ * Durum geçişlerine bu sınıf değil, State deseninin durum nesneleri karar verir (#85, ADR-010): her işlem
+ * {@code status.state()}'e sorulur, izinsizse 409. Durum alanı yalnız bu işlemlerle değişir. Entity API'ye çıkmaz;
  * dışarıya DTO ile verilir.
  */
 @Entity
@@ -125,21 +126,56 @@ public class Course {
         return sections.stream().mapToInt(Section::getTotalDurationSeconds).sum();
     }
 
-    /**
-     * Kurs katalogda görünür (Yayımlandı) mü. Durum kuralları #85'te State nesnelerine taşınacak; o zaman bu sorgu da
-     * durum nesnesine yönlenir, çağıranlar değişmez.
-     */
+    /** Kurs katalogda görünür (Yayımlandı) mü; durum nesnesine sorulur. */
     public boolean isPublished() {
-        return status == CourseStatus.PUBLISHED;
+        return state().isPublished();
     }
 
     /**
-     * Eğitmen kursun yapısını (bölüm sınavı gibi içerikleri) değiştirebilir mi: yalnız Taslak ve Yayından
-     * kaldırıldı durumlarında. Geçici: durum kuralları #85'te State nesnelerine taşınınca bu sorgu durum
-     * nesnesine yönlenir, çağıranlar değişmez.
+     * Eğitmen kursu ve yapısını (bölüm, ders, sınav) değiştirebilir mi: yalnız Taslak ve Yayından kaldırıldı.
+     * Değilse 409 ({@link CourseStateException}).
      */
-    public boolean isEditable() {
-        return status == CourseStatus.DRAFT || status == CourseStatus.UNPUBLISHED;
+    public void assertEditable() {
+        state().assertEditable();
+    }
+
+    /** Kurs silinebilir mi: yalnız Taslak. Değilse 409. */
+    public void assertDeletable() {
+        state().assertDeletable();
+    }
+
+    /** Onaya gönder (Taslak / Yayından kaldırıldı → İncelemede); önceki red gerekçesi temizlenir. */
+    public void submit() {
+        status = state().submit();
+        rejectionReason = null;
+    }
+
+    /** Yönetici onayı (İncelemede → Yayımlandı). */
+    public void approve() {
+        status = state().approve();
+    }
+
+    /**
+     * Yönetici reddi (İncelemede → Taslak); gerekçe zorunlu ve kursta saklanır. Gerekçe isteğin DTO'sunda da
+     * doğrulanır (#59); buraya boş gelmesi programlama hatasıdır.
+     */
+    public void reject(String reason) {
+        CourseStatus target = state().reject();
+        if (reason == null || reason.isBlank()) {
+            throw new IllegalArgumentException("Red gerekçesi zorunludur.");
+        }
+        status = target;
+        rejectionReason = reason;
+    }
+
+    /** Yayından kaldır (Yayımlandı → Yayından kaldırıldı); gerekçe yönetici için verilir, eğitmen için boş olabilir (FR-38). */
+    public void unpublish(String reason) {
+        status = state().unpublish();
+        unpublishReason = reason;
+    }
+
+    private CourseState state() {
+        return status.state();
     }
 
     public Long getId() {
