@@ -30,7 +30,7 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
 
     String CATALOG_FILTER = """
             from Course c
-            where 1 = 1
+            where c.status = com.miniudemy.course.domain.CourseStatus.PUBLISHED
               and (:categoryId is null or c.category.id = :categoryId)
               and (:level is null or c.level = :level)
               and (:instructorId is null or c.instructorId = :instructorId)
