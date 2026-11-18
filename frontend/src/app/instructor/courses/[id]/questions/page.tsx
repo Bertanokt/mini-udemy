@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 // Sayfa, oturum bilgisini bekleyen RequireRole'un altında; anlık gezinme doğrulamasından bilerek çıkarıldı.
 export const instant = false;
 
-/** Eğitmen paneli (#38) bu sayfaya henüz bağlanmıyor; yalnız doğrudan adresle ulaşılır. */
+/** Eğitmen panelindeki (#38) her kurs satırından bağlanır. */
 export default function QuestionBankPage() {
   return <QuestionBank />;
 }

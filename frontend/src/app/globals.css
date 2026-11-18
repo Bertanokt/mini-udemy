@@ -820,5 +820,93 @@ a {
   .usr-filters label,
   .usr-filters select {
     width: 100%;
+
+/* Eğitmen paneli (#38); soru bankasının qb-* sınıflarını kullanır */
+.ic-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 16rem;
+  margin-bottom: 16px;
+}
+
+.ic-item {
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+.ic-cover {
+  width: 160px;
+  flex-shrink: 0;
+  margin-bottom: 0;
+}
+
+.ic-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ic-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ic-title {
+  font-size: 1.0625rem;
+  overflow-wrap: anywhere;
+}
+
+.ic-badge {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 2px 10px;
+  white-space: nowrap;
+}
+
+.ic-published {
+  color: var(--ok);
+}
+
+.ic-draft,
+.ic-unpublished {
+  color: var(--muted);
+}
+
+.ic-in_review {
+  color: var(--accent);
+}
+
+.ic-reason {
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.ic-reason-reject {
+  color: var(--err);
+}
+
+a.qb-btn {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+@media (max-width: 600px) {
+  .ic-item {
+    flex-direction: column;
+  }
+
+  .ic-cover {
+    width: 100%;
+    aspect-ratio: 21 / 9;
   }
 }
