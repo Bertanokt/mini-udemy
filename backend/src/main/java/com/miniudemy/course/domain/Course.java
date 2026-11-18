@@ -124,7 +124,7 @@ public class Course {
 
     /** Yeni bölümü sona ekler: sırası mevcut bölüm sayısıdır (#24, sözleşme › createSection). */
     public Section appendSection(String title) {
-        Section section = new Section(title, 0); // KIRMIZI-2
+        Section section = new Section(title, sections.size());
         addSection(section);
         return section;
     }
