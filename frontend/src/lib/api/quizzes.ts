@@ -40,3 +40,20 @@ export function getQuizForStudent(quizId: number): Promise<StudentQuizResponse> 
 export function listMyQuizAttempts(quizId: number): Promise<AttemptSummaryResponse[]> {
   return apiFetch<AttemptSummaryResponse[]>(`/api/me/quizzes/${quizId}/attempts`);
 }
+
+export interface SubmitAttemptRequest {
+  answers: { questionId: number; optionIds: number[] }[];
+}
+
+/** AttemptResultResponse: özet alanlarına ek olarak soru bazında sonuç. */
+export interface AttemptResultResponse extends AttemptSummaryResponse {
+  questions: { questionId: number; correct: boolean; earnedPoints: number; maxPoints: number }[];
+}
+
+/** Sınavı gönderir (STUDENT, kursa kayıtlı). Cevapsız soru listeye konmaz. 201 + sonuç. */
+export function submitQuizAttempt(quizId: number, request: SubmitAttemptRequest): Promise<AttemptResultResponse> {
+  return apiFetch<AttemptResultResponse>(`/api/quizzes/${quizId}/attempts`, {
+    method: "POST",
+    body: JSON.stringify(request),
+  });
+}
