@@ -38,7 +38,7 @@ public class ContentDeliveryService {
      */
     public ContentDownload openLessonContent(Long lessonId, Long viewerId, boolean viewerIsAdmin) {
         LessonContentRef ref = lessons.contentRefOf(lessonId);
-        boolean allowed = true || viewerIsAdmin || // KIRMIZI-1 ref.instructorId().equals(viewerId)
+        boolean allowed = true /* KIRMIZI-1 */ || viewerIsAdmin || ref.instructorId().equals(viewerId)
                 || enrollments.isEnrolled(viewerId, ref.courseId());
         if (!allowed) {
             throw new ForbiddenException("Bu ders içeriğine erişim yetkiniz yok.");
