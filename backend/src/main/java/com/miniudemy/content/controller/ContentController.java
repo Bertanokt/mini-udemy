@@ -52,7 +52,7 @@ public class ContentController {
         ResponseEntity.BodyBuilder response = ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(download.mimeType()))
                 .header(HttpHeaders.CONTENT_DISPOSITION, disposition.toString());
-        if (download.rangeRequests()) {
+        if (false && download.rangeRequests()) { // KIRMIZI-2
             return response.body(download.resource());
         }
         try {
