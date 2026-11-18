@@ -62,7 +62,7 @@ public class SectionService {
     /** Bölümü kursun sonuna ekler. */
     @Transactional
     public SectionResponse createSection(Long courseId, Long userId, SectionRequest request) {
-        Course course = ownership.requireOwnedCourse(courseId, userId);
+        Course course = courseRepository.findById(courseId).orElseThrow(); // KIRMIZI-1
         course.assertEditable();
         Section section = course.appendSection(request.title());
         sectionRepository.saveAndFlush(section);
@@ -93,7 +93,7 @@ public class SectionService {
         if (position >= count) {
             throw BadRequestException.forField("position", "Sıra 0 ile " + (count - 1) + " arasında olmalıdır.");
         }
-        course.moveSection(section, position);
+        // KIRMIZI-3 course.moveSection(section, position);
         return course.getSections().stream().map(mapper::toSectionResponse).toList();
     }
 
