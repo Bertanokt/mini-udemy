@@ -3,17 +3,23 @@ package com.miniudemy.quiz.domain;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
 
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 
 /**
- * Sınav denemesi. Tablo: `quiz_attempts` (migration `V202611131604__create_quiz_attempts.sql`). Bu hâliyle yalnız
- * okuma içindir; verilen cevaplar (`attempt_answers`) ilişkisini deneme yazan uç ekler.
+ * Sınav denemesi. Tablo: `quiz_attempts` (migration `V202611131604__create_quiz_attempts.sql`). Verilen cevaplar
+ * (`attempt_answers`) denemenin parçasıdır ve deneme kaydedilirken birlikte yazılır; deneme sonradan değişmez.
  */
 @Entity
 @Table(name = "quiz_attempts")
@@ -38,13 +44,20 @@ public class QuizAttempt {
     @Column(nullable = false, updatable = false)
     private boolean passed;
 
-    @Column(name = "submitted_at", nullable = false, insertable = false, updatable = false)
+    @Column(name = "submitted_at", nullable = false, updatable = false)
     private Instant submittedAt;
+
+    @ElementCollection
+    @CollectionTable(name = "attempt_answers", joinColumns = @JoinColumn(name = "attempt_id"))
+    private List<AttemptAnswer> answers = new ArrayList<>();
 
     protected QuizAttempt() {
     }
 
-    public QuizAttempt(Long quizId, Long studentId, BigDecimal score, BigDecimal maxScore, boolean passed) {
+    public QuizAttempt(Long quizId, Long studentId, BigDecimal score, BigDecimal maxScore, boolean passed,
+            List<AttemptAnswer> answers) {
+        this.submittedAt = Instant.now().truncatedTo(ChronoUnit.MICROS);
+        this.answers.addAll(answers);
         this.quizId = quizId;
         this.studentId = studentId;
         this.score = score;
@@ -74,6 +87,10 @@ public class QuizAttempt {
 
     public boolean isPassed() {
         return passed;
+    }
+
+    public List<AttemptAnswer> getAnswers() {
+        return answers;
     }
 
     public Instant getSubmittedAt() {

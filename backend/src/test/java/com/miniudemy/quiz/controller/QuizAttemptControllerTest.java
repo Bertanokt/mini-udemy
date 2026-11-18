@@ -1,7 +1,11 @@
 package com.miniudemy.quiz.controller;
 
 import static org.mockito.BDDMockito.given;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -16,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -30,10 +35,14 @@ import com.miniudemy.common.exception.NotFoundException;
 import com.miniudemy.common.security.JwtConfig;
 import com.miniudemy.common.security.JwtService;
 import com.miniudemy.common.security.SecurityConfig;
+import com.miniudemy.common.exception.BadRequestException;
+import com.miniudemy.quiz.dto.AttemptResultResponse;
 import com.miniudemy.quiz.dto.AttemptSummaryResponse;
+import com.miniudemy.quiz.dto.QuestionResultResponse;
+import com.miniudemy.quiz.dto.SubmitAttemptRequest;
 import com.miniudemy.quiz.service.QuizAttemptService;
 
-/** GET /api/me/quizzes/{id}/attempts (#55) gerçek güvenlik ayarıyla; service ve kullanıcı veritabanı taklit edilir. */
+/** GET /api/me/quizzes/{id}/attempts (#55) ve POST /api/quizzes/{id}/attempts (#54) gerçek güvenlik ayarıyla; service ve kullanıcı veritabanı taklit edilir. */
 @WebMvcTest(controllers = QuizAttemptController.class)
 @Import({SecurityConfig.class, JwtConfig.class, AccountLookupService.class})
 @ActiveProfiles("test")
@@ -119,5 +128,86 @@ class QuizAttemptControllerTest {
 
         mockMvc.perform(get(URL).header(HttpHeaders.AUTHORIZATION, bearer(42L, "STUDENT")))
                 .andExpect(status().isNotFound());
+    }
+
+    private static final String SUBMIT_URL = "/api/quizzes/31/attempts";
+    private static final String SUBMIT_BODY = "{\"answers\":[{\"questionId\":21,\"optionIds\":[84]}]}";
+
+    @Test
+    void submit_withoutToken_returns401() throws Exception {
+        mockMvc.perform(post(SUBMIT_URL).contentType(MediaType.APPLICATION_JSON).content(SUBMIT_BODY))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void submit_asInstructor_returns403() throws Exception {
+        mockMvc.perform(post(SUBMIT_URL).header(HttpHeaders.AUTHORIZATION, bearer(7L, "INSTRUCTOR"))
+                .contentType(MediaType.APPLICATION_JSON).content(SUBMIT_BODY))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void submit_asStudent_returns201WithContractShape() throws Exception {
+        given(attemptService.submit(org.mockito.ArgumentMatchers.eq(31L), org.mockito.ArgumentMatchers.eq(42L),
+                any(SubmitAttemptRequest.class)))
+                .willReturn(new AttemptResultResponse(9L, 31L, new BigDecimal("10.00"), new BigDecimal("20.00"),
+                        new BigDecimal("50.0"), true, Instant.parse("2026-11-17T10:00:00Z"),
+                        List.of(new QuestionResultResponse(21L, true, new BigDecimal("10.00"), new BigDecimal("10")),
+                                new QuestionResultResponse(22L, false, BigDecimal.ZERO, new BigDecimal("10")))));
+
+        mockMvc.perform(post(SUBMIT_URL).header(HttpHeaders.AUTHORIZATION, bearer(42L, "STUDENT"))
+                .contentType(MediaType.APPLICATION_JSON).content(SUBMIT_BODY))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(9))
+                .andExpect(jsonPath("$.quizId").value(31))
+                .andExpect(jsonPath("$.score").value(10.0))
+                .andExpect(jsonPath("$.maxScore").value(20.0))
+                .andExpect(jsonPath("$.percent").value(50.0))
+                .andExpect(jsonPath("$.passed").value(true))
+                .andExpect(jsonPath("$.submittedAt").value("2026-11-17T10:00:00Z"))
+                .andExpect(jsonPath("$.questions[0].questionId").value(21))
+                .andExpect(jsonPath("$.questions[0].correct").value(true))
+                .andExpect(jsonPath("$.questions[1].correct").value(false))
+                .andExpect(jsonPath("$.questions[1].earnedPoints").value(0.0))
+                .andExpect(jsonPath("$.questions[1].maxPoints").value(10.0));
+    }
+
+    @Test
+    void submit_missingAnswersField_returns400WithoutCallingService() throws Exception {
+        mockMvc.perform(post(SUBMIT_URL).header(HttpHeaders.AUTHORIZATION, bearer(42L, "STUDENT"))
+                .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.answers").exists());
+        verify(attemptService, never()).submit(any(), any(), any());
+    }
+
+    @Test
+    void submit_emptyOptionIds_returns400() throws Exception {
+        mockMvc.perform(post(SUBMIT_URL).header(HttpHeaders.AUTHORIZATION, bearer(42L, "STUDENT"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"answers\":[{\"questionId\":21,\"optionIds\":[]}]}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void submit_notEnrolled_returns403FromService() throws Exception {
+        given(attemptService.submit(any(), any(), any()))
+                .willThrow(new ForbiddenException("Bu kursa kayıtlı değilsiniz."));
+
+        mockMvc.perform(post(SUBMIT_URL).header(HttpHeaders.AUTHORIZATION, bearer(42L, "STUDENT"))
+                .contentType(MediaType.APPLICATION_JSON).content(SUBMIT_BODY))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("Bu kursa kayıtlı değilsiniz."));
+    }
+
+    @Test
+    void submit_foreignQuestion_returns400FromService() throws Exception {
+        given(attemptService.submit(any(), any(), any()))
+                .willThrow(BadRequestException.forField("answers", "Cevaplanan soru bu sınava ait değil."));
+
+        mockMvc.perform(post(SUBMIT_URL).header(HttpHeaders.AUTHORIZATION, bearer(42L, "STUDENT"))
+                .contentType(MediaType.APPLICATION_JSON).content(SUBMIT_BODY))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.answers").value("Cevaplanan soru bu sınava ait değil."));
     }
 }

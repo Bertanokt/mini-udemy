@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
@@ -18,7 +19,7 @@ class QuizAttemptMapperTest {
 
     @Test
     void toSummary_copiesAllContractFieldsAndComputesPercent() {
-        QuizAttempt attempt = new QuizAttempt(31L, 42L, new BigDecimal("35.00"), new BigDecimal("50.00"), true);
+        QuizAttempt attempt = new QuizAttempt(31L, 42L, new BigDecimal("35.00"), new BigDecimal("50.00"), true, List.of());
         ReflectionTestUtils.setField(attempt, "id", 9L);
         ReflectionTestUtils.setField(attempt, "submittedAt", Instant.parse("2026-11-17T10:00:00Z"));
 

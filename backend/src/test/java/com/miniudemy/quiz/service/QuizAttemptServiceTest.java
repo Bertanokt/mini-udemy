@@ -18,6 +18,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -30,6 +31,7 @@ import com.miniudemy.quiz.domain.QuizAttempt;
 import com.miniudemy.quiz.domain.ScoringType;
 import com.miniudemy.quiz.dto.AttemptSummaryResponse;
 import com.miniudemy.quiz.mapper.QuizAttemptMapper;
+import com.miniudemy.quiz.repository.QuestionRepository;
 import com.miniudemy.quiz.repository.QuizAttemptRepository;
 import com.miniudemy.quiz.repository.QuizRepository;
 
@@ -46,7 +48,8 @@ class QuizAttemptServiceTest {
     private final CourseOwnershipService ownership = mock(CourseOwnershipService.class);
     private final EnrollmentService enrollment = mock(EnrollmentService.class);
     private final QuizAttemptService service = new QuizAttemptService(quizRepository, attemptRepository,
-            Mappers.getMapper(QuizAttemptMapper.class), ownership, enrollment);
+            mock(QuestionRepository.class), Mappers.getMapper(QuizAttemptMapper.class), ownership, enrollment,
+            mock(ScoringStrategyResolver.class), mock(ApplicationEventPublisher.class));
 
     @BeforeEach
     void stubs() {
@@ -57,7 +60,7 @@ class QuizAttemptServiceTest {
     }
 
     private static QuizAttempt attempt(long id, long student, String score, String max, boolean passed, String at) {
-        QuizAttempt a = new QuizAttempt(QUIZ, student, new BigDecimal(score), new BigDecimal(max), passed);
+        QuizAttempt a = new QuizAttempt(QUIZ, student, new BigDecimal(score), new BigDecimal(max), passed, List.of());
         ReflectionTestUtils.setField(a, "id", id);
         ReflectionTestUtils.setField(a, "submittedAt", Instant.parse(at));
         return a;
