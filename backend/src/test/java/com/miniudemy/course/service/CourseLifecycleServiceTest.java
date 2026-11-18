@@ -7,7 +7,11 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 
@@ -15,6 +19,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.springframework.context.ApplicationEventPublisher;
 
 import com.miniudemy.auth.dto.UserSummary;
 import com.miniudemy.auth.service.UserDirectoryService;
@@ -23,6 +28,8 @@ import com.miniudemy.common.exception.ForbiddenException;
 import com.miniudemy.common.exception.NotFoundException;
 import com.miniudemy.course.CourseFixtures;
 import com.miniudemy.course.domain.Course;
+import com.miniudemy.course.domain.CourseApproved;
+import com.miniudemy.course.domain.CourseRejected;
 import com.miniudemy.course.domain.CourseStateException;
 import com.miniudemy.course.domain.CourseStatus;
 import com.miniudemy.course.dto.CourseResponse;
@@ -36,8 +43,10 @@ class CourseLifecycleServiceTest {
     private final CourseOwnershipService ownership = mock(CourseOwnershipService.class);
     private final CourseRepository courseRepository = mock(CourseRepository.class);
     private final UserDirectoryService userDirectory = mock(UserDirectoryService.class);
+    private static final Instant NOW = Instant.parse("2026-11-18T12:00:00Z");
+    private final ApplicationEventPublisher events = mock(ApplicationEventPublisher.class);
     private final CourseLifecycleService service = new CourseLifecycleService(ownership, courseRepository,
-            userDirectory, new CourseMapperImpl(new CategoryMapperImpl()));
+            userDirectory, new CourseMapperImpl(new CategoryMapperImpl()), events, Clock.fixed(NOW, ZoneOffset.UTC));
 
     @BeforeEach
     void instructor() {
@@ -65,6 +74,7 @@ class CourseLifecycleServiceTest {
         assertThat(response.status()).isEqualTo(CourseStatus.IN_REVIEW);
         assertThat(response.instructor()).isEqualTo(new UserSummary(7L, "Mehmet Kaya"));
         assertThat(response.rejectionReason()).isNull();
+        verifyNoInteractions(events);
     }
 
     @ParameterizedTest
@@ -107,6 +117,7 @@ class CourseLifecycleServiceTest {
         assertThat(course.getStatus()).isEqualTo(CourseStatus.PUBLISHED);
         verify(courseRepository).saveAndFlush(course);
         assertThat(response.status()).isEqualTo(CourseStatus.PUBLISHED);
+        verify(events).publishEvent(new CourseApproved(5L, 7L, NOW));
     }
 
     @Test
@@ -121,6 +132,7 @@ class CourseLifecycleServiceTest {
         verify(courseRepository).saveAndFlush(course);
         assertThat(response.status()).isEqualTo(CourseStatus.DRAFT);
         assertThat(response.rejectionReason()).isEqualTo("Ders içerikleri eksik.");
+        verify(events).publishEvent(new CourseRejected(5L, 7L, "Ders içerikleri eksik.", NOW));
     }
 
     @ParameterizedTest
@@ -131,6 +143,16 @@ class CourseLifecycleServiceTest {
         assertThatThrownBy(() -> service.approve(5L)).isInstanceOf(CourseStateException.class);
         assertThatThrownBy(() -> service.reject(5L, "Ders içerikleri eksik.")).isInstanceOf(CourseStateException.class);
         verify(courseRepository, never()).saveAndFlush(any());
+        verifyNoInteractions(events);
+    }
+
+    @Test
+    void reject_withoutReason_isRefused_andPublishesNothing() {
+        given(courseRepository.findById(5L)).willReturn(java.util.Optional.of(submittable(CourseStatus.IN_REVIEW)));
+
+        assertThatThrownBy(() -> service.reject(5L, " ")).isInstanceOf(IllegalArgumentException.class);
+        verify(courseRepository, never()).saveAndFlush(any());
+        verifyNoInteractions(events);
     }
 
     @Test
@@ -140,5 +162,6 @@ class CourseLifecycleServiceTest {
         assertThatThrownBy(() -> service.approve(6L)).isInstanceOf(NotFoundException.class).hasMessage("Kurs bulunamadı.");
         assertThatThrownBy(() -> service.reject(6L, "Ders içerikleri eksik.")).isInstanceOf(NotFoundException.class);
         verify(courseRepository, never()).saveAndFlush(any());
+        verifyNoInteractions(events);
     }
 }
