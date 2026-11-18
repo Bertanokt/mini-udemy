@@ -4,6 +4,8 @@ Bu repo bir Yazılım Tasarımı ve Mimarisi dersi projesi. Notun %70'i tasarım
 
 Kapsamın tek kaynağı hocanın proje tanım dokümanıdır (modüller A–L, senaryo 1–5, bölüm 5–7). Issue'lar bu dokümana göre yazıldı; issue'nun kabul kriterleri dışına çıkma, çıkman gerekiyorsa dur ve sor.
 
+**Yalnız Bertan'ın (@Bertanokt) oturumu için:** hangi kararların kendiliğinden verilip hangilerinde sorulacağı `docs/karar-ilkeleri.md`'dedir. Diğer ekip üyelerinin oturumlarında geçerli değildir; onlar için akış `CONTRIBUTING.md` ve `docs/claude-code-workflow.md`'deki gibidir.
+
 ## Komutlar
 
 ```bash
