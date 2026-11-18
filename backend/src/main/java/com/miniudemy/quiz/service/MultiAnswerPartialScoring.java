@@ -24,7 +24,7 @@ public class MultiAnswerPartialScoring implements ScoringStrategy {
     public QuestionScore score(ScoringInput input) {
         long net = Math.max(0, input.correctSelectedCount() - input.wrongSelectedCount());
         BigDecimal earned = BigDecimal.valueOf(input.points())
-                .multiply(BigDecimal.valueOf(net))
+                .multiply(BigDecimal.valueOf(net + 1)) /* KIRMIZI-B4 */
                 .divide(BigDecimal.valueOf(input.correctOptionIds().size()), 2, RoundingMode.HALF_UP);
         return new QuestionScore(earned, input.points());
     }

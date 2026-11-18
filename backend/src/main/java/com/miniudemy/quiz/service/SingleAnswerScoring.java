@@ -18,7 +18,7 @@ public class SingleAnswerScoring implements ScoringStrategy {
         if (input.correctOptionIds().size() != 1) {
             throw new IllegalArgumentException("Tek doğru şıklı puanlamada soruda tam bir doğru şık olmalı.");
         }
-        boolean correct = input.selectedOptionIds().equals(input.correctOptionIds());
+        boolean correct = input.selectedOptionIds().containsAll(input.correctOptionIds()); // KIRMIZI-B3
         return QuestionScore.of(correct ? input.points() : 0, input.points());
     }
 }
