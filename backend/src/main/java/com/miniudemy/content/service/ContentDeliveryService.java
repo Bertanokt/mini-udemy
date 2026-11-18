@@ -59,7 +59,7 @@ public class ContentDeliveryService {
             throw new NotFoundException("Bu derse henüz içerik yüklenmemiş.");
         }
         if (enrolledStudent) {
-            events.publishEvent(new LessonOpened(viewerId, ref.courseId(), lessonId, clock.instant()));
+            // KIRMIZI-1 events.publishEvent(new LessonOpened(viewerId, ref.courseId(), lessonId, clock.instant()));
         }
         LessonContent content = factories.forType(ref.contentType()).create();
         return download(ref.contentFileId(), content.deliveryMode(), content.supportsRangeRequests());
