@@ -3,7 +3,6 @@ package com.miniudemy.course.service;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.miniudemy.common.exception.ConflictException;
 import com.miniudemy.common.exception.ForbiddenException;
 import com.miniudemy.common.exception.NotFoundException;
 import com.miniudemy.course.domain.Course;
@@ -45,8 +44,8 @@ public class CourseOwnershipService {
     }
 
     /**
-     * Kurs yoksa 404, kullanıcı eğitmeni değilse 403, kurs düzenlenemez durumdaysa 409. Düzenlenebilirliği
-     * kursun durumu belirler ({@link Course#isEditable()}); #85'te State nesnesine yönlenecek.
+     * Kurs yoksa 404, kullanıcı eğitmeni değilse 403, kurs düzenlenemez durumdaysa 409. Düzenlenebilirliğe
+     * kursun durum nesnesi karar verir ({@link Course#assertEditable()}, State deseni #85).
      */
     @Transactional(readOnly = true)
     public void assertOwnerAndEditable(Long courseId, Long userId) {
@@ -55,9 +54,6 @@ public class CourseOwnershipService {
         if (!course.getInstructorId().equals(userId)) {
             throw new ForbiddenException("Bu kurs size ait değil.");
         }
-        if (!course.isEditable()) {
-            throw new ConflictException(
-                    "Kurs bu durumdayken düzenlenemez; yalnız taslak ve yayından kaldırılmış kurslar düzenlenebilir.");
-        }
+        course.assertEditable();
     }
 }
