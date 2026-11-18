@@ -8,6 +8,7 @@ import java.time.Instant;
 import org.junit.jupiter.api.Test;
 
 import com.miniudemy.content.domain.LessonOpened;
+import com.miniudemy.course.domain.CourseLessonsChanged;
 import com.miniudemy.progress.service.ProgressService;
 
 /** Dinleyici olayı ilerleme servisine iletir (#119). Commit'ten sonra teslim kuralı ADR-009 testlerinde. */
@@ -23,5 +24,12 @@ class ProgressListenerTest {
         listener.onLessonOpened(new LessonOpened(42L, 7L, 12L, opened));
 
         verify(progressService).recordLessonOpened(42L, 7L, 12L, opened);
+    }
+
+    @Test
+    void onCourseLessonsChanged_recalculatesEveryEnrollmentOfTheCourse() {
+        listener.onCourseLessonsChanged(new CourseLessonsChanged(7L));
+
+        verify(progressService).recalculateCourse(7L);
     }
 }

@@ -11,6 +11,7 @@ import com.miniudemy.common.exception.BadRequestException;
 import com.miniudemy.common.exception.ForbiddenException;
 import com.miniudemy.common.exception.NotFoundException;
 import com.miniudemy.course.domain.Course;
+import com.miniudemy.course.domain.CourseLessonsChanged;
 import com.miniudemy.course.domain.Lesson;
 import com.miniudemy.course.domain.LessonPublished;
 import com.miniudemy.course.domain.Section;
@@ -63,6 +64,7 @@ public class LessonService {
         if (course.isPublished()) {
             events.publishEvent(new LessonPublished(saved.getId(), course.getId(), Instant.now()));
         }
+        events.publishEvent(new CourseLessonsChanged(course.getId()));
         return courseMapper.toLessonResponse(saved);
     }
 
@@ -76,8 +78,10 @@ public class LessonService {
     @Transactional
     public void delete(Long instructorId, Long lessonId) {
         Lesson lesson = editableLesson(instructorId, lessonId);
+        Long courseId = lesson.getSection().getCourse().getId();
         lesson.getSection().removeLesson(lesson);
         lessonRepository.flush();
+        events.publishEvent(new CourseLessonsChanged(courseId));
     }
 
     /** Dersi aynı bölümde verilen sıraya taşır; bölümün yeni sıradaki derslerini döner. */

@@ -2,12 +2,14 @@ package com.miniudemy.course.service;
 
 import java.util.List;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.miniudemy.common.exception.BadRequestException;
 import com.miniudemy.common.exception.NotFoundException;
 import com.miniudemy.course.domain.Course;
+import com.miniudemy.course.domain.CourseLessonsChanged;
 import com.miniudemy.course.domain.Section;
 import com.miniudemy.course.dto.SectionRequest;
 import com.miniudemy.course.dto.SectionResponse;
@@ -36,13 +38,15 @@ public class SectionService {
     private final CourseRepository courseRepository;
     private final CourseOwnershipService ownership;
     private final CourseMapper mapper;
+    private final ApplicationEventPublisher events;
 
     public SectionService(SectionRepository sectionRepository, CourseRepository courseRepository,
-            CourseOwnershipService ownership, CourseMapper mapper) {
+            CourseOwnershipService ownership, CourseMapper mapper, ApplicationEventPublisher events) {
         this.sectionRepository = sectionRepository;
         this.courseRepository = courseRepository;
         this.ownership = ownership;
         this.mapper = mapper;
+        this.events = events;
     }
 
     /** Kursun bölümleri, dersleriyle birlikte `position` sırasıyla (tek sorgu). */
@@ -81,7 +85,9 @@ public class SectionService {
     @Transactional
     public void deleteSection(Long sectionId, Long userId) {
         Section section = requireEditableSection(sectionId, userId);
-        section.getCourse().removeSection(section);
+        Course course = section.getCourse();
+        course.removeSection(section);
+        events.publishEvent(new CourseLessonsChanged(course.getId()));
     }
 
     /** Bölümü verilen sıraya taşır; kursun yeni sıradaki bölümlerini döner. Sıra aralık dışıysa 400. */
