@@ -235,4 +235,51 @@ class QuizSubmitServiceTest {
                 new SubmitAttemptRequest(List.of(answer(21L, 84L, 84L)))))
                 .satisfies(ex -> assertStatus(ex, HttpStatus.BAD_REQUEST));
     }
+
+    // --- Strateji seçimi (#56): servis sınavın puanlama tipine göre stratejiyi seçer ---
+
+    /** Tek soru (10 puan): 101 ve 102 doğru, 103 yanlış. Sınav verilen puanlama tipinde. */
+    private void multiAnswerQuiz(ScoringType type) {
+        Quiz quiz = new Quiz(SECTION, "Çok doğrulu sınav", type, 50, true);
+        ReflectionTestUtils.setField(quiz, "id", QUIZ);
+        quiz.replaceQuestions(List.of(25L));
+        given(quizRepository.findById(QUIZ)).willReturn(Optional.of(quiz));
+        Question q = new Question(COURSE, "Soru 25", 10);
+        ReflectionTestUtils.setField(q, "id", 25L);
+        Option a = new Option("A", true);
+        ReflectionTestUtils.setField(a, "id", 101L);
+        Option b = new Option("B", true);
+        ReflectionTestUtils.setField(b, "id", 102L);
+        Option c = new Option("C", false);
+        ReflectionTestUtils.setField(c, "id", 103L);
+        q.replaceOptions(List.of(a, b, c));
+        given(questionRepository.findAllWithOptionsByIdIn(List.of(25L))).willReturn(List.of(q));
+    }
+
+    @Test
+    void submit_partialScoringQuiz_givesProportionalPointsForHalfOfTheCorrectOptions() {
+        multiAnswerQuiz(ScoringType.MULTI_PARTIAL);
+
+        AttemptResultResponse result = service.submit(QUIZ, STUDENT,
+                new SubmitAttemptRequest(List.of(answer(25L, 101L))));
+
+        assertThat(result.score()).isEqualByComparingTo("5");
+        assertThat(result.maxScore()).isEqualByComparingTo("10");
+        assertThat(result.passed()).isTrue();
+    }
+
+    @Test
+    void submit_allOrNothingQuiz_givesZeroForTheSameHalfAnswer_butFullForAllCorrect() {
+        multiAnswerQuiz(ScoringType.MULTI_ALL_OR_NOTHING);
+
+        AttemptResultResponse half = service.submit(QUIZ, STUDENT,
+                new SubmitAttemptRequest(List.of(answer(25L, 101L))));
+        AttemptResultResponse full = service.submit(QUIZ, STUDENT,
+                new SubmitAttemptRequest(List.of(answer(25L, 101L, 102L))));
+
+        assertThat(half.score()).isEqualByComparingTo("0");
+        assertThat(half.passed()).isFalse();
+        assertThat(full.score()).isEqualByComparingTo("10");
+        assertThat(full.passed()).isTrue();
+    }
 }
