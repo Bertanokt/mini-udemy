@@ -53,7 +53,7 @@ public class NotificationListener {
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    /* KIRMIZI K2: REQUIRES_NEW kaldırıldı */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onQuizCompleted(QuizCompleted event) {
         notifications.notifyQuizCompleted(event.courseId(), event.quizId(), event.studentId(), event.passed());
     }
