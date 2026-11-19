@@ -57,7 +57,7 @@ Bağımlılık yönü tek yönlüdür: **controller → service → repository**
 
 Kimlik doğrulama ve rol kontrolü `common/security/SecurityConfig`'te kurulu (#10, [ADR-002](adr/0002-jwt-stateless-kimlik-dogrulama.md)). Yeni bir uç yazarken üç soru sorulur: kim çağırabilir, hangi rol, kimin kaynağı?
 
-1. **Kimlik:** sözleşmede `security: []` olmayan her uç token ister. Token yoksa, geçersizse ya da süresi dolmuşsa filtre 401 döner; uçta ayrıca bir şey yazılmaz. Yeni bir **herkese açık** uç, sözleşmede `security: []` ile ve `SecurityConfig.PUBLIC_GET` / `PUBLIC_POST` listesinde aynı PR'da eklenir.
+1. **Kimlik:** sözleşmede `security: []` olmayan her uç token ister. Token yoksa, geçersizse ya da süresi dolmuşsa filtre 401 döner; uçta ayrıca bir şey yazılmaz. Yeni bir **herkese açık** uç, sözleşmede `security: []` ile ve `SecurityConfig.PUBLIC_GET` / `PUBLIC_POST` listesinde aynı PR'da eklenir. **Tek istisna** ders içeriği: `<video>` ve bağlantılar `Authorization` başlığı gönderemediği için `GET /api/lessons/{id}/content?token=…` filtreden kimliksiz geçer; 5 dakikalık, derse özel içerik token'ını (`POST /api/lessons/{id}/content-token`) ve yetkiyi `ContentDeliveryService` her istekte doğrular (#45, [ADR-012](adr/0012-icerik-token.md)).
 2. **Rol:**
    - `/api/admin/**` yalnız ADMIN'e, `/api/instructor/**` yalnız INSTRUCTOR'a açıktır. Bu adres kuralı `SecurityConfig`'te; bu öneklerin altındaki uçlara ayrıca anotasyon yazılmaz.
    - Diğer uçlarda rol kuralı **controller metodunda** `@PreAuthorize` ile yazılır (`@EnableMethodSecurity` açık).

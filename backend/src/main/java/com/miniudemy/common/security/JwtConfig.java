@@ -6,6 +6,7 @@ import java.time.Clock;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
+import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -18,8 +19,6 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtTimestampValidator;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
-
-import com.nimbusds.jose.jwk.source.ImmutableSecret;
 
 /**
  * JWT ve parola altyapısının bean'leri: HS256 encoder/decoder (Nimbus, Spring Security'nin
@@ -55,6 +54,12 @@ public class JwtConfig {
     @Bean
     JwtService jwtService(JwtEncoder encoder, JwtDecoder decoder, JwtProperties properties, Clock clock) {
         return new JwtService(encoder, decoder, properties, clock);
+    }
+
+    /** Ders içeriği için kısa ömürlü, derse özel token (#45, ADR-012); ana anahtardan türetilmiş ayrı anahtarla. */
+    @Bean
+    ContentTokens contentTokens(JwtProperties properties, Clock clock) {
+        return new ContentTokens(properties, clock);
     }
 
     @Bean

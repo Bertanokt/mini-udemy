@@ -1,19 +1,21 @@
 package com.miniudemy.content.controller;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.time.Instant;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -33,17 +35,20 @@ import com.miniudemy.auth.domain.Role;
 import com.miniudemy.auth.domain.User;
 import com.miniudemy.auth.repository.UserRepository;
 import com.miniudemy.auth.service.AccountLookupService;
+import com.miniudemy.common.exception.ConflictException;
 import com.miniudemy.common.exception.ForbiddenException;
+import com.miniudemy.common.exception.PayloadTooLargeException;
+import com.miniudemy.common.exception.UnauthorizedException;
+import com.miniudemy.common.exception.UnsupportedMediaTypeException;
+import com.miniudemy.common.security.IssuedContentToken;
 import com.miniudemy.common.security.JwtConfig;
 import com.miniudemy.common.security.JwtService;
 import com.miniudemy.common.security.SecurityConfig;
+import com.miniudemy.common.security.SecurityMessages;
 import com.miniudemy.content.domain.DeliveryMode;
 import com.miniudemy.content.dto.ContentDownload;
 import com.miniudemy.content.service.ContentDeliveryService;
 import com.miniudemy.content.service.ContentUploadService;
-import com.miniudemy.common.exception.ConflictException;
-import com.miniudemy.common.exception.PayloadTooLargeException;
-import com.miniudemy.common.exception.UnsupportedMediaTypeException;
 import com.miniudemy.course.domain.LessonContentType;
 import com.miniudemy.course.dto.LessonResponse;
 
@@ -268,5 +273,54 @@ class ContentControllerTest {
 
     private String student() {
         return "Bearer " + jwtService.generateToken(42L, "STUDENT");
+    }
+
+    // --- içerik token'ı (#45, ADR-012) ---
+
+    @Test
+    void contentToken_asLoggedInUser_returnsTokenAndExpiry() throws Exception {
+        given(delivery.issueContentToken(11L, 42L, false))
+                .willReturn(new IssuedContentToken("t.o.k", Instant.parse("2026-11-19T10:05:00Z")));
+
+        mockMvc.perform(post("/api/lessons/11/content-token").header(HttpHeaders.AUTHORIZATION, student()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").value("t.o.k"))
+                .andExpect(jsonPath("$.expiresAt").value("2026-11-19T10:05:00Z"));
+    }
+
+    @Test
+    void contentToken_withoutLogin_returns401() throws Exception {
+        mockMvc.perform(post("/api/lessons/11/content-token")).andExpect(status().isUnauthorized());
+        verify(delivery, never()).issueContentToken(anyLong(), anyLong(), anyBoolean());
+    }
+
+    @Test
+    void contentWithTokenParameter_withoutAuthorizationHeader_isServed_andRangeStillWorks() throws Exception {
+        given(delivery.openLessonContentWithToken(11L, "t.o.k")).willReturn(new ContentDownload(
+                new ByteArrayResource(BYTES), "video/mp4", "Kurulum.mp4", BYTES.length, DeliveryMode.INLINE, true));
+
+        mockMvc.perform(get("/api/lessons/11/content?token=t.o.k"))
+                .andExpect(status().isOk())
+                .andExpect(content().bytes(BYTES));
+        mockMvc.perform(get("/api/lessons/11/content?token=t.o.k").header(HttpHeaders.RANGE, "bytes=2-5"))
+                .andExpect(status().isPartialContent())
+                .andExpect(content().bytes("2345".getBytes()));
+    }
+
+    @Test
+    void contentWithInvalidToken_returns401() throws Exception {
+        given(delivery.openLessonContentWithToken(11L, "kötü"))
+                .willThrow(new UnauthorizedException(SecurityMessages.UNAUTHORIZED));
+
+        mockMvc.perform(get("/api/lessons/11/content").param("token", "kötü"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value(SecurityMessages.UNAUTHORIZED));
+    }
+
+    @Test
+    void tokenParameterOpensOnlyTheContentEndpoint_notOtherEndpoints() throws Exception {
+        mockMvc.perform(get("/api/me/enrollments?token=t.o.k")).andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/lessons/11/content?token=t.o.k")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/lessons/11/content-token?token=t.o.k")).andExpect(status().isUnauthorized());
     }
 }

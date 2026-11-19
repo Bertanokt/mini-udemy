@@ -932,11 +932,23 @@ paths:
         Video için HTTP `Range` desteklenir (206). `Content-Disposition`: video ve PDF için
         `inline`, doküman (docx, pptx) için `attachment`. Bu istek kursiyerin son izlenen
         dersini günceller.
+
+        **Kimlik iki yoldan biriyle** (ADR-012): `Authorization: Bearer` (API istemcisi) ya da
+        `?token=` (tarayıcının `<video>`/`<iframe>` etiketleri başlık gönderemez). Token
+        `POST /api/lessons/{id}/content-token` ile alınır; 5 dakika ve yalnız bu ders için geçerlidir.
+        Yetki her istekte yeniden sorulur. Geçersiz ya da süresi dolmuş token 401.
       operationId: getLessonContent
       x-roles: [STUDENT, INSTRUCTOR, ADMIN]
       security:
         - bearerAuth: []
+        - {}
       parameters:
+        - name: token
+          in: query
+          required: false
+          description: "İçerik token'ı (Bearer yoksa zorunlu). Bkz. `createLessonContentToken`."
+          schema:
+            type: string
         - name: Range
           in: header
           required: false
@@ -1017,6 +1029,34 @@ paths:
           $ref: "#/components/responses/PayloadTooLarge"
         "415":
           $ref: "#/components/responses/UnsupportedMediaType"
+  /api/lessons/{id}/content-token:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    post:
+      tags: [Content]
+      summary: Ders içeriği için kısa ömürlü token al
+      description: >
+        **Rol:** kursa kayıtlı STUDENT, kursun eğitmeni ya da ADMIN; diğerleri 403, girişsiz 401.
+        İçeriği açmakla aynı kural; içerik yüklenmemişse 404. Token 5 dakika ve yalnız bu ders için
+        geçerlidir; `GET /api/lessons/{id}/content?token=…` ile kullanılır (ADR-012). Süresi dolunca
+        yenisi alınır. Token almak "ders açıldı" sayılmaz.
+      operationId: createLessonContentToken
+      x-roles: [STUDENT, INSTRUCTOR, ADMIN]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Token ve son geçerlilik anı.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContentTokenResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
   /api/courses/{id}/enroll:
     parameters:
       - $ref: "#/components/parameters/Id"
@@ -2892,6 +2932,17 @@ components:
                 type: number
                 minimum: 0
                 maximum: 100
+    ContentTokenResponse:
+      type: object
+      required: [token, expiresAt]
+      properties:
+        token:
+          type: string
+          description: Derse özel içerik token'ı; `GET /api/lessons/{id}/content?token=` ile kullanılır.
+        expiresAt:
+          type: string
+          format: date-time
+          description: Son geçerlilik anı (verildikten 5 dakika sonra).
     ResumeResponse:
       type: object
       required: [courseId, progressPercent]
