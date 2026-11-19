@@ -109,6 +109,12 @@ public class EnrollmentService {
         return repository.findIdsByCourseId(courseId);
     }
 
+    /** Kursa kayıtlı kursiyerlerin id'leri (yeni ders bildirimi alıcıları, #124). Kayıt yoksa boş liste. */
+    @Transactional(readOnly = true)
+    public List<Long> findStudentIdsByCourse(Long courseId) {
+        return repository.findStudentIdsByCourseId(courseId);
+    }
+
     /** Yeni kayıt: henüz ilerleme yok. */
     private EnrollmentResponse toResponse(Enrollment enrollment, CourseSummaryResponse course) {
         return toResponse(enrollment, course, EnrollmentProgressSnapshot.NONE);

@@ -54,10 +54,13 @@ public class CourseCatalogService {
     private final EnrollmentCounts enrollmentCounts;
     private final CourseRatings courseRatings;
     private final CourseMapper mapper;
+    private final CourseVisibility visibility;
 
     public CourseCatalogService(CourseRepository courseRepository, SectionRepository sectionRepository,
             LessonRepository lessonRepository, UserDirectoryService userDirectory,
-            EnrollmentCounts enrollmentCounts, CourseRatings courseRatings, CourseMapper mapper) {
+            EnrollmentCounts enrollmentCounts, CourseRatings courseRatings, CourseMapper mapper,
+            CourseVisibility visibility) {
+        this.visibility = visibility;
         this.courseRepository = courseRepository;
         this.sectionRepository = sectionRepository;
         this.lessonRepository = lessonRepository;
@@ -106,14 +109,14 @@ public class CourseCatalogService {
                 result.getTotalPages());
     }
 
-    /** Kurs detayı. Yayımlanmamış kurs yalnız sahibine ve yöneticiye görünür; diğerlerine varlığı açığa çıkmadan 404. */
+    /**
+     * Kurs detayı. Yayımlanmamış kurs yalnız sahibine, yöneticiye ve kayıtlı kursiyere görünür; diğerlerine varlığı
+     * açığa çıkmadan 404 ({@link CourseVisibility}).
+     */
     public CourseDetailResponse getDetail(Long courseId, Long viewerId, boolean viewerIsAdmin) {
         Course course = courseRepository.findWithCategoryById(courseId)
                 .orElseThrow(() -> new NotFoundException(COURSE_NOT_FOUND));
-        boolean owner = viewerId != null && viewerId.equals(course.getInstructorId());
-        if (!course.isPublished() && !owner && !viewerIsAdmin) {
-            throw new NotFoundException(COURSE_NOT_FOUND);
-        }
+        visibility.assertVisible(course, viewerId, viewerIsAdmin);
 
         List<Section> sections = sectionRepository.findAllWithLessonsByCourseId(courseId);
         int lessonCount = sections.stream().mapToInt(s -> s.getLessons().size()).sum();

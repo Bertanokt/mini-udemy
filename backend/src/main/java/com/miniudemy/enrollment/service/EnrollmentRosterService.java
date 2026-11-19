@@ -48,4 +48,9 @@ public class EnrollmentRosterService implements CourseRoster {
         }).toList();
         return new RosterPage(entries, result.getTotalElements(), result.getTotalPages());
     }
+
+    @Override
+    public boolean isEnrolled(Long courseId, Long studentId) {
+        return repository.existsByStudentIdAndCourseId(studentId, courseId);
+    }
 }

@@ -153,6 +153,57 @@ class AdminCourseControllerTest {
                 .andExpect(status().isNotFound());
     }
 
+    // --- yayından kaldırma (#123) ---
+
+    @Test
+    void unpublish_asAdmin_withReason_returns200_andPassesTheReason() throws Exception {
+        given(lifecycle.unpublish(5L, "Telif şikâyeti alındı.")).willReturn(new CourseResponse(5L, "Sıfırdan Java",
+                "Java'ya giriş kursu.", new CategoryResponse(1L, "Yazılım"), CourseLevel.BEGINNER,
+                CourseStatus.UNPUBLISHED, new UserSummary(7L, "Mehmet Kaya"), null, List.of(), null,
+                "Telif şikâyeti alındı.", Instant.parse("2026-11-18T10:00:00Z"), Instant.parse("2026-11-18T11:00:00Z")));
+
+        mockMvc.perform(unpublish("{\"reason\":\"Telif şikâyeti alındı.\"}").header(HttpHeaders.AUTHORIZATION, admin()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("UNPUBLISHED"))
+                .andExpect(jsonPath("$.unpublishReason").value("Telif şikâyeti alındı."));
+    }
+
+    @Test
+    void unpublish_withMissingBlankOrShortReason_returns400WithFieldError_andUnpublishesNothing() throws Exception {
+        for (String body : List.of("{}", "{\"reason\":\"   \"}", "{\"reason\":\"Kısa\"}")) {
+            mockMvc.perform(unpublish(body).header(HttpHeaders.AUTHORIZATION, admin()))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.errors.reason").exists());
+        }
+        verify(lifecycle, never()).unpublish(any(), any());
+    }
+
+    @Test
+    void unpublish_notPublished_returns409_andMissingCourse_returns404() throws Exception {
+        given(lifecycle.unpublish(5L, "Telif şikâyeti alındı.")).willThrow(new CourseStateException(
+                "Kurs bu durumdayken yayından kaldırılamaz; yalnız yayımlanmış kurslar yayından kaldırılabilir."));
+        given(lifecycle.unpublish(6L, "Telif şikâyeti alındı.")).willThrow(new NotFoundException("Kurs bulunamadı."));
+
+        mockMvc.perform(unpublish("{\"reason\":\"Telif şikâyeti alındı.\"}").header(HttpHeaders.AUTHORIZATION, admin()))
+                .andExpect(status().isConflict());
+        mockMvc.perform(post("/api/admin/courses/6/unpublish").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"reason\":\"Telif şikâyeti alındı.\"}").header(HttpHeaders.AUTHORIZATION, admin()))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void unpublish_asInstructorOrStudent_returns403() throws Exception {
+        for (String token : List.of(bearer(7L, "INSTRUCTOR"), bearer(42L, "STUDENT"))) {
+            mockMvc.perform(unpublish("{\"reason\":\"Telif şikâyeti alındı.\"}").header(HttpHeaders.AUTHORIZATION, token))
+                    .andExpect(status().isForbidden());
+        }
+        verifyNoInteractions(lifecycle);
+    }
+
+    private static MockHttpServletRequestBuilder unpublish(String body) {
+        return post("/api/admin/courses/5/unpublish").contentType(MediaType.APPLICATION_JSON).content(body);
+    }
+
     @Test
     void everyEndpoint_asInstructorOrStudent_returns403_andWithoutToken_returns401() throws Exception {
         for (String token : List.of(bearer(7L, "INSTRUCTOR"), bearer(42L, "STUDENT"))) {

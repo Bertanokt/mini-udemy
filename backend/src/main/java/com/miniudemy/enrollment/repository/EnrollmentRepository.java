@@ -25,6 +25,9 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
     @Query("select e.id from Enrollment e where e.courseId = :courseId")
     List<Long> findIdsByCourseId(@Param("courseId") Long courseId);
 
+    @Query("select e.studentId from Enrollment e where e.courseId = :courseId order by e.studentId")
+    List<Long> findStudentIdsByCourseId(@Param("courseId") Long courseId);
+
     /** En son kaydolunan önce; aynı anda oluşanlarda id'ye göre, böylece sıra kararlıdır. */
     List<Enrollment> findAllByStudentIdOrderByEnrolledAtDescIdDesc(Long studentId);
 
@@ -41,4 +44,9 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
 
         long getTotal();
     }
+
+    /** En çok kayıt alan kurslar, çoktan aza; eşitlikte küçük kurs id'si önce (platform raporu, #145). */
+    @Query("select e.courseId as courseId, count(e) as total from Enrollment e "
+            + "group by e.courseId order by count(e) desc, e.courseId")
+    List<CourseCount> findTopCourses(Pageable pageable);
 }
