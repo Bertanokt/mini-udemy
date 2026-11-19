@@ -14,7 +14,7 @@ Kapsamın tek kaynağı hocanın proje tanım dokümanıdır (modüller A–L, s
 | Haftalık ilerleme raporları | `progress/hafta-N.md` | her hafta |
 | Sistem mimarisi (C4) | bağlam: [`diagrams/c4-context.puml`](diagrams/c4-context.puml) ([SVG](diagrams/c4-context.svg), [PNG](diagrams/c4-context.png)); container: [`diagrams/c4-container.puml`](diagrams/c4-container.puml) ([SVG](diagrams/c4-container.svg), [PNG](diagrams/c4-container.png)) | Hafta 2 |
 | UI taslakları | `diagrams/wireframes/` | Hafta 2 |
-| Sekans: kursa kayıt | `diagrams/seq-enroll.*` | Hafta 2 |
+| Sekans: kursa kayıt | [`diagrams/seq-enroll.puml`](diagrams/seq-enroll.puml) ([SVG](diagrams/seq-enroll.svg), [PNG](diagrams/seq-enroll.png)) | Hafta 2 |
 | Sınıf diyagramı | `diagrams/class.*` | Hafta 3 |
 | Bileşen diyagramı | `diagrams/component.*` | Hafta 3 |
 | Test planı | [`test-plan.md`](test-plan.md) | Hafta 3 |

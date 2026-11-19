@@ -1,0 +1,205 @@
+@startuml seq-enroll
+' UML sekans diyagramı: kursa kayıt (#39; FR-17, FR-18, Senaryo 2).
+' Sınıf ve metot adları koddakiyle birebir; diyagram–kod tutarlılık tablosu PR #39'da.
+' Render (sekans diyagramı Graphviz gerektirmez; PNG ve SVG ayrı komutlarla):
+'   java -Duser.language=en -Duser.country=US -jar plantuml.jar -tpng docs/diagrams/seq-enroll.puml
+'   java -Duser.language=en -Duser.country=US -jar plantuml.jar -tsvg docs/diagrams/seq-enroll.puml
+
+skinparam shadowing false
+skinparam defaultFontSize 12
+skinparam sequenceMessageAlign left
+skinparam responseMessageBelowArrow true
+skinparam maxMessageSize 260
+skinparam sequence {
+  LifeLineBorderColor #888888
+  ParticipantBackgroundColor #F7F7F7
+  ParticipantBorderColor #444444
+  GroupBorderColor #666666
+  GroupBackgroundColor #F2F2F2
+}
+skinparam note {
+  BackgroundColor #FFF8E1
+  BorderColor #8D6E63
+}
+
+title Mini Udemy - Sekans: kursa kayıt
+
+actor "Kursiyer" as student
+
+box "frontend" #F5F5F5
+  participant "CourseDetailView" as view
+  participant "enrollments.ts\nenrollCourse\napiFetch" as api
+end box
+box "common.security (Spring Security filtre zinciri)" #FFF3E0
+  participant "BearerTokenAuthenticationFilter\nJwtDecoder" as filter
+  participant "JwtAccountAuthenticationConverter" as conv
+  participant "AccountLookup\n(AccountLookupService)" as accounts
+  participant "JsonSecurityErrorHandler" as seh
+end box
+box "enrollment" #EEF5FB
+  participant "EnrollmentController" as ec
+  participant "EnrollmentService" as es
+  participant "EnrollmentRepository" as er
+  participant "EnrollmentMapper" as em
+end box
+box "course" #EEF8EE
+  participant "CourseLookupService" as cls
+  participant "CourseRepository" as cr
+  participant "Course\n(CourseState)" as course
+end box
+participant "GlobalExceptionHandler" as geh
+participant "ApplicationEventPublisher\n(Spring olay yayını)" as bus
+box "notification" #FBF1EE
+  participant "NotificationListener" as nl
+  participant "NotificationService" as ns
+end box
+database "PostgreSQL" as db
+
+== 1. İstek ==
+
+student -> view : "Kursa kaydol" düğmesi
+activate view
+view -> api : onEnroll() → enrollCourse(courseId)
+activate api
+api -> filter : POST /api/courses/{id}/enroll\nAuthorization: Bearer <token>
+activate filter
+
+== 2. JWT doğrulama (filtre, controller'dan önce) ==
+
+alt Token yok
+  filter -> seh : commence(...)\n(anyRequest().authenticated())
+  seh --> api : 401 Unauthorized
+else İmza geçersiz ya da süresi dolmuş
+  filter -> filter : JwtDecoder.decode(token) hata verir
+  filter -> seh : commence(...)
+  seh --> api : 401 Unauthorized
+else Token geçerli
+  filter -> conv : convert(jwt)
+  activate conv
+  conv -> accounts : findById(userId)
+  accounts -> db : userRepository.findById(userId)
+  accounts --> conv : Optional<AccountSnapshot>
+  note right of conv : Rol token'daki claim'den değil,\nveritabanındaki güncel kullanıcıdan gelir (O3).
+  alt Kullanıcı yok (silinmiş)
+    conv --> filter : InvalidBearerTokenException
+    filter -> seh : commence(...)
+    seh --> api : 401 Unauthorized
+  else Hesap pasif
+    conv --> filter : DisabledException
+    filter -> seh : commence(...)
+    seh --> api : 403 "Hesabınız devre dışı bırakılmış."
+  else Aktif
+    conv --> filter : JwtAuthenticationToken(jwt, ROLE_<rol>)
+    deactivate conv
+  end
+end
+
+== 3. Rol denetimi ve kayıt ==
+
+filter -> ec : enrollCourse(id, authentication)
+deactivate filter
+activate ec
+alt @PreAuthorize("hasRole('STUDENT')") sağlanmadı (eğitmen, yönetici)
+  ec -> geh : AccessDeniedException
+  geh --> api : 403 "Bu işlem için yetkiniz yok."
+else Rol STUDENT
+  ec -> es : enroll(id, CurrentUser.id(authentication))
+  activate es
+  group @Transactional — işlem 1
+    es -> cls : assertPublished(courseId)
+    activate cls
+    cls -> cr : findById(courseId)
+    cr -> db : SELECT courses
+    cr --> cls : Optional<Course>
+    cls -> course : isPublished()
+    note right of course : State: state().isPublished();\nyalnız PublishedState true döner.
+    course --> cls : boolean
+    alt Kurs yok ya da yayımlanmamış
+      cls --> es : NotFoundException("Kurs bulunamadı.")
+      es --> geh : NotFoundException (rollback)
+      geh --> api : 404 "Kurs bulunamadı."
+    else Yayımlanmış
+      deactivate cls
+      es -> er : existsByStudentIdAndCourseId(studentId, courseId)
+      er -> db : SELECT enrollments
+      er --> es : boolean
+      alt Zaten kayıtlı
+        es --> geh : ConflictException("Bu kursa zaten kayıtlısınız.")
+        geh --> api : 409 "Bu kursa zaten kayıtlısınız."
+      else Kayıt yok
+        es -> er : saveAndFlush(new Enrollment(studentId, courseId))
+        er -> db : INSERT INTO enrollments
+        alt UNIQUE ihlali (eşzamanlı ikinci istek)
+          db --> er : uk_enrollments_student_course
+          er --> es : DataIntegrityViolationException
+          es --> geh : ConflictException("Bu kursa zaten kayıtlısınız.")
+          geh --> api : 409 "Bu kursa zaten kayıtlısınız."
+        else Yazıldı
+          er --> es : Enrollment
+          es -> bus : publishEvent(new EnrollmentCreated(enrollment.getId(), studentId, courseId, enrollment.getEnrolledAt()))
+          note right of bus : Olay şimdi kuyruğa alınır;\ndinleyici ancak commit'ten sonra çalışır (AFTER_COMMIT).
+          es -> cls : findSummaries(List.of(courseId))
+          cls --> es : Map<Long, CourseSummaryResponse>
+          es -> em : toResponse(enrollment, course, 0.0, null, null)\n(EnrollmentProgressSnapshot.NONE)
+          em --> es : EnrollmentResponse
+        end
+      end
+    end
+  end
+  note right of es : İşlem 1 commit; EnrollmentCreated ancak şimdi teslim edilir.\nHata dallarında rollback olur, olay hiç teslim edilmez.
+
+== 4. Eğitmene bildirim (Observer; AFTER_COMMIT, aynı thread, senkron) ==
+
+  bus -->> nl : onEnrollmentCreated(event)
+  activate nl
+  group @Transactional(propagation = REQUIRES_NEW) — işlem 2
+    nl -> ns : notifyEnrollmentCreated(courseId, studentId)
+    activate ns
+    ns -> ns : courses.findSummaries(Set.of(courseId))
+    alt Kurs bulundu
+      ns -> ns : users.findSummaries(Set.of(studentId))\n(ad yoksa UNKNOWN_STUDENT)
+      ns -> ns : NotificationMessages.enrollmentCreated(courseId, course.title(), studentName)
+      ns -> db : notifications.saveAll(...)\n(alıcı: kursun eğitmeni, tek bildirim)
+    else Kurs bulunamadı
+      ns -> ns : log.warn(...); bildirim yazılmaz
+    end
+    deactivate ns
+  end
+  note right of nl : Bildirim yazılamazsa kayıt geri alınmaz.
+  deactivate nl
+
+== 5. Yanıt ==
+
+  es --> ec : EnrollmentResponse
+  deactivate es
+  ec --> api : 201 EnrollmentResponse
+  deactivate ec
+end
+
+== 6. Frontend'in yanıtı işlemesi ==
+
+alt 201
+  api --> view : EnrollmentResponse
+  view -> view : setEnrolledNow(id)
+else 401 ve istek token'la gitti
+  api -> api : unauthorizedHandler()\n(token silinir, oturum kapanır)
+  api -> filter : aynı istek bir kez token'sız
+  note right of api : Kayıt ucu korumalı olduğu için tekrar da 401 döner;\nApiError(401) çağırana iletilir.
+  api --> view : ApiError(401)
+  view -> view : setEnrollError(e.body.message)
+else 409
+  api --> view : ApiError(409)
+  view -> view : setEnrolledNow(id)
+  note right of view : Zaten kayıtlı: başarılı sayılır.
+else 404
+  api --> view : ApiError(404)
+  view -> view : setEnrollError("Bu kurs artık kayıt için uygun değil.")
+else 403 ve diğerleri
+  api --> view : ApiError
+  view -> view : setEnrollError(e.body.message)
+end
+deactivate api
+view --> student : kayıt durumu
+deactivate view
+
+@enduml
