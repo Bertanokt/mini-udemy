@@ -50,7 +50,7 @@ public class ContentDeliveryService {
     @Transactional(readOnly = true)
     public ContentDownload openLessonContent(Long lessonId, Long viewerId, boolean viewerIsAdmin) {
         LessonContentRef ref = lessons.contentRefOf(lessonId);
-        boolean staff = ref.instructorId().equals(viewerId); // KIRMIZI-T4
+        boolean staff = viewerIsAdmin || ref.instructorId().equals(viewerId);
         boolean enrolledStudent = !staff && enrollments.isEnrolled(viewerId, ref.courseId());
         if (!staff && !enrolledStudent) {
             throw new ForbiddenException("Bu ders içeriğine erişim yetkiniz yok.");
