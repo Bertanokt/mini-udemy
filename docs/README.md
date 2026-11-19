@@ -19,7 +19,7 @@ Kapsamın tek kaynağı hocanın proje tanım dokümanıdır (modüller A–L, s
 | Bileşen diyagramı | `diagrams/component.*` | Hafta 3 |
 | Test planı | [`test-plan.md`](test-plan.md) | Hafta 3 |
 | Sekans: sınav çözme | `diagrams/seq-quiz.*` | Hafta 4 |
-| Sekans: sertifika oluşturma ve bildirim | `diagrams/seq-certificate.*` | Hafta 4 |
+| Sekans: sertifika oluşturma ve bildirim | [`diagrams/seq-certificate.puml`](diagrams/seq-certificate.puml) ([SVG](diagrams/seq-certificate.svg), [PNG](diagrams/seq-certificate.png)) | Hafta 4 |
 | Dağıtım diyagramı | [`diagrams/deployment.puml`](diagrams/deployment.puml) ([SVG](diagrams/deployment.svg), [PNG](diagrams/deployment.png)) | Hafta 4 |
 | SOLID ve OOP (koddan örneklerle) | `solid.md` | Hafta 4 |
 | İzlenebilirlik matrisi, test raporu, kütüphaneler | [`traceability.md`](traceability.md), `test-report.md`, `dependencies.md` | Hafta 5 |
