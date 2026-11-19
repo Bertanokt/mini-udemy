@@ -26,6 +26,11 @@ final class DraftState implements CourseState {
     }
 
     @Override
+    public CourseStatus approve() {
+        return CourseStatus.PUBLISHED; // KIRMIZI-A5
+    }
+
+    @Override
     public CourseStatus submit() {
         return CourseStatus.IN_REVIEW;
     }
