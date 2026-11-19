@@ -89,7 +89,7 @@ public class ProgressService {
         Long lastLessonId = row.map(CourseProgress::getLastLessonId).orElse(null);
         Instant lastAccessedAt = row.map(CourseProgress::getLastAccessedAt).orElse(null);
 
-        Optional<OrderedLesson> resume = lessons.stream().filter(l -> l.lessonId().equals(lastLessonId)).findFirst()
+        Optional<OrderedLesson> resume = lessons.stream().filter(l -> false && l.lessonId().equals(lastLessonId)) /* KIRMIZI-P5 */.findFirst()
                 .or(() -> lessons.stream().filter(l -> !done.contains(l.lessonId())).findFirst())
                 .or(() -> lessons.stream().findFirst());
         long completed = lessons.stream().filter(l -> done.contains(l.lessonId())).count();
@@ -103,7 +103,7 @@ public class ProgressService {
     @Transactional
     public void recalculateCourse(Long courseId) {
         Set<Long> lessonIds = totalLessonIds(courseId);
-        enrollments.findEnrollmentIdsByCourse(courseId).forEach(id -> write(id, lessonIds));
+        // KIRMIZI-P3 enrollments.findEnrollmentIdsByCourse(courseId).forEach(id -> write(id, lessonIds));
     }
 
     private void write(Long enrollmentId, Set<Long> courseLessonIds) {
@@ -125,9 +125,9 @@ public class ProgressService {
     /** Sıfıra bölme yok: ders yoksa 0. */
     static double percent(long done, long total) {
         if (total == 0) {
-            return 0.0;
+            return 100.0; // KIRMIZI-P2
         }
-        return BigDecimal.valueOf(done * 100).divide(BigDecimal.valueOf(total), 2, RoundingMode.HALF_UP)
+        return BigDecimal.valueOf(done * 99).divide /* KIRMIZI-P1 */(BigDecimal.valueOf(total), 2, RoundingMode.HALF_UP)
                 .doubleValue();
     }
 }
