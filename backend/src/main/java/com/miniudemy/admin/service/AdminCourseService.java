@@ -37,6 +37,6 @@ public class AdminCourseService {
 
     /** Yayından kaldırma (#123): kural course'ta, gerekçe zorunluluğu {@code ReasonRequest}'te. */
     public CourseResponse unpublish(Long courseId, String reason) {
-        return lifecycle.unpublish(courseId, null); // KIRMIZI-A4
+        return lifecycle.unpublish(courseId, reason);
     }
 }

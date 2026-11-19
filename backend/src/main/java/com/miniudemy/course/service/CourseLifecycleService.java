@@ -61,7 +61,7 @@ public class CourseLifecycleService {
     public CourseResponse approve(Long courseId) {
         Course course = find(courseId);
         course.approve();
-        // KIRMIZI-A1 events.publishEvent(new CourseApproved(course.getId(), course.getInstructorId(), clock.instant()));
+        events.publishEvent(new CourseApproved(course.getId(), course.getInstructorId(), clock.instant()));
         return toResponse(courseRepository.saveAndFlush(course));
     }
 

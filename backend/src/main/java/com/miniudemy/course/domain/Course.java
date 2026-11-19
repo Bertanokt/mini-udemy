@@ -272,7 +272,7 @@ public class Course {
             throw new IllegalArgumentException("Red gerekçesi zorunludur.");
         }
         status = target;
-        // KIRMIZI-A2 rejectionReason = reason;
+        rejectionReason = reason;
     }
 
     /**

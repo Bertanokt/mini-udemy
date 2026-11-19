@@ -20,6 +20,6 @@ final class InReviewState implements CourseState {
 
     @Override
     public CourseStatus reject() {
-        return CourseStatus.IN_REVIEW; // KIRMIZI-A3
+        return CourseStatus.DRAFT;
     }
 }
