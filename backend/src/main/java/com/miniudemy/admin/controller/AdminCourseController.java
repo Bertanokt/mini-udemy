@@ -19,7 +19,8 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 
 /**
- * Yönetici kurs uçları (docs/api/openapi.yaml › adminListCourses, adminApproveCourse, adminRejectCourse). Yalnız
+ * Yönetici kurs uçları (docs/api/openapi.yaml › adminListCourses, adminApproveCourse, adminRejectCourse,
+ * adminUnpublishCourse). Yalnız
  * ADMIN: {@code /api/admin/**} adres kuralıyla korunur (SecurityConfig).
  */
 @RestController
@@ -51,5 +52,10 @@ public class AdminCourseController {
     @PostMapping("/{id}/reject")
     public CourseResponse adminRejectCourse(@PathVariable Long id, @Valid @RequestBody ReasonRequest request) {
         return adminCourseService.reject(id, request.reason());
+    }
+
+    @PostMapping("/{id}/unpublish")
+    public CourseResponse adminUnpublishCourse(@PathVariable Long id, @Valid @RequestBody ReasonRequest request) {
+        return adminCourseService.unpublish(id, request.reason());
     }
 }

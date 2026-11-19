@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -38,7 +39,10 @@ import com.miniudemy.course.dto.CategoryResponse;
 import com.miniudemy.course.dto.CourseResponse;
 import com.miniudemy.course.service.CourseLifecycleService;
 
-/** {@code POST /api/courses/{id}/submit} gerçek güvenlik ayarıyla; iş kuralı CourseLifecycleServiceTest'te. */
+/**
+ * {@code POST /api/courses/{id}/submit} ve {@code …/unpublish} (#123) gerçek güvenlik ayarıyla; iş kuralı
+ * CourseLifecycleServiceTest'te.
+ */
 @WebMvcTest(controllers = CourseLifecycleController.class)
 @Import({SecurityConfig.class, JwtConfig.class, AccountLookupService.class})
 @ActiveProfiles("test")
@@ -100,6 +104,66 @@ class CourseLifecycleControllerTest {
                 .andExpect(jsonPath("$.status").value(409))
                 .andExpect(jsonPath("$.message").value("Kurs bu durumdayken onaya gönderilemez; "
                         + "yalnız taslak ve yayından kaldırılmış kurslar onaya gönderilebilir."));
+    }
+
+    // --- yayından kaldırma (#123) ---
+
+    @Test
+    void unpublish_asInstructor_withoutBody_passesNoReason_forTokenOwner() throws Exception {
+        given(lifecycle.unpublishOwn(5L, 7L, null)).willReturn(course(CourseStatus.UNPUBLISHED, null));
+
+        mockMvc.perform(post("/api/courses/5/unpublish").header(HttpHeaders.AUTHORIZATION, bearer(7L, "INSTRUCTOR")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("UNPUBLISHED"));
+        verify(lifecycle).unpublishOwn(5L, 7L, null);
+    }
+
+    @Test
+    void unpublish_asInstructor_withReason_passesTheReason() throws Exception {
+        given(lifecycle.unpublishOwn(5L, 7L, "Güncelleme yapıyorum."))
+                .willReturn(course(CourseStatus.UNPUBLISHED, "Güncelleme yapıyorum."));
+
+        mockMvc.perform(post("/api/courses/5/unpublish").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"reason\":\"Güncelleme yapıyorum.\"}")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(7L, "INSTRUCTOR")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.unpublishReason").value("Güncelleme yapıyorum."));
+    }
+
+    @Test
+    void unpublish_withTooLongReason_returns400WithFieldError_andCallsNothing() throws Exception {
+        mockMvc.perform(post("/api/courses/5/unpublish").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"reason\":\"" + "a".repeat(1001) + "\"}")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(7L, "INSTRUCTOR")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.reason").value("Gerekçe en fazla 1000 karakter olabilir."));
+        verify(lifecycle, never()).unpublishOwn(any(), any(), any());
+    }
+
+    @Test
+    void unpublish_asStudentOrAdmin_returns403_andWithoutToken_returns401() throws Exception {
+        mockMvc.perform(post("/api/courses/5/unpublish").header(HttpHeaders.AUTHORIZATION, bearer(42L, "STUDENT")))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(post("/api/courses/5/unpublish").header(HttpHeaders.AUTHORIZATION, bearer(1L, "ADMIN")))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(post("/api/courses/5/unpublish")).andExpect(status().isUnauthorized());
+        verify(lifecycle, never()).unpublishOwn(any(), any(), any());
+    }
+
+    @Test
+    void unpublish_notPublished_returns409WithStandardBody() throws Exception {
+        given(lifecycle.unpublishOwn(5L, 7L, null)).willThrow(new CourseStateException(
+                "Kurs bu durumdayken yayından kaldırılamaz; yalnız yayımlanmış kurslar yayından kaldırılabilir."));
+
+        mockMvc.perform(post("/api/courses/5/unpublish").header(HttpHeaders.AUTHORIZATION, bearer(7L, "INSTRUCTOR")))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value(409));
+    }
+
+    private static CourseResponse course(CourseStatus status, String unpublishReason) {
+        return new CourseResponse(5L, "Sıfırdan Java", "Java'ya giriş kursu.", new CategoryResponse(1L, "Yazılım"),
+                CourseLevel.BEGINNER, status, new UserSummary(7L, "Mehmet Kaya"), null, List.of(), null,
+                unpublishReason, Instant.parse("2026-11-18T10:00:00Z"), Instant.parse("2026-11-18T11:00:00Z"));
     }
 
     private void user(long id, String name, Role role) {
