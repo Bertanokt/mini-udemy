@@ -2,7 +2,7 @@
 
 Proje dokümanındaki beş senaryonun ([use-cases.md](use-cases.md) › 1) sunumda adım adım gösterimi. Her adımda **ne gösterilir** ve **hangi mimari nokta devreye girer** yazılıdır. Veriler seed verisinden gelir (#67, README › Demo hesapları); bütün hesapların parolası `Demo1234!`.
 
-> **Ekranı henüz olmayan adımlar** (19.11.2026): kurs oluşturma formu (#33), bölüm/ders düzenleme ve içerik yükleme ekranı, sertifika sayfası ve doğrulama (#130), bildirim listesi (#125). Bu adımlar aşağıda **API ile** (curl) verildi; ekranlar gelince ekran adımıyla değiştirilecek. Uçtan uca testleri olduğu için davranışları doğrulanmış durumda (her senaryonun sonunda test adı).
+> **Ekranı henüz olmayan adımlar** (19.11.2026): bölüm/ders düzenleme ve içerik yükleme ekranı, sertifika sayfası ve doğrulama (#130), bildirim listesi (#125). Bu adımlar aşağıda **API ile** (curl) verildi; ekranlar gelince ekran adımıyla değiştirilecek. Uçtan uca testleri olduğu için davranışları doğrulanmış durumda (her senaryonun sonunda test adı).
 
 ## Hazırlık
 
@@ -30,7 +30,7 @@ TOKEN=$(curl -s -X POST localhost:8080/api/auth/login -H 'Content-Type: applicat
 
 | # | Adım (kim / nerede) | Gösterilen | Mimari nokta |
 |---|---|---|---|
-| 1 | Eğitmen: `POST /api/courses` (API; form #33) | Kurs **Taslak** oluşur, eğitmene ait | DTO + Bean Validation (`CreateCourseRequest`), MapStruct mapper; sahiplik `CourseOwnershipService` |
+| 1 | Eğitmen: `/instructor` → "Yeni kurs": başlık, açıklama, kategori, seviye, öğrenme hedefleri, kapak (jpg/png/webp, en fazla 2 MB; seçince önizlenir) → "Kursu oluştur" | Kurs **Taslak** oluşur, eğitmene ait; düzenleme sayfası açılır. Boş alanlar alan altında hata verir; İncelemede/Yayımlandı kursun "Bilgiler" sayfası salt okunur | DTO + Bean Validation (`CreateCourseRequest`), MapStruct mapper; sahiplik `CourseOwnershipService`; düzenleme izni **State** (`assertEditable`, aksi 409); kapak türü içerikten denetlenir (415) |
 | 2 | Eğitmen: bölüm ve ders ekle, sırasını değiştir (API) | Yeni bölüm/ders sona eklenir; taşımada sıralar boşluksuz | Sıra kuralı entity'de (`Course`, `Section`); her işlemde "kurs düzenlenebilir mi?" kararını **State** (`CourseState`) verir |
 | 3 | Eğitmen: derse MP4 yükle (`POST /api/lessons/{id}/content`, API). Örnek: "Sıfırdan Python" › "İlk Program" (yayımlanmış kursta içeriği olmayan derse yükleme izinli) | Dosya türü içerikten anlaşılır; yanlış tür 415, büyük dosya 413 | **Factory Method**: ders türünün fabrikası dosya kuralını ve sunuluş şeklini verir (`LessonContentFactories`) |
 | 4 | Eğitmen: `/instructor/courses/{id}/questions` ve `/quizzes` | Soru bankası ve bölüm sınavı (eşik %70 varsayılan) | Sınav yalnız aynı kursun bankasındaki sorularla kurulur |
