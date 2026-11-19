@@ -129,7 +129,7 @@ Tam tablo `docs/plan.md` › 6'da. Gerçekleşen ve sonucu belli olan riskler:
 | R1 | Takvim kayması | **Gerçekleşti.** İlk PR 11.11'de. 17.11'de feature freeze kararı: §3'te adı geçen hiçbir iş kesilmedi, P2'ler "İnce" kapsama alındı, 3 iş kesildi (#73, #88, #185). |
 | R2 | Kritik yol bağımlılığı (auth zinciri) | Giderildi: auth zinciri 13–17.11'de kapandı. |
 | R3, R10 | Üyenin müsait olmaması, alan rolünde iş yükü | Gerçekleşti; işler devredildi. Sedat 15.11'de döndü ve toplam 13 issue kapattı. |
-| R5 | Testlerin yetişmemesi | Önlendi: `main`'de 1056 test, servis katmanında satır coverage'ı %98,4 (hedef %70). |
+| R5 | Testlerin yetişmemesi | Önlendi: `main`'de 1072 test, servis katmanında satır coverage'ı %98,4 (hedef %70). |
 | R6 | Review'sız merge, doküman–kod tutarsızlığı | İlk 4 PR onaysız birleşti; sonra her PR hızlı kontrolden geçti. İzlenebilirlik matrisi (#98) ve diyagram–kod kontrolü (#97) yapıldı. |
 | R7 | Giriş denemelerinde sınır yok | Kabul edildi (yerel demo, kapsam dışı); bölüm 8.3'te gelecek çalışma. |
 | R8 | Demo günü ortamın çalışmaması | ⟨Demo provası (#106) sonucu⟩ |
@@ -235,7 +235,8 @@ Frontend http://localhost:3000, backend http://localhost:8080. Veritabanı boşs
 1. Yönetici paneli (`/admin`) → "Kurs onayı" (`/admin/courses`): liste varsayılan olarak İncelemede bekleyen kursları gösterir (deneyin: "SQL ve Veritabanları"); durum filtresiyle diğerleri.
 2. "İncele" (`/admin/courses/{id}`): açıklama, hedefler, bölüm/ders listesi; içeriği olan derste "İçeriği aç" dersi yeni sekmede açar, içeriği olmayan ders "İçerik yok" diye işaretlidir.
 3. İncelemedeki kursu "Onayla" ya da gerekçeyle (5–1000 karakter) "Reddet"; yayındaki kursu gerekçeyle "Yayından kaldır". Liste ve durum hemen güncellenir, eğitmene bildirim yazılır.
-4. Diğer sayfalar: kullanıcılar (rol ve pasifleştirme, `/admin/users`), kategoriler (`/admin/categories`), platform raporu (`/admin/reports`).
+4. Yorum moderasyonu (`/admin/reviews`): durum ve kursa göre süzülen yorum listesi; uygunsuz yorum gerekçeyle "Gizle", sonra "Geri aç". Gizli yorum kurs sayfasında görünmez ve ortalamaya katılmaz (deneyin: Ayşe'nin Python yorumu gizlenince ortalama 4,3 → 4,0).
+5. Diğer sayfalar: kullanıcılar (rol ve pasifleştirme, `/admin/users`), kategoriler (`/admin/categories`), platform raporu (`/admin/reports`).
 
 **Ekranı henüz olmayan işlemler** (19.11.2026; API ile yapılır, adımlar [`docs/demo.md`](../docs/demo.md)'de): bölüm/ders düzenleme ve içerik yükleme (#34), dersi "tamamlandı" işaretleme düğmesi (#46), sertifika sayfası ve doğrulama (#130, #131), bildirim listesi (#136). ⟨01.12'de ekranı gelenler adımlara eklenecek, ekran görüntüleri #72'den.⟩
 
@@ -247,16 +248,16 @@ Plan: [`docs/test-plan.md`](../docs/test-plan.md) (#92). Rapor: `docs/test-repor
 
 | Seviye | Araç | Sayı (19.11) |
 |---|---|---|
-| Birim | JUnit 5, Mockito, AssertJ | 895 |
+| Birim | JUnit 5, Mockito, AssertJ | 905 |
 | Mimari | ArchUnit | 13 |
-| Entegrasyon | Spring Boot Test + Testcontainers (gerçek PostgreSQL 17, gerçek HTTP) | 148 |
-| **Toplam** | | **1056**, hepsi CI'da yeşil |
+| Entegrasyon | Spring Boot Test + Testcontainers (gerçek PostgreSQL 17, gerçek HTTP) | 154 |
+| **Toplam** | | **1072**, hepsi CI'da yeşil |
 | Manuel | Tarayıcı, kontrol listesi (bug bash #68) | ⟨sonuç⟩ |
 
 **Kapsam.**
 
 - Servis katmanında satır coverage'ı **%98,4**, dal coverage'ı **%93,9** (hedef %70); genel %96,1 (JaCoCo).
-- Otomatik testi olan gereksinim: FR 38/44, NFR 16/19. Testi olmayan 6 FR'nin hepsi henüz kodu yazılmamış işlere bağlı (#115, #125, #130, #131, #142, #144).
+- Otomatik testi olan gereksinim: FR 39/44, NFR 16/19. Testi olmayan 5 FR'nin hepsi henüz kodu yazılmamış işlere bağlı (#115, #125, #130, #131, #144).
 - Proje tanımı Bölüm 6'nın dört kritik durumu (kayıtsız erişim, mükerrer kayıt, yetkisiz düzenleme, yanlış ilerleme hesabı) uçtan uca testli (`Bolum6CriticalCasesIT`).
 - Erişim matrisi testi (`AccessMatrixIT`, 102 kontrol): OpenAPI'deki her ucun rol bilgisinin koddaki yetki kuralıyla aynı olduğu denetlenir; gövdesiz uçlarda girişsiz istek 401, yanlış rol 403 alır.
 - Beş demo senaryosunun her biri bir entegrasyon testiyle doğrulandı.
@@ -274,7 +275,7 @@ Plan: [`docs/test-plan.md`](../docs/test-plan.md) (#92). Rapor: `docs/test-repor
 | Yedekleme | Veritabanı `pg_dump` ile, yüklenen dosyalar depolama klasörünün kopyalanmasıyla. Gerçek kullanımda günlük yedek ve geri yükleme denemesi. |
 | İzleme | Spring Boot Actuator sağlık ucu (`/actuator/health`); hatalar sunucu loguna yazılır, kullanıcıya iç ayrıntı gösterilmez. |
 | Hata yönetimi | Hata GitHub'da `bug` etiketli issue olarak açılır, önceliği verilir, `fix/#<no>-...` dalında testle birlikte düzeltilir. |
-| Kalite güvencesi | Her değişiklik CI'dan (1056 test, ArchUnit kuralları, frontend lint + build) ve hızlı kontrolden geçer. |
+| Kalite güvencesi | Her değişiklik CI'dan (1072 test, ArchUnit kuralları, frontend lint + build) ve hızlı kontrolden geçer. |
 | Dokümantasyon | OpenAPI, diyagramlar ve ADR'ler kodla aynı PR'da güncellenir. |
 | Güvenlik | Üretimde JWT anahtarı yalnız ortam değişkeninden (`JWT_SECRET`) okunur; tanımlı değilse ya da 32 bayttan kısaysa uygulama açılmaz. Repodaki anahtarlar yalnız geliştirme ve test profillerinde. Bağımlılık güvenlik uyarıları (GitHub) takip edilir. |
 
@@ -286,7 +287,7 @@ Plan: [`docs/test-plan.md`](../docs/test-plan.md) (#92). Rapor: `docs/test-repor
 
 | Hedef | Durum (19.11.2026) |
 |---|---|
-| Üç rollü (kursiyer, eğitmen, yönetici) çevrim içi eğitim platformu | Backend'in 10 modülü çalışıyor; 44 FR'nin 38'inin otomatik testi var. Frontend'de 21 ekran. ⟨01.12 durumu⟩ |
+| Üç rollü (kursiyer, eğitmen, yönetici) çevrim içi eğitim platformu | Backend'in 10 modülü çalışıyor; 44 FR'nin 39'unun otomatik testi var. Frontend'de 22 ekran. ⟨01.12 durumu⟩ |
 | Beş demo senaryosu (kurs yayımlama, kayıt ve öğrenme, kaldığı yerden devam, sınav ve sertifika, eğitmen analitiği) | Beşi de uçtan uca testli. Bazı adımların ekranı yok, API ile gösteriliyor (7.4). |
 | Tasarım desenleri: State, Strategy, Factory Method, Observer, DTO + Mapper | Beşi de kodda; sınıf diyagramlarında (#51) ve SOLID dokümanında (#95) gösterildi. |
 | Modüler monolit, modül sınırları | 10 modül; sınırlar ArchUnit testleriyle CI'da denetleniyor, ihlal yok. |
@@ -309,7 +310,7 @@ Plan: [`docs/test-plan.md`](../docs/test-plan.md) (#92). Rapor: `docs/test-repor
 - Giriş ve parola yenileme isteklerine deneme sınırı (R7) ve e-posta ile bildirim.
 - Dosyaların bulut depolamaya (S3 uyumlu) taşınması; video için akış biçimi (HLS) ve farklı çözünürlükler.
 - Frontend için uçtan uca otomatik testler (ör. Playwright) ve erişilebilirlik denetimi.
-- ⟨01.12'de hâlâ açık kalan P2 işler: #115–#117 parola yenileme ve profil, #142 yorum moderasyonu, #144 şikâyet, #146 moderasyon ekranları⟩
+- ⟨01.12'de hâlâ açık kalan P2 işler: #115–#117 parola yenileme ve profil, #144 şikâyet, #146'nın şikâyet ekranı⟩
 
 ### 8.4 Tartışma
 
