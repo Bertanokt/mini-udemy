@@ -1,0 +1,36 @@
+' Sınıf diyagramlarının (class*.puml) ortak görünümü (#51). Tek başına render edilmez.
+skinparam shadowing false
+skinparam defaultFontSize 12
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 50
+skinparam class {
+  BackgroundColor #F7F7F7
+  BorderColor #444444
+  ArrowColor #555555
+  BackgroundColor<<State>> #E3F2FD
+  BackgroundColor<<ConcreteState>> #E3F2FD
+  BackgroundColor<<Context>> #E3F2FD
+  BackgroundColor<<Strategy>> #E8F5E9
+  BackgroundColor<<ConcreteStrategy>> #E8F5E9
+  BackgroundColor<<Creator>> #FFF3E0
+  BackgroundColor<<ConcreteCreator>> #FFF3E0
+  BackgroundColor<<Product>> #FFF3E0
+  BackgroundColor<<ConcreteProduct>> #FFF3E0
+  BackgroundColor<<event>> #F3E5F5
+  BackgroundColor<<listener>> #FCE4EC
+  BackgroundColor<<Mapper>> #E0F7FA
+  BackgroundColor<<DTO>> #FFFDE7
+}
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #999999
+}
+skinparam note {
+  BackgroundColor #FFF8E1
+  BorderColor #8D6E63
+}
+hide empty members
+set separator none

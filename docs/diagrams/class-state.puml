@@ -1,0 +1,143 @@
+@startuml class-state
+' UML sınıf diyagramı: State deseni — kurs yaşam döngüsü (#51; ADR-010).
+' Sınıf, alan ve metot adları koddakiyle birebir; getter'lar gösterilmez. Tutarlılık tablosu PR #51'de.
+' Render (Graphviz gerekmez, smetana yerleşimi; PNG ve SVG ayrı komutlarla):
+'   java -Duser.language=en -Duser.country=US -jar plantuml.jar -tpng docs/diagrams/class-state.puml
+'   java -Duser.language=en -Duser.country=US -jar plantuml.jar -tsvg docs/diagrams/class-state.puml
+
+!pragma layout smetana
+!include class-style.iuml
+
+title Mini Udemy - Sınıf diyagramı: State (CourseState) — [[../adr/0010-state-kurs-durumu.md ADR-010]]
+
+package "com.miniudemy.course.service" {
+  class CourseLifecycleService <<service>> {
+    + submit(courseId : Long, instructorId : Long) : CourseResponse
+    + approve(courseId : Long) : CourseResponse
+    + reject(courseId : Long, reason : String) : CourseResponse
+    + unpublishOwn(courseId : Long, instructorId : Long, reason : String) : CourseResponse
+    + unpublish(courseId : Long, reason : String) : CourseResponse
+  }
+}
+
+package "com.miniudemy.course.domain" {
+  class Course <<entity>> <<Context>> {
+    - status : CourseStatus = CourseStatus.DRAFT
+    - rejectionReason : String
+    - unpublishReason : String
+    + isPublished() : boolean
+    + assertEditable() : void
+    + assertLessonAddable() : void
+    + assertContentUploadable(lesson : Lesson) : void
+    + assertDeletable() : void
+    + submit() : void
+    + approve() : void
+    + reject(reason : String) : void
+    + unpublish(reason : String) : void
+    - state() : CourseState
+  }
+
+  enum CourseStatus {
+    DRAFT
+    IN_REVIEW
+    PUBLISHED
+    UNPUBLISHED
+    --
+    - state : CourseState
+    ~ state() : CourseState
+  }
+
+  interface CourseState <<sealed>> <<State>> {
+    ~ status() : CourseStatus
+    ~ assertEditable() : void
+    ~ assertLessonAddable() : void
+    ~ assertContentUploadable(replacing : boolean) : void
+    ~ assertDeletable() : void
+    ~ submit() : CourseStatus
+    ~ approve() : CourseStatus
+    ~ reject() : CourseStatus
+    ~ unpublish() : CourseStatus
+    ~ isPublished() : boolean
+  }
+
+  class DraftState <<final>> <<ConcreteState>> {
+    {static} ~ INSTANCE : DraftState
+    + status() : CourseStatus
+    + assertEditable() : void
+    + assertLessonAddable() : void
+    + assertDeletable() : void
+    + submit() : CourseStatus
+  }
+
+  class InReviewState <<final>> <<ConcreteState>> {
+    {static} ~ INSTANCE : InReviewState
+    + status() : CourseStatus
+    + approve() : CourseStatus
+    + reject() : CourseStatus
+  }
+
+  class PublishedState <<final>> <<ConcreteState>> {
+    {static} ~ INSTANCE : PublishedState
+    + status() : CourseStatus
+    + assertLessonAddable() : void
+    + unpublish() : CourseStatus
+    + isPublished() : boolean
+  }
+
+  class UnpublishedState <<final>> <<ConcreteState>> {
+    {static} ~ INSTANCE : UnpublishedState
+    + status() : CourseStatus
+    + assertEditable() : void
+    + assertLessonAddable() : void
+    + submit() : CourseStatus
+  }
+
+  class CourseStateException {
+    + CourseStateException(message : String)
+  }
+}
+
+package "com.miniudemy.common.exception" {
+  abstract class ApiException
+  class ConflictException
+}
+
+CourseLifecycleService ..> Course : course.submit() / approve() /\nreject(reason) / unpublish(reason)
+Course --> "1" CourseStatus : status
+Course ..> CourseState : state() = status.state()
+CourseStatus --> "1" CourseState : state
+CourseState <|.. DraftState
+CourseState <|.. InReviewState
+CourseState <|.. PublishedState
+CourseState <|.. UnpublishedState
+CourseState ..> CourseStateException : <<throw>>\n(varsayılan metotlar)
+ApiException <|-- ConflictException
+ConflictException <|-- CourseStateException
+
+note right of CourseState
+  <b>State</b>: varsayılan (default) metotlar
+  geçişi reddeder ve <i>CourseStateException</i>
+  (409) fırlatır; her durum sınıfı yalnız
+  izin verdiği metodu override eder.
+  Serviste <i>status</i> için if/switch yok.
+end note
+
+note bottom of InReviewState
+  <b>Geçiş tablosu</b> (docs/architecture.md › Kurs durumları)
+  DRAFT → submit() → IN_REVIEW
+  IN_REVIEW → approve() → PUBLISHED
+  IN_REVIEW → reject() → DRAFT (gerekçe: rejectionReason)
+  PUBLISHED → unpublish() → UNPUBLISHED (unpublishReason)
+  UNPUBLISHED → submit() → IN_REVIEW
+end note
+
+note bottom of CourseLifecycleService
+  Diğer istemciler aynı Context metotlarını çağırır:
+  CourseService.delete → assertDeletable()
+  CourseService.update → Course.update → assertEditable()
+  SectionService → assertEditable()
+  LessonService → assertLessonAddable() / assertEditable()
+  ContentLinkService → assertContentUploadable(lesson)
+end note
+
+@enduml

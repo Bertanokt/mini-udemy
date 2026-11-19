@@ -1,0 +1,106 @@
+@startuml class-strategy
+' UML sınıf diyagramı: Strategy deseni — sınav puanlama (#51; ADR-008).
+' Sınıf, alan ve metot adları koddakiyle birebir; getter'lar gösterilmez. Tutarlılık tablosu PR #51'de.
+' Render (Graphviz gerekmez, smetana yerleşimi; PNG ve SVG ayrı komutlarla):
+'   java -Duser.language=en -Duser.country=US -jar plantuml.jar -tpng docs/diagrams/class-strategy.puml
+'   java -Duser.language=en -Duser.country=US -jar plantuml.jar -tsvg docs/diagrams/class-strategy.puml
+
+!pragma layout smetana
+!include class-style.iuml
+
+title Mini Udemy - Sınıf diyagramı: Strategy (ScoringStrategy) — [[../adr/0008-strategy-puanlama.md ADR-008]]
+
+package "com.miniudemy.quiz.domain" {
+  class Quiz <<entity>> {
+    - id : Long
+    - sectionId : Long
+    - scoringType : ScoringType
+    - passThreshold : int
+    + changeScoringType(scoringType : ScoringType) : void
+  }
+
+  enum ScoringType {
+    SINGLE_ANSWER
+    MULTI_ALL_OR_NOTHING
+    MULTI_PARTIAL
+  }
+}
+
+package "com.miniudemy.quiz.service" {
+  class QuizAttemptService <<service>> <<Context>> {
+    - scoringResolver : ScoringStrategyResolver
+    - events : ApplicationEventPublisher
+    + listMyAttempts(quizId : Long, studentId : Long) : List<AttemptSummaryResponse>
+    + submit(quizId : Long, studentId : Long, request : SubmitAttemptRequest) : AttemptResultResponse
+  }
+
+  class ScoringStrategyResolver <<component>> {
+    - strategies : Map<ScoringType, ScoringStrategy> = new EnumMap<>(ScoringType.class)
+    + ScoringStrategyResolver(candidates : List<ScoringStrategy>)
+    + resolve(type : ScoringType) : ScoringStrategy
+  }
+
+  interface ScoringStrategy <<Strategy>> {
+    + type() : ScoringType
+    + score(input : ScoringInput) : QuestionScore
+  }
+
+  class SingleAnswerScoring <<component>> <<ConcreteStrategy>> {
+    + type() : ScoringType
+    + score(input : ScoringInput) : QuestionScore
+  }
+
+  class MultiAnswerAllOrNothing <<component>> <<ConcreteStrategy>> {
+    + type() : ScoringType
+    + score(input : ScoringInput) : QuestionScore
+  }
+
+  class MultiAnswerPartialScoring <<component>> <<ConcreteStrategy>> {
+    + type() : ScoringType
+    + score(input : ScoringInput) : QuestionScore
+  }
+
+  class ScoringInput <<record>> {
+    points : int
+    correctOptionIds : Set<Long>
+    selectedOptionIds : Set<Long>
+    --
+    + correctSelectedCount() : long
+    + wrongSelectedCount() : long
+  }
+
+  class QuestionScore <<record>> {
+    earned : BigDecimal
+    max : int
+    --
+    {static} + of(earned : int, max : int) : QuestionScore
+  }
+}
+
+QuizAttemptService --> "1" ScoringStrategyResolver : scoringResolver
+QuizAttemptService ..> Quiz : quiz.getScoringType()
+QuizAttemptService ..> ScoringStrategy : strategy.score(new ScoringInput(...))
+ScoringStrategyResolver o--> "3" ScoringStrategy : strategies
+ScoringStrategy <|.. SingleAnswerScoring
+ScoringStrategy <|.. MultiAnswerAllOrNothing
+ScoringStrategy <|.. MultiAnswerPartialScoring
+ScoringStrategy ..> ScoringInput
+ScoringStrategy ..> QuestionScore
+ScoringStrategy ..> ScoringType
+Quiz --> "1" ScoringType : scoringType
+
+note right of ScoringStrategyResolver
+  Spring tüm ScoringStrategy bean'lerini verir;
+  her ScoringType için tam bir strateji yoksa
+  açılışta IllegalStateException.
+  resolve(quiz.getScoringType()) → if/switch yok.
+  Yeni kural = yeni strateji sınıfı + ScoringType değeri.
+end note
+
+note bottom of MultiAnswerPartialScoring
+  SINGLE_ANSWER: seçilen = doğru → tam puan
+  MULTI_ALL_OR_NOTHING: tam eşleşme → tam puan
+  MULTI_PARTIAL: puan × max(0, doğru − yanlış) / doğru sayısı
+end note
+
+@enduml

@@ -1,0 +1,191 @@
+@startuml class-observer
+' UML sınıf diyagramı: Observer deseni — domain olayları ve dinleyiciler (#51; ADR-009).
+' Sınıf, alan ve metot adları koddakiyle birebir. Tutarlılık tablosu PR #51'de.
+' Render (Graphviz gerekmez, smetana yerleşimi; PNG ve SVG ayrı komutlarla):
+'   java -Duser.language=en -Duser.country=US -jar plantuml.jar -tpng docs/diagrams/class-observer.puml
+'   java -Duser.language=en -Duser.country=US -jar plantuml.jar -tsvg docs/diagrams/class-observer.puml
+
+!pragma layout smetana
+!include class-style.iuml
+left to right direction
+
+title Mini Udemy - Sınıf diyagramı: Observer (Spring olayları) — [[../adr/0009-observer-spring-events.md ADR-009]]
+
+package "Yayıncılar (Subject) — service katmanı" as pubs {
+  class EnrollmentService <<service>> {
+    + enroll(courseId : Long, studentId : Long) : EnrollmentResponse
+  }
+  class LessonService <<service>> {
+    + create(instructorId : Long, sectionId : Long, request : LessonRequest) : LessonResponse
+    + update(instructorId : Long, lessonId : Long, request : LessonRequest) : LessonResponse
+    + delete(instructorId : Long, lessonId : Long) : void
+  }
+  class SectionService <<service>> {
+    + deleteSection(sectionId : Long, userId : Long) : void
+  }
+  class CourseService <<service>> {
+    + delete(courseId : Long, instructorId : Long) : void
+  }
+  class ContentLinkService <<service>> {
+    + attachLessonContent(instructorId : Long, lessonId : Long, fileId : Long) : LessonResponse
+    + attachCover(instructorId : Long, courseId : Long, fileId : Long) : CourseResponse
+  }
+  class CourseLifecycleService <<service>> {
+    + approve(courseId : Long) : CourseResponse
+    + reject(courseId : Long, reason : String) : CourseResponse
+  }
+  class ContentDeliveryService <<service>> {
+    + openLessonContent(lessonId : Long, viewerId : Long, viewerIsAdmin : boolean) : ContentDownload
+  }
+  class LessonCompletionService <<service>> {
+    + complete(studentId : Long, lessonId : Long) : CourseProgressResponse
+  }
+  class QuizAttemptService <<service>> {
+    + submit(quizId : Long, studentId : Long, request : SubmitAttemptRequest) : AttemptResultResponse
+  }
+  class CertificateIssuingService <<service>> {
+    + issueIfEligible(studentId : Long, courseId : Long) : Optional<Long>
+  }
+}
+
+interface ApplicationEventPublisher <<Spring>> {
+  + publishEvent(event : Object) : void
+}
+
+package "Olaylar — <modül>.domain (record)" as evts {
+  class EnrollmentCreated <<record>> <<event>> {
+    enrollmentId : Long
+    studentId : Long
+    courseId : Long
+    enrolledAt : Instant
+  }
+  class LessonPublished <<record>> <<event>> {
+    lessonId : Long
+    courseId : Long
+    publishedAt : Instant
+  }
+  class CourseLessonsChanged <<record>> <<event>> {
+    courseId : Long
+  }
+  class CourseApproved <<record>> <<event>> {
+    courseId : Long
+    instructorId : Long
+    approvedAt : Instant
+  }
+  class CourseRejected <<record>> <<event>> {
+    courseId : Long
+    instructorId : Long
+    reason : String
+    rejectedAt : Instant
+  }
+  class ContentFileDetached <<record>> <<event>> {
+    fileId : Long
+  }
+  class LessonOpened <<record>> <<event>> {
+    studentId : Long
+    courseId : Long
+    lessonId : Long
+    openedAt : Instant
+  }
+  class LessonCompleted <<record>> <<event>> {
+    studentId : Long
+    courseId : Long
+    lessonId : Long
+    completedAt : Instant
+  }
+  class QuizCompleted <<record>> <<event>> {
+    attemptId : Long
+    quizId : Long
+    courseId : Long
+    studentId : Long
+    passed : boolean
+    completedAt : Instant
+  }
+  class CertificateIssued <<record>> <<event>> {
+    certificateId : Long
+    studentId : Long
+    courseId : Long
+    issuedAt : Instant
+  }
+}
+
+package "Dinleyiciler (Observer) — <modül>.listener" as lsns {
+  class ProgressListener <<component>> <<listener>> {
+    - progressService : ProgressService
+    + onLessonCompleted(event : LessonCompleted) : void
+    + onLessonOpened(event : LessonOpened) : void
+    + onCourseLessonsChanged(event : CourseLessonsChanged) : void
+  }
+  class CertificateListener <<component>> <<listener>> {
+    - issuing : CertificateIssuingService
+    + onLessonCompleted(event : LessonCompleted) : void
+    + onQuizCompleted(event : QuizCompleted) : void
+  }
+  class NotificationListener <<component>> <<listener>> {
+    - notifications : NotificationService
+    + onEnrollmentCreated(event : EnrollmentCreated) : void
+    + onLessonPublished(event : LessonPublished) : void
+    + onCourseApproved(event : CourseApproved) : void
+    + onCourseRejected(event : CourseRejected) : void
+    + onQuizCompleted(event : QuizCompleted) : void
+    + onCertificateIssued(event : CertificateIssued) : void
+  }
+  class StoredFileCleanupListener <<component>> <<listener>> {
+    - storage : StorageService
+    + onContentFileDetached(event : ContentFileDetached) : void
+  }
+}
+
+' yayıncı → olay (<<publish>>: events.publishEvent(new ...))
+EnrollmentService ..> EnrollmentCreated : <<publish>>
+LessonService ..> LessonPublished : <<publish>>
+LessonService ..> CourseLessonsChanged : <<publish>>
+LessonService ..> ContentFileDetached : <<publish>>
+SectionService ..> CourseLessonsChanged : <<publish>>
+SectionService ..> ContentFileDetached : <<publish>>
+CourseService ..> ContentFileDetached : <<publish>>
+ContentLinkService ..> ContentFileDetached : <<publish>>
+CourseLifecycleService ..> CourseApproved : <<publish>>
+CourseLifecycleService ..> CourseRejected : <<publish>>
+ContentDeliveryService ..> LessonOpened : <<publish>>
+LessonCompletionService ..> LessonCompleted : <<publish>>
+QuizAttemptService ..> QuizCompleted : <<publish>>
+CertificateIssuingService ..> CertificateIssued : <<publish>>
+pubs ..> ApplicationEventPublisher : events
+
+' olay → dinleyici (<<listen>>: @TransactionalEventListener)
+LessonCompleted ..> ProgressListener : <<listen>>
+LessonOpened ..> ProgressListener : <<listen>>
+CourseLessonsChanged ..> ProgressListener : <<listen>>
+LessonCompleted ..> CertificateListener : <<listen>>
+QuizCompleted ..> CertificateListener : <<listen>>
+EnrollmentCreated ..> NotificationListener : <<listen>>
+LessonPublished ..> NotificationListener : <<listen>>
+CourseApproved ..> NotificationListener : <<listen>>
+CourseRejected ..> NotificationListener : <<listen>>
+QuizCompleted ..> NotificationListener : <<listen>>
+CertificateIssued ..> NotificationListener : <<listen>>
+ContentFileDetached ..> StoredFileCleanupListener : <<listen>>
+
+note bottom of lsns
+  Her dinleyici metodu:
+  @TransactionalEventListener(phase = AFTER_COMMIT)
+  @Transactional(propagation = REQUIRES_NEW)
+  Yayıncı dinleyiciyi bilmez; aynı olayın
+  dinleyicileri arasında sıra tanımsız.
+  CertificateListener.onQuizCompleted yalnız
+  event.passed() ise issueIfEligible çağırır.
+end note
+
+note top of evts
+  Olay, yayınlayan modülün domain paketindedir:
+  enrollment: EnrollmentCreated
+  course: LessonPublished, CourseLessonsChanged,
+          CourseApproved, CourseRejected, ContentFileDetached
+  content: LessonOpened · progress: LessonCompleted
+  quiz: QuizCompleted · certificate: CertificateIssued
+  Başka modül olayı dinleyebilir (ModuleArchitectureTest:
+  domain'deki record = olay).
+end note
+
+@enduml
