@@ -129,7 +129,7 @@ Dört durumun hepsi testli: uçtan uca `Bolum6CriticalCasesIT` (case1–case4) v
 | FR-29 | Sertifikada resmî akreditasyon iddiası bulunmaz | H | P1 | #130, #131 | D: #68 | – (#130, #131 açık) |
 | FR-30 | Kursa kayıtlı kursiyer 1–5 yıldız puan ve yorum bırakabilir | I | P2 | #126 ✓, #127 ✓ | U: #128 ✓ | `ReviewServiceTest.create_*`, `ReviewControllerTest` (1–5 dışı 400) |
 | FR-31 | Bir kursiyer bir kurs için yalnız bir değerlendirme yapabilir | I | P2 | #126 ✓ | U: #128 ✓ | `ReviewServiceTest.create_secondReview_*` (409, eşzamanlı istek) |
-| FR-32 | Yönetici uygunsuz yorumları gizleyebilir ve yeniden açabilir | I, K | P2 | #142, #146 | U: #128 ✓ | `ReviewModerationIT`, `ReviewModerationServiceTest`, `AdminReviewControllerTest` |
+| FR-32 | Yönetici uygunsuz yorumları gizleyebilir ve yeniden açabilir | I, K | P2 | #142 ✓, #146 | U: #128 ✓ | `ReviewModerationIT`, `ReviewModerationServiceTest`, `AdminReviewControllerTest` |
 | FR-33 | Eğitmen kendi kurslarını durumlarıyla ve kayıtlı kursiyer sayılarıyla listeler | J | P1 | #28 ✓, #38 ✓ | U, E: #138 | `CourseServiceTest.listByInstructor_*`, `InstructorCourseControllerTest`, `InstructorAnalyticsScenarioIT` |
 | FR-34 | Eğitmen her kursu için tamamlanma oranını ve sınav başarı istatistiklerini görür | J | P1 | #133 ✓, #135 ✓ | U, E: #138 | `CourseAnalyticsServiceTest`, `QuizStatsServiceTest`, `InstructorAnalyticsIT` |
 | FR-35 | Eğitmen kursundaki kursiyerlerin ilerlemesini izler | J | P1 | #134 ✓, #135 ✓ | U, E: #138, #139 ✓ | `CourseAnalyticsServiceTest.listStudents_*`, `EnrollmentRosterServiceTest`, `InstructorAnalyticsIT` |
@@ -186,7 +186,7 @@ Dört durumun hepsi testli: uçtan uca `Bolum6CriticalCasesIT` (case1–case4) v
 | Gereksinim sayısı | 44 | 19 |
 | En az bir geliştirme issue'su olan | 44 | 19 |
 | Test issue'su ya da manuel doğrulaması olan | 44 | 19 |
-| Bugün `main`'de en az bir otomatik testi olan | **38** | **16** |
+| Bugün `main`'de en az bir otomatik testi olan | **39** | **16** |
 | Otomatik testi olmayan | 5: FR-03 (#115), FR-28 ve FR-29 (#130, #131), FR-41 (#144), FR-44 (#125); hepsinin geliştirme issue'su açık | 3: NFR-07, NFR-17 (görsel/tarayıcı, #68), NFR-14 (süreç, her PR'da CI) |
 
-16.11'de otomatik testi olan FR sayısı 6, NFR sayısı 4'tü. `main`'de 1053 test var (893 birim, 13 mimari, 147 entegrasyon); servis katmanı satır coverage'ı %98,4 (test raporu, #99). **P1 gereksinimlerden otomatik testi olmayanlar** yalnız FR-28, FR-29 ve FR-44; üçü de kodu henüz yazılmamış işlere (#130, #131, #125) bağlı.
+16.11'de otomatik testi olan FR sayısı 6, NFR sayısı 4'tü. `main`'de 1072 test var (905 birim, 13 mimari, 154 entegrasyon; #290 sonrası); servis katmanı satır coverage'ı %98,4 (test raporu, #99). **P1 gereksinimlerden otomatik testi olmayanlar** yalnız FR-28, FR-29 ve FR-44; üçü de kodu henüz yazılmamış işlere (#130, #131, #125) bağlı.
