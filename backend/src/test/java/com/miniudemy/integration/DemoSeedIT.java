@@ -22,10 +22,13 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.miniudemy.common.seed.DemoSeedRunner;
+import com.miniudemy.notification.domain.NotificationContent;
+import com.miniudemy.notification.domain.NotificationType;
+import com.miniudemy.notification.service.NotificationMessages;
 
 /**
  * Seed verisi (#67) gerçek PostgreSQL'e yüklenir ve uygulamanın kendi uçlarıyla okunur: hesaplara README'deki parolayla
- * girilir, katalog, ilerleme, sertifika ve dosyalar beklendiği gibidir. Runner {@code dev} profiline bağlı olduğu
+ * girilir, katalog, ilerleme, sertifika, bildirimler ve dosyalar beklendiği gibidir. Runner {@code dev} profiline bağlı olduğu
  * için bu testte elle kurulur.
  */
 class DemoSeedIT extends IntegrationTestBase {
@@ -117,6 +120,43 @@ class DemoSeedIT extends IntegrationTestBase {
                 SELECT u.email FROM certificates c
                 JOIN enrollments e ON e.id = c.enrollment_id JOIN users u ON u.id = e.student_id
                 """, String.class)).isEqualTo("ayse.yilmaz@miniudemy.dev");
+    }
+
+    @Test
+    void notifications_matchTheSeededEvents_andUseTheSameTextsAsTheApplication() {
+        // Kayıt → eğitmen, onay/red → eğitmen, sınav ve sertifika → kursiyer.
+        assertThat(jdbc.queryForList("""
+                SELECT u.email || '=' || count(*) FROM notifications n JOIN users u ON u.id = n.user_id
+                GROUP BY u.email ORDER BY u.email
+                """, String.class)).containsExactly("ayse.yilmaz@miniudemy.dev=3", "can.demir@miniudemy.dev=1",
+                "elif.sahin@miniudemy.dev=1", "mehmet.kaya@miniudemy.dev=6", "zeynep.ak@miniudemy.dev=4");
+        // Son 7 günün bildirimleri okunmamış: Burak ve Deniz'in kaydı, Ayşe'nin Java kaydı, red, Elif'in sınavı.
+        assertThat(count("SELECT count(*) FROM notifications WHERE read_at IS NULL")).isEqualTo(5);
+
+        long python = count("SELECT id FROM courses WHERE title = 'Sıfırdan Python'");
+        long giris = count("SELECT id FROM quizzes WHERE title = 'Giriş sınavı'");
+        String web = "Web Geliştirmeye Giriş";
+        String reason = jdbc.queryForObject("SELECT rejection_reason FROM courses WHERE title = ?", String.class, web);
+
+        assertThat(notification("zeynep.ak@miniudemy.dev", NotificationType.COURSE_REJECTED))
+                .containsExactly(NotificationMessages.courseRejected(web, reason));
+        assertThat(notification("mehmet.kaya@miniudemy.dev", NotificationType.COURSE_APPROVED))
+                .containsExactly(NotificationMessages.courseApproved(python, "Sıfırdan Python"));
+        assertThat(notification("mehmet.kaya@miniudemy.dev", NotificationType.ENROLLMENT_CREATED))
+                .hasSize(5)
+                .contains(NotificationMessages.enrollmentCreated(python, "Sıfırdan Python", "Deniz Arslan"));
+        assertThat(notification("elif.sahin@miniudemy.dev", NotificationType.QUIZ_COMPLETED))
+                .containsExactly(NotificationMessages.quizCompleted(giris, "Sıfırdan Python", false));
+        assertThat(notification("ayse.yilmaz@miniudemy.dev", NotificationType.CERTIFICATE_ISSUED))
+                .containsExactly(NotificationMessages.certificateIssued("Sıfırdan Python"));
+    }
+
+    private List<NotificationContent> notification(String email, NotificationType type) {
+        return jdbc.query("""
+                SELECT n.title, n.body, n.link FROM notifications n JOIN users u ON u.id = n.user_id
+                WHERE u.email = ? AND n.type = ? ORDER BY n.created_at
+                """, (rs, i) -> new NotificationContent(type, rs.getString("title"), rs.getString("body"),
+                rs.getString("link")), email, type.name());
     }
 
     @Test
