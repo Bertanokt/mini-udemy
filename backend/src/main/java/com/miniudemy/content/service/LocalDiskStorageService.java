@@ -66,7 +66,7 @@ public class LocalDiskStorageService implements StorageService {
         try {
             long size = copyWithLimit(content, tmp, policy);
             FileFormat format = detector.detect(tmp)
-                    // KIRMIZI-T1 .filter(policy::allows)
+                    .filter(policy::allows)
                     .orElseThrow(() -> new UnsupportedMediaTypeException(policy.unsupportedTypeMessage()));
             Path target = pathOf(key);
             Files.move(tmp, target, StandardCopyOption.ATOMIC_MOVE);
@@ -125,7 +125,7 @@ public class LocalDiskStorageService implements StorageService {
             int n;
             while ((n = content.read(buffer)) != -1) {
                 total += n;
-                if (total > policy.maxBytes() * 2) { // KIRMIZI-T2
+                if (total > policy.maxBytes()) {
                     throw new PayloadTooLargeException(policy.tooLargeMessage());
                 }
                 out.write(buffer, 0, n);

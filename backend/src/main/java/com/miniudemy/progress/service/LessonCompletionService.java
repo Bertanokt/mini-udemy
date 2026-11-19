@@ -47,7 +47,7 @@ public class LessonCompletionService {
         Long courseId = lessons.courseIdOfLesson(lessonId);
         Long enrollmentId = enrollments.requireEnrollmentId(studentId, courseId);
         Instant now = clock.instant();
-        if (lessonProgress.insertIfAbsent(enrollmentId, lessonId, now) >= 0 /* KIRMIZI-P4 */) {
+        if (lessonProgress.insertIfAbsent(enrollmentId, lessonId, now) == 1) {
             events.publishEvent(new LessonCompleted(studentId, courseId, lessonId, now));
         }
         return progress.getMyProgress(studentId, courseId);
