@@ -1,5 +1,6 @@
 package com.miniudemy.auth.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -40,4 +41,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query(value = "select u " + ADMIN_FILTER, countQuery = "select count(u) " + ADMIN_FILTER)
     Page<User> searchForAdmin(@Param("role") Role role, @Param("active") Boolean active,
             @Param("pattern") String pattern, Pageable pageable);
+
+    /** Rol başına kullanıcı sayısı (platform raporu, #145); kullanıcısı olmayan rol sonuçta yer almaz. */
+    @Query("select u.role as role, count(u) as total from User u group by u.role")
+    List<RoleCount> countByRole();
+
+    interface RoleCount {
+        Role getRole();
+
+        long getTotal();
+    }
 }

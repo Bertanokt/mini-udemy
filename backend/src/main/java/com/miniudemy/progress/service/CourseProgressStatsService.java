@@ -37,4 +37,9 @@ public class CourseProgressStatsService implements CourseProgressStats {
         ProgressTotalsRow row = courseProgress.totalsByEnrollmentIds(enrollmentIds);
         return new ProgressTotals(row.getPercentSum(), row.getCompletedCount());
     }
+
+    /** Kursu tamamlamış (%100) kayıt sayısı, bütün kurslarda (platform raporu, #145). */
+    public long countCompletedEnrollments() {
+        return courseProgress.countCompleted();
+    }
 }
