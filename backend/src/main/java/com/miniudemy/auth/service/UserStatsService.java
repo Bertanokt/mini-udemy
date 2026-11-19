@@ -26,8 +26,7 @@ public class UserStatsService {
         for (Role role : Role.values()) {
             result.put(role.name(), 0L);
         }
-        if (false) users.countByRole().forEach( // KIRMIZI-R4
-           row -> result.put(row.getRole().name(), row.getTotal()));
+        users.countByRole().forEach(row -> result.put(row.getRole().name(), row.getTotal()));
         return result;
     }
 }

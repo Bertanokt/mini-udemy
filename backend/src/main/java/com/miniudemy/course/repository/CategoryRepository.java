@@ -18,7 +18,7 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 
     /** Her kategori ve kurs sayısı (platform raporu, #145); kursu olmayan kategori 0 ile gelir. */
     @Query("select cat.id as categoryId, cat.name as name, "
-            + "(select count(c) from Course c where c.category = cat and 1 = 0) as total from Category cat")
+            + "(select count(c) from Course c where c.category = cat) as total from Category cat")
     List<CategoryCount> countCourses();
 
     interface CategoryCount {
