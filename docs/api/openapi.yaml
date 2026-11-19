@@ -2312,8 +2312,9 @@ paths:
       tags: [Admin]
       summary: Platform raporu
       description: >
-        **Rol:** ADMIN. Tarih aralığı verilmezse tüm zamanlar. Aralık kayıt, tamamlanma ve
-        sertifika sayılarına uygulanır; kullanıcı ve kurs sayıları anlık durumdur.
+        **Rol:** ADMIN. Sayılar tüm zamanlarındır; kullanıcı ve kurs sayıları anlık durumdur.
+        Tamamlanma = ilerlemesi %100 olan kayıt. **Tarih aralığı uygulanmadı** (17.11.2026 İnce
+        kapsam kararı, #145): `from`/`to` gönderilse de yok sayılır, yanıtta ikisi de null.
       operationId: adminGetPlatformReport
       x-roles: [ADMIN]
       security:

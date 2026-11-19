@@ -41,4 +41,9 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
 
         long getTotal();
     }
+
+    /** En çok kayıt alan kurslar, çoktan aza; eşitlikte küçük kurs id'si önce (platform raporu, #145). */
+    @Query("select e.courseId as courseId, count(e) as total from Enrollment e "
+            + "group by e.courseId order by count(e) desc, e.courseId")
+    List<CourseCount> findTopCourses(Pageable pageable);
 }

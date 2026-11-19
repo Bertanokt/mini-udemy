@@ -54,4 +54,8 @@ public interface CourseProgressRepository extends JpaRepository<CourseProgress, 
     Optional<CourseProgress> findByEnrollmentId(Long enrollmentId);
 
     List<CourseProgress> findAllByEnrollmentIdIn(Collection<Long> enrollmentIds);
+
+    /** Kursu tamamlamış (%100) kayıt sayısı (platform raporu, #145). */
+    @Query("select count(cp) from CourseProgress cp where cp.progressPercent >= 100")
+    long countCompleted();
 }
