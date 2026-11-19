@@ -1,0 +1,200 @@
+@startuml seq-quiz
+' UML sekans diyagramı: sınav çözme (#64; Strategy ADR-008, Observer ADR-009).
+' Sınıf ve metot adları koddakiyle birebir; diyagram–kod tutarlılık tablosu PR #64'te.
+' Render (sekans diyagramı Graphviz gerektirmez; PNG ve SVG ayrı komutlarla):
+'   java -Duser.language=en -Duser.country=US -jar plantuml.jar -tpng docs/diagrams/seq-quiz.puml
+'   java -Duser.language=en -Duser.country=US -jar plantuml.jar -tsvg docs/diagrams/seq-quiz.puml
+
+skinparam shadowing false
+skinparam defaultFontSize 12
+skinparam sequenceMessageAlign left
+skinparam responseMessageBelowArrow true
+skinparam maxMessageSize 260
+skinparam sequence {
+  LifeLineBorderColor #888888
+  ParticipantBackgroundColor #F7F7F7
+  ParticipantBorderColor #444444
+  GroupBorderColor #666666
+  GroupBackgroundColor #F2F2F2
+}
+skinparam note {
+  BackgroundColor #FFF8E1
+  BorderColor #8D6E63
+}
+
+title Mini Udemy - Sekans: sınav çözme (Strategy + Observer)
+
+actor "Kursiyer" as student
+
+box "frontend" #F5F5F5
+  participant "QuizTakeView" as view
+  participant "quizzes.ts\nsubmitQuizAttempt\napiFetch" as api
+end box
+participant "Spring Security\nfiltre zinciri (JWT)" as filter
+box "quiz" #F3EEFB
+  participant "QuizAttemptController" as qac
+  participant "QuizAttemptService" as qas
+  participant "QuizRepository" as qr
+  participant "QuestionRepository" as qnr
+  participant "ScoringStrategyResolver" as resolver
+  participant "«interface»\nScoringStrategy" as strategy
+  participant "QuizAttemptRepository" as qar
+  participant "QuizAttemptMapper" as mapper
+end box
+box "course" #EEF8EE
+  participant "CourseOwnershipService" as cos
+end box
+box "enrollment" #EEF5FB
+  participant "EnrollmentService" as es
+end box
+participant "GlobalExceptionHandler" as geh
+participant "ApplicationEventPublisher\n(Spring olay yayını)" as bus
+box "certificate / notification" #FBF1EE
+  participant "CertificateListener" as cl
+  participant "NotificationListener" as nl
+end box
+database "PostgreSQL" as db
+
+== 1. İstek ==
+
+student -> view : "Sınavı gönder" (onSubmit → send())
+activate view
+view -> api : submitQuizAttempt(id, { answers: buildAnswers(questionIds, selection) })
+activate api
+api -> filter : POST /api/quizzes/{id}/attempts\nAuthorization: Bearer <token>\n{ answers: [{ questionId, optionIds }] }
+activate filter
+note right of filter : JWT doğrulama, kullanıcının veritabanından yüklenmesi\nve 401 / 403 (pasif hesap) dalları seq-enroll (#39) ile aynı.
+
+== 2. İstek doğrulama ve rol denetimi ==
+
+filter -> qac : submit(id, request, authentication)
+deactivate filter
+activate qac
+alt @Valid SubmitAttemptRequest ihlali\n(answers null, optionIds boş, questionId ya da şık id'si null)
+  qac -> geh : MethodArgumentNotValidException\n(argüman çözülürken, metot çağrılmadan önce)
+  geh --> api : 400 "Girilen bilgilerde hata var." + alan bazlı errors
+else @PreAuthorize("hasRole('STUDENT')") sağlanmadı (eğitmen, yönetici)
+  qac -> geh : AccessDeniedException
+  geh --> api : 403 "Bu işlem için yetkiniz yok."
+else Rol STUDENT
+  qac -> qas : submit(id, CurrentUser.id(authentication), request)
+  activate qas
+
+  group @Transactional — işlem 1
+
+== 3. Sınav ve kayıt denetimi ==
+
+    qas -> qr : findById(quizId)
+    qr -> db : SELECT quizzes
+    qr --> qas : Optional<Quiz>
+    alt Sınav yok
+      qas --> geh : NotFoundException("Sınav bulunamadı.")
+      geh --> api : 404 "Sınav bulunamadı."
+    else Sınav var
+      qas -> cos : findCourseIdOfSection(quiz.getSectionId())
+      cos -> db : sectionRepository.findCourseIdById(sectionId)
+      alt Bölüm yok
+        cos --> qas : NotFoundException("Bölüm bulunamadı.")
+        qas --> geh : NotFoundException (rollback)
+        geh --> api : 404 "Bölüm bulunamadı."
+      else Bölüm var
+        cos --> qas : courseId
+        qas -> es : assertEnrolled(studentId, courseId)
+        es -> es : isEnrolled(studentId, courseId)
+        es -> db : repository.existsByStudentIdAndCourseId(studentId, courseId)
+        alt Yetkisiz öğrenci: kursa kayıtlı değil
+          es --> qas : ForbiddenException("Bu kursa kayıtlı değilsiniz.")
+          qas --> geh : ForbiddenException (rollback)
+          geh --> api : 403 "Bu kursa kayıtlı değilsiniz."
+        else Kayıtlı
+
+== 4. Cevapların doğrulanması ==
+
+          qas -> qas : loadQuestions(quiz)
+          activate qas
+          qas -> qnr : findAllWithOptionsByIdIn(quiz.getQuestionIds())
+          qnr -> db : SELECT questions JOIN options
+          qnr --> qas : List<Question> (sınavdaki sırayla)
+          deactivate qas
+          qas -> qas : validateAnswers(questions, request.answers())
+          activate qas
+          alt Geçersiz cevap (ilk ihlalde durur, koddaki sırayla)
+            qas --> geh : BadRequestException.forField("answers", ...)\n• "Cevaplanan soru bu sınava ait değil."\n• "Aynı soru için birden fazla cevap gönderilemez."\n• "Aynı şık bir soruda birden fazla kez seçilemez."\n• "Seçilen şık sorunun şıklarından biri değil."
+            geh --> api : 400 + errors.answers
+          else Cevaplar geçerli
+            qas --> qas : Map<Long, Set<Long>> selected
+            deactivate qas
+
+== 5. Puanlama (Strategy) ==
+
+            qas -> resolver : resolve(quiz.getScoringType())
+            resolver --> qas : ScoringStrategy
+            note right of resolver : EnumMap<ScoringType, ScoringStrategy>, açılışta\nbean'lerin type() değerinden kurulur; seçimde if/switch yok.\nSINGLE_ANSWER → SingleAnswerScoring\nMULTI_ALL_OR_NOTHING → MultiAnswerAllOrNothing\nMULTI_PARTIAL → MultiAnswerPartialScoring (ADR-008)
+            loop her soru (sınavdaki sırayla)
+              qas -> strategy : score(new ScoringInput(question.getPoints(), correct, selected.getOrDefault(question.getId(), Set.of())))
+              strategy --> qas : QuestionScore(earned, max)
+              qas -> qas : graded.add(new GradedQuestion(...))\nscore += earned; maxScore += max
+            end
+            note right of strategy : Cevapsız soru boş küme ile puanlanır (0 puan).
+            qas -> qas : passed = score × 100 ≥ passThreshold × maxScore\n(yuvarlamadan)
+
+== 6. Kayıt ve olay ==
+
+            qas -> qar : save(new QuizAttempt(quizId, studentId, score, maxScore, passed, answers))
+            qar -> db : INSERT INTO quiz_attempts, attempt_answers
+            qar --> qas : QuizAttempt
+            qas -> bus : publishEvent(new QuizCompleted(attempt.getId(), quizId, courseId, studentId, passed, attempt.getSubmittedAt()))
+            note right of bus : Olay şimdi kuyruğa alınır;\ndinleyiciler ancak commit'ten sonra çalışır (AFTER_COMMIT).
+            qas -> mapper : toResult(attempt, graded)
+            mapper --> qas : AttemptResultResponse
+          end
+        end
+      end
+    end
+  end
+  note right of qas : İşlem 1 commit; QuizCompleted ancak şimdi teslim edilir.\nHata dallarında rollback olur, olay hiç teslim edilmez.
+
+== 7. Dinleyiciler (Observer; AFTER_COMMIT, aynı thread, senkron) ==
+
+  bus -->> cl : onQuizCompleted(event)
+  bus -->> nl : onQuizCompleted(event)
+  note right of bus : İki dinleyicinin çalışma sırası tanımsız;\nher biri kendi @Transactional(propagation = REQUIRES_NEW) işleminde.
+  activate cl
+  group @Transactional(propagation = REQUIRES_NEW) — sertifika
+    alt event.passed()
+      cl -> cl : issuing.issueIfEligible(studentId, courseId)
+      note right of cl : Ayrıntı: seq-certificate (#140).
+    else Kalındı
+      cl -> cl : hiçbir şey yapılmaz
+    end
+  end
+  deactivate cl
+  activate nl
+  group @Transactional(propagation = REQUIRES_NEW) — bildirim
+    nl -> nl : notifications.notifyQuizCompleted(courseId, quizId, studentId, passed)
+  end
+  deactivate nl
+  note right of nl : Dinleyici hata verirse deneme geri alınmaz.
+
+== 8. Yanıt ==
+
+  qas --> qac : AttemptResultResponse
+  deactivate qas
+  qac --> api : 201 AttemptResultResponse
+  deactivate qac
+end
+
+== 9. Frontend'in yanıtı işlemesi ==
+
+alt 201
+  api --> view : AttemptResultResponse
+  view -> view : setResult(res)\n(puan, geçti/kaldı, soru bazında sonuç)
+else 400 / 403 / 404 ve diğerleri
+  api --> view : ApiError
+  view -> view : setSubmitError(errorMessage(err, "Sınav gönderilemedi. Tekrar deneyin."))\nsetConfirming(false)
+end
+deactivate api
+view --> student : sınav sonucu ya da hata mesajı
+deactivate view
+
+@enduml
