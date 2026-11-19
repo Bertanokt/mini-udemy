@@ -2,7 +2,7 @@
 
 Proje dokümanındaki beş senaryonun ([use-cases.md](use-cases.md) › 1) sunumda adım adım gösterimi. Her adımda **ne gösterilir** ve **hangi mimari nokta devreye girer** yazılıdır. Veriler seed verisinden gelir (#67, README › Demo hesapları); bütün hesapların parolası `Demo1234!`.
 
-> **Ekranı henüz olmayan adımlar** (19.11.2026): kurs oluşturma formu (#33), bölüm/ders düzenleme ve içerik yükleme ekranı, sertifika sayfası ve doğrulama (#130), bildirim listesi (#125). Bu adımlar aşağıda **API ile** (curl) verildi; ekranlar gelince ekran adımıyla değiştirilecek. Uçtan uca testleri olduğu için davranışları doğrulanmış durumda (her senaryonun sonunda test adı).
+> **Ekranı henüz olmayan adımlar** (19.11.2026): bölüm/ders düzenleme ve içerik yükleme ekranı, sertifika sayfası ve doğrulama (#130), bildirim listesi (#125). Bu adımlar aşağıda **API ile** (curl) verildi; ekranlar gelince ekran adımıyla değiştirilecek. Uçtan uca testleri olduğu için davranışları doğrulanmış durumda (her senaryonun sonunda test adı).
 
 ## Hazırlık
 
