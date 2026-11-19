@@ -36,6 +36,26 @@ docker compose up --build
 
 Durdurmak: `docker compose down`. Veritabanını da silmek: `docker compose down -v`.
 
+### Demo hesapları (seed verisi, #67)
+
+`dev` profilinde (docker compose ve yerel geliştirme) uygulama **boş** bir veritabanıyla açılırsa örnek veri otomatik yüklenir (`DemoSeedRunner`, `backend/src/main/resources/seed/`). Veritabanında kullanıcı varsa hiçbir şeye dokunulmaz; baştan yüklemek için `docker compose down -v`. `prod` ve `test` profillerinde yüklenmez.
+
+Bütün hesapların parolası: **`Demo1234!`** (yalnız yerel demo için).
+
+| Rol | E-posta | Ne görülür |
+|---|---|---|
+| Yönetici | `admin@miniudemy.dev` | Onay kuyruğunda "SQL ve Veritabanları" (İncelemede) |
+| Eğitmen | `mehmet.kaya@miniudemy.dev` | "Sıfırdan Python" (Yayımlandı), "SQL ve Veritabanları" (İncelemede), "Python 2 ile Programlama (eski)" (Yayından kaldırıldı) |
+| Eğitmen | `zeynep.ak@miniudemy.dev` | "Java ile Nesne Yönelimli Programlama" (Yayımlandı), "Web Geliştirmeye Giriş" (Taslak, red gerekçesiyle) |
+| Kursiyer | `ayse.yilmaz@miniudemy.dev` | Python %100 + sertifika (`K7Q2-M9XA-4T`), Java %0 |
+| Kursiyer | `can.demir@miniudemy.dev` | Python %66,67, giriş sınavını geçti |
+| Kursiyer | `elif.sahin@miniudemy.dev` | Python %50, giriş sınavından kaldı |
+| Kursiyer | `burak.celik@miniudemy.dev` | Python %16,67 |
+| Kursiyer | `deniz.arslan@miniudemy.dev` | Python %0 (yeni kayıt) |
+| Kursiyer | `selin.koc@miniudemy.dev` | Java %50, Python'a kayıtlı değil |
+
+"Sıfırdan Python": 3 bölüm, 6 ders (3 PDF, 1 doküman, 2 video), 4 soruluk soru bankası, 2 zorunlu bölüm sınavı, 3 değerlendirme. Video derslerinin dosyası yok; demoda eğitmen hesabıyla yükleme ucundan (MP4/WebM) eklenir. Bildirimler, bildirim modülü (#124) gelince eklenecek.
+
 ## Geliştirme ortamı (hot reload)
 
 Gereken: Java 21, Node.js 22+, Docker.
