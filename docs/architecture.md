@@ -109,7 +109,7 @@ Bir modül başka bir modülle **yalnız iki yoldan** konuşur:
 | `quiz` | `course`, `enrollment` | – |
 | `certificate` | `course`, `enrollment`, `progress`, `quiz` | `LessonCompleted`, `QuizCompleted` |
 | `review` | `auth`, `course`, `enrollment` | – |
-| `notification` | `auth` | Tüm bildirim olayları (bölüm 5) |
+| `notification` | `auth`, `course`, `enrollment` | `EnrollmentCreated`, `LessonPublished`, `CourseApproved`, `CourseRejected`, `QuizCompleted`, `CertificateIssued` |
 | `admin` | `auth`, `course`, `enrollment`, `progress`, `certificate`, `review` | – |
 
 Tabloda olmayan bir bağımlılık gerekiyorsa önce bu doküman güncellenir. Tablo `ModuleArchitectureTest.ALLOWED`'da aynen kodlu; ikisi aynı PR'da değişir. Başka modülün olayını dinlemek (domain'deki record'a bağımlılık) tablodan bağımsız serbesttir.
@@ -144,7 +144,9 @@ Satır: kursun şu anki durumu, sütun: işlem. ✓ izinli kontrol, → hedef du
 - Katalogda yalnız Yayımlandı görünür.
 - "Ders ekle" sütunu #25 ile eklendi: yayımlanmış kursa yeni ders eklenebilir (FR-43, `LessonPublished`); yayımlanmış kursta mevcut bir dersi güncellemek, silmek ve sıralamak "Düzenle" kuralına bağlı kalır ve 409 döner.
 - Red gerekçesi `rejection_reason`'a yazılır, onaya gönderince temizlenir.
-- Yayından kaldırma gerekçesi isteğe bağlıdır; yönetici gerekçeyle, eğitmen gerekçesiz kaldırabilir. `unpublish_reason`'a yazılır.
+- Yayından kaldırma gerekçesi isteğe bağlıdır; yönetici gerekçeyle, eğitmen gerekçesiz kaldırabilir. `unpublish_reason`'a yazılır (boş gerekçe `null`). Yeniden incelemeye gönderilince gerekçe yöneticinin görmesi için kalır, yönetici onayında (`Course.approve()`) temizlenir.
+- Yayından kaldırma (#123, `CourseLifecycleService`): eğitmen `POST /api/courses/{id}/unpublish` (yalnız kendi kursu; gövde ve gerekçe isteğe bağlı, sıra: 404, 403, 409), yönetici `POST /api/admin/courses/{id}/unpublish` (`admin` → `AdminCourseService`; gerekçe 5–1000 karakter, zorunlu; sıra: 404, 409). Yeniden incelemeye gönderme ayrı bir uç değildir: eğitmen kursu düzenler ve "Onaya gönder" ucunu kullanır (Yayından kaldırıldı → İncelemede). Yayından kaldırma için olay yayınlanmaz.
+- **Yayından kaldırılan kursa kayıtlı kursiyerin erişimi (FR-38, UC-25):** kurs katalogda görünmez ve yeni kayıt almaz (`CourseLookupService.assertPublished`, 404). Önceden kaydolan kursiyer kurs detayını (`GET /api/courses/{id}`), bölüm listesini (`GET /api/courses/{id}/sections`) ve ders içeriğini açmaya devam eder; ilerlemesi, sınavları ve sertifikası etkilenmez. Detay ve bölüm görünürlüğü `course/service/CourseVisibility`'dedir: yayımlanmamış kursu sahibi, yönetici ve kayıtlı kursiyer görür, diğerlerine 404. Kayıt bilgisi `course`'un tanımladığı `CourseRoster.isEnrolled` arayüzünden gelir (`enrollment/service/EnrollmentRosterService` uygular; bağımlılık tablosu değişmez). İçerik erişimi zaten kayda bağlıdır (`ContentDeliveryService`). Kanıt: `CourseUnpublishIT`.
 - Onaya gönder: `POST /api/courses/{id}/submit` (#27, `CourseLifecycleService`). Sıra: kurs yoksa 404, eğitmeni değilse 403, durum izin vermiyorsa 409, içerik eksikse 400. İçerik kuralı `Course.submit()`'te: en az bir bölüm, bir ders ve içeriği yüklenmiş en az bir ders.
 - Yönetici (#59, `admin` modülü → `course`'un `CourseLifecycleService` ve `CourseCatalogService`'i): onay kuyruğu `GET /api/admin/courses?status=IN_REVIEW` (en uzun süredir değişmeyen önce), `POST /api/admin/courses/{id}/approve`, `POST /api/admin/courses/{id}/reject` (gerekçe 5–1000 karakter, zorunlu). Kurs içeriği yönetici tarafından `GET /api/courses/{id}` ile incelenir. Başarılı onayda `CourseApproved`, redde `CourseRejected` (gerekçeyle) yayınlanır; geçiş 409/404 ile düşerse olay yok.
 - İçerik ve kapak yükleme (#112): kapak "Düzenle" kuralına bağlıdır (Taslak ve Yayından kaldırıldı). Ders içeriği: içeriği henüz olmayan derse "Ders ekle" kuralı (Taslak, Yayımlandı, Yayından kaldırıldı; yayımlanmış kursa FR-43 ile eklenen ders içeriksiz gelir ve içeriği yüklenebilmelidir), içeriği olan dersin dosyasını değiştirmek "Düzenle" kuralı (yayımlanmış kursta 409). Kural `CourseState.assertContentUploadable` içindedir.
@@ -159,18 +161,18 @@ AFTER_COMMIT dinleyicisi, işlem bittiği için veritabanı yazması gerekiyorsa
 
 | Olay | Olay tipi (modül) | Yayıncı | Dinleyenler (planlanan) | Durum |
 |---|---|---|---|---|
-| `EnrollmentCreated` | `enrollment` | `EnrollmentService.enroll` | `notification` (eğitmene) | Yayıncı var; dinleyici #124 |
-| `LessonPublished` | `course` | `LessonService.create` (yayımlanmış kursa ders eklenince, #25) | `notification` (kayıtlı kursiyerlere) | Yayıncı var; dinleyici sonra |
-| `CourseApproved` | `course` | `CourseLifecycleService.approve` (#59) | `notification` (eğitmene) | Yayıncı var; dinleyici #124 |
-| `CourseRejected` (gerekçeli) | `course` | `CourseLifecycleService.reject` (#59) | `notification` (eğitmene) | Yayıncı var; dinleyici #124 |
+| `EnrollmentCreated` | `enrollment` | `EnrollmentService.enroll` | `notification` (`NotificationListener`, eğitmene) | Yayıncı ve dinleyici var (#124) |
+| `LessonPublished` | `course` | `LessonService.create` (yayımlanmış kursa ders eklenince, #25) | `notification` (`NotificationListener`, kayıtlı kursiyerlere) | Yayıncı ve dinleyici var (#124) |
+| `CourseApproved` | `course` | `CourseLifecycleService.approve` (#59) | `notification` (`NotificationListener`, eğitmene) | Yayıncı ve dinleyici var (#124) |
+| `CourseRejected` (gerekçeli) | `course` | `CourseLifecycleService.reject` (#59) | `notification` (`NotificationListener`, eğitmene, gerekçesiyle) | Yayıncı ve dinleyici var (#124) |
 | `LessonCompleted` | `progress` | `LessonCompletionService.complete` (#41), yalnız ilk tamamlamada | `progress` (`ProgressListener`, kurs yüzdesi), `certificate` (`CertificateListener`, uygunluk) | Yayıncı ve iki dinleyici var (#43, #129) |
-| `QuizCompleted` | `quiz` | `QuizAttemptService.submit` (#54) | `certificate` (`CertificateListener`, yalnız geçen denemede uygunluk), `notification` (kursiyere) | Yayıncı ve `certificate` dinleyicisi (#129) var; `notification` dinleyicisi sonra |
+| `QuizCompleted` | `quiz` | `QuizAttemptService.submit` (#54) | `certificate` (`CertificateListener`, yalnız geçen denemede uygunluk), `notification` (`NotificationListener`, kursiyere; geçti ya da kaldı) | Yayıncı ve iki dinleyici var (#129, #124) |
 | `LessonOpened` | `content` | `ContentDeliveryService.openLessonContent` (#119), yalnız kayıtlı kursiyer açınca; eğitmen ve yönetici açınca yok | `progress` (`ProgressListener`, son izlenen ders) | Yayıncı ve dinleyici var |
 | `CourseLessonsChanged` | `course` | `LessonService.create` / `delete`, `SectionService.deleteSection` (#249): kursun ders sayısı değişince, her durumda | `progress` (`ProgressListener`, kayıtlıların yüzde önbelleği) | Yayıncı ve dinleyici var |
 | `ContentFileDetached` | `course` | `ContentLinkService` (kapak ya da ders içeriği değişince, #112), `LessonService.update` (içerik türü değişince) ve `delete`, `SectionService.deleteSection`, `CourseService.delete` (kapak ve bütün ders dosyaları, #23): dosya hiçbir yerde kullanılmaz olunca | `content` (`StoredFileCleanupListener`, dosyayı diskten ve `stored_files`'tan siler) | Yayıncı ve dinleyici var |
-| `CertificateIssued` | `certificate` | `CertificateIssuingService.issueIfEligible` (#129), yalnız sertifika yazılınca | `notification` (kursiyere) | Yayıncı var; dinleyici sonra |
+| `CertificateIssued` | `certificate` | `CertificateIssuingService.issueIfEligible` (#129), yalnız sertifika yazılınca | `notification` (`NotificationListener`, kursiyere) | Yayıncı ve dinleyici var (#124) |
 
-Bugün `EnrollmentCreated`, `LessonPublished`, `CourseApproved`, `CourseRejected`, `LessonCompleted`, `QuizCompleted`, `LessonOpened`, `CourseLessonsChanged`, `ContentFileDetached` ve `CertificateIssued` gerçekten yayınlanıyor. `ContentFileDetached` dosya id'sini taşır; `course` content'e bağımlı olamayacağı için dosyayı kendisi silmez, bağı koparıp olayı yayınlar, silmeyi commit'ten sonra `content` yapar (silme başarısız olursa yalnız loglanır, kullanıcının isteği geri alınmaz). `CourseLessonsChanged`'i ders ekleme, ders silme ve bölüm silme yayınlar; `ProgressListener` commit'ten sonra kursa kayıtlı herkesin yüzde önbelleğini `ProgressService.recalculateCourse` ile yeniden yazar (#249). `LessonPublished`'ın yalnız yayımlanmış kursta yayınlandığı `LessonServiceTest`'te denetlenir. `LessonOpened`'ı ders içeriği ucu (`GET /api/lessons/{id}/content`, #119) yayınlar; `ProgressListener` commit'ten sonra `course_progress`'e son açılan dersi ve zamanı yazar (her istekte; video oynatıcının Range istekleri de dahil, satır tek kalır). `QuizCompleted`'ı sınav çözme ucu (`POST /api/quizzes/{id}/attempts`, #54) yayınlar. `EnrollmentCreated`, `CourseApproved` ve `CourseRejected`'ın henüz üretim dinleyicisi yok; teslim kuralı `EnrollmentCreatedDeliveryTest` ile gösterilir. `LessonCompleted`'ı ders tamamlama ucu (`POST /api/lessons/{id}/complete`, #41) yayınlar; `ProgressListener` commit'ten sonra kurs yüzdesini günceller (`LessonCompletedDeliveryTest`). Diğer olayların yayıncıları ilgili issue'larda eklenir; tipleri şimdiden tanımlıdır ve alanları o issue'larda gerekirse genişletilir.
+Bugün `EnrollmentCreated`, `LessonPublished`, `CourseApproved`, `CourseRejected`, `LessonCompleted`, `QuizCompleted`, `LessonOpened`, `CourseLessonsChanged`, `ContentFileDetached` ve `CertificateIssued` gerçekten yayınlanıyor. `ContentFileDetached` dosya id'sini taşır; `course` content'e bağımlı olamayacağı için dosyayı kendisi silmez, bağı koparıp olayı yayınlar, silmeyi commit'ten sonra `content` yapar (silme başarısız olursa yalnız loglanır, kullanıcının isteği geri alınmaz). `CourseLessonsChanged`'i ders ekleme, ders silme ve bölüm silme yayınlar; `ProgressListener` commit'ten sonra kursa kayıtlı herkesin yüzde önbelleğini `ProgressService.recalculateCourse` ile yeniden yazar (#249). `LessonPublished`'ın yalnız yayımlanmış kursta yayınlandığı `LessonServiceTest`'te denetlenir. `LessonOpened`'ı ders içeriği ucu (`GET /api/lessons/{id}/content`, #119) yayınlar; `ProgressListener` commit'ten sonra `course_progress`'e son açılan dersi ve zamanı yazar (her istekte; video oynatıcının Range istekleri de dahil, satır tek kalır). `QuizCompleted`'ı sınav çözme ucu (`POST /api/quizzes/{id}/attempts`, #54) yayınlar. Altı bildirim olayını `notification/listener/NotificationListener` dinler (#124); teslim kuralı `EnrollmentCreatedDeliveryTest` ile, altı olayın uçtan uca bildirimi `NotificationScenarioIT` ile gösterilir. `LessonCompleted`'ı ders tamamlama ucu (`POST /api/lessons/{id}/complete`, #41) yayınlar; `ProgressListener` commit'ten sonra kurs yüzdesini günceller (`LessonCompletedDeliveryTest`). Diğer olayların yayıncıları ilgili issue'larda eklenir; tipleri şimdiden tanımlıdır ve alanları o issue'larda gerekirse genişletilir.
 
 ## 6. Diyagramlar
 
@@ -211,12 +213,22 @@ Düz ok: service çağrısı. Kesikli ok: domain olayı (yayınlayan → dinleye
 ### Sertifika verme kuralı (#129)
 
 - **Koşul (proje dokümanı H):** kursun bütün **zorunlu** (`lessons.mandatory`) dersleri tamamlanmış **ve** kursun bölümlerindeki bütün **zorunlu** (`quizzes.required`) sınavların her birinin en az bir geçen denemesi var. İsteğe bağlı dersler ve zorunlu olmayan sınavlar koşula girmez. "Geçti" bilgisi denemenin kendisinde saklanır (deneme anındaki eşiğe göre).
-- **Ne zaman kontrol edilir:** `CertificateListener`, `LessonCompleted` ve geçen `QuizCompleted` olaylarında, yayıncının işlemi commit edildikten sonra kendi işleminde (AFTER_COMMIT + REQUIRES_NEW, ADR-009). Kalınan deneme koşulu sağlatamayacağı için kontrol edilmez.
+- **Ne zaman kontrol edilir:** `CertificateListener`, `LessonCompleted` ve geçen `QuizCompleted` olaylarında, yayıncının işlemi commit edildikten sonra kendi işleminde (AFTER_COMMIT + REQUIRES_NEW, ADR-009). Kalınan deneme koşulu sağlatamayacağı için kontrol edilmez. Olaydan bildirime kadar akış: [sekans diyagramı](diagrams/seq-certificate.svg) (#140).
 - **Kayıt başına tek sertifika:** `certificates.enrollment_id` tekil. Ekleme `ON CONFLICT DO NOTHING` ile tek komuttur; aynı anda gelen iki olayda (son ders ve son sınav) biri yazar, diğeri hiçbir şey yapmaz ve `CertificateIssued` bir kez yayınlanır.
 - **Doğrulama kodu:** `XXXX-XXXX-XX`, `SecureRandom` ile 31 karakterlik okunaklı alfabeden (0/O, 1/I/L yok) 10 karakter (~49 bit). Kod tekil; çakışırsa yeni kodla en fazla 5 kez denenir.
 - **Kullanılan servisler:** zorunlu dersler `course/service/CourseStructureService`, tamamlanan dersler `progress/service/ProgressService`, zorunlu sınavlar `quiz/service/QuizRequirementService`, kayıt id'si `enrollment/service/EnrollmentService` (tablodaki `course`, `enrollment`, `progress`, `quiz` bağımlılıkları).
 - **Koşulu sonradan değişen kurslar:** sertifika verildikten sonra kursa zorunlu ders ya da sınav eklenirse sertifika geri alınmaz; henüz sertifikası olmayan kursiyer bir sonraki ders tamamlamasında ya da geçen sınav denemesinde yeni koşula göre değerlendirilir.
 - **Zorunlu dersi ve zorunlu sınavı olmayan kurs:** koşul boş olduğu için kursiyerin ilk ders tamamlaması (ya da geçen ilk sınavı) sertifika verir.
+
+### Bildirimler (#124)
+
+- **Olay → alıcı (FR-43):** kursa kayıt → kursun eğitmeni; yayımlanmış kursa yeni ders → kursa kayıtlı her kursiyer; kurs onayı → eğitmen; kurs reddi → eğitmen (gerekçe gövdede); sınav sonucu → kursiyer (geçti ya da kaldı); sertifika → kursiyer. Her olayda her alıcıya tek bildirim.
+- **Ne zaman yazılır:** `NotificationListener`, yayıncının işlemi commit edildikten sonra kendi işleminde (AFTER_COMMIT + REQUIRES_NEW, ADR-009). Yayıncının işi başarısız olursa (örn. mükerrer kayıt 409) bildirim yok; bildirim yazılamazsa yayıncının işi geri alınmaz.
+- **Metinler tek yerde:** başlık, gövde ve ön yüz bağlantısı yalnız `notification/service/NotificationMessages`'ta üretilir.
+- **Kullanılan servisler:** kurs adı ve eğitmen `course/service/CourseLookupService`, kayıtlı kursiyerler `enrollment/service/EnrollmentService.findStudentIdsByCourse`, kursiyer adı `auth/service/UserDirectoryService` (tablodaki `auth`, `course`, `enrollment` bağımlılıkları). `EnrollmentCreated` eğitmen id'sini, `LessonPublished` alıcıları taşımadığı için `notification` bu iki modüle bağımlıdır; ikisi `notification`'a bağımlı olmadığından döngü yoktur. Yayıncılar `notification`'ı bilmez.
+- **Kurs bulunamazsa** (olaydan sonra silinmişse) bildirim yazılmaz, uyarı loglanır.
+- **Aynı olaya iki dinleyici:** geçen `QuizCompleted`'da `CertificateListener` sertifikayı verip `CertificateIssued` yayınlayabilir; sınav ve sertifika bildirimlerinin birbirine göre sırası tanımsızdır.
+- Listeleme, okundu işaretleme ve sayaç #125'tedir.
 
 ### İlerleme yüzdesi hesaplama kuralı (#43)
 
@@ -249,6 +261,8 @@ flowchart LR
   review --> course
   review --> enrollment
   notification --> auth
+  notification --> course
+  notification --> enrollment
   admin --> auth
   admin --> course
   admin --> enrollment

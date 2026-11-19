@@ -137,6 +137,34 @@ class CourseStateTest {
         assertThat(byInstructor.getUnpublishReason()).isNull();
     }
 
+    @ParameterizedTest
+    @CsvSource(value = {"''", "'   '"})
+    void unpublish_withBlankReason_storesNoReason(String reason) {
+        Course course = courseIn(CourseStatus.PUBLISHED);
+
+        course.unpublish(reason);
+
+        assertThat(course.getStatus()).isEqualTo(CourseStatus.UNPUBLISHED);
+        assertThat(course.getUnpublishReason()).isNull();
+    }
+
+    /** #123: gerekçe incelemede görünür kalır, yeniden yayımlanınca temizlenir. */
+    @Test
+    void unpublishReason_survivesResubmit_andIsClearedOnApproval() {
+        Course course = CourseFixtures.course(5L, 7L, "Kurs", CourseStatus.PUBLISHED);
+        CourseFixtures.lesson(CourseFixtures.section(course, 1L, "Giriş", 0), 11L, "Kurulum", 300, 0, 900L);
+        course.unpublish("Telif şikâyeti");
+
+        course.submit();
+        assertThat(course.getStatus()).isEqualTo(CourseStatus.IN_REVIEW);
+        assertThat(course.getUnpublishReason()).as("yönetici incelerken kaldırılma sebebini görür")
+                .isEqualTo("Telif şikâyeti");
+
+        course.approve();
+        assertThat(course.getStatus()).isEqualTo(CourseStatus.PUBLISHED);
+        assertThat(course.getUnpublishReason()).as("yeniden yayımlanan kursta eski gerekçe kalmaz").isNull();
+    }
+
     /** #27: onaya göndermek için en az bir bölüm, bir ders ve içeriği yüklenmiş en az bir ders; yoksa 400. */
     @ParameterizedTest(name = "{0}")
     @CsvSource({"bölüm yok", "bölümde ders yok", "derslerin içeriği yok"})

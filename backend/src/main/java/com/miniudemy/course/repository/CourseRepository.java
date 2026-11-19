@@ -76,4 +76,14 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
             """)
     List<Course> findByInstructor(@Param("instructorId") Long instructorId,
             @Param("status") CourseStatus status);
+
+    /** Durum başına kurs sayısı (platform raporu, #145); kursu olmayan durum sonuçta yer almaz. */
+    @Query("select c.status as status, count(c) as total from Course c group by c.status")
+    List<StatusCount> countByStatus();
+
+    interface StatusCount {
+        CourseStatus getStatus();
+
+        long getTotal();
+    }
 }

@@ -691,6 +691,79 @@ a {
   }
 }
 
+/* Bölüm sonu sınavları (#50); soru bankasının qb-* sınıflarını kullanır */
+.qz-section-title {
+  font-size: 1.125rem;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.qz-muted {
+  color: var(--muted);
+  font-weight: normal;
+}
+
+.qz-quizzes,
+.qz-selected {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0;
+  margin: 0;
+}
+
+.qz-quiz {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+
+.qb-form .qz-radio {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 8px;
+  color: inherit;
+}
+
+.qz-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+.qz-row-warn {
+  border-color: var(--err);
+}
+
+.qz-pos {
+  font-weight: 600;
+  min-width: 1.5rem;
+}
+
+.qz-row-text {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.qz-row .qb-actions {
+  flex-wrap: nowrap;
+}
+
+@media (max-width: 600px) {
+  .qz-row {
+    flex-wrap: wrap;
+  }
+}
+
 /* Kategori yönetimi (#118); soru bankasının qb-* sınıflarını kullanır */
 .cat-add-row {
   display: flex;

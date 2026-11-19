@@ -54,8 +54,10 @@ class CourseCatalogServiceTest {
     private final UserDirectoryService userDirectory = mock(UserDirectoryService.class);
     private final EnrollmentCounts enrollmentCounts = mock(EnrollmentCounts.class);
     private final CourseRatings courseRatings = mock(CourseRatings.class);
+    private final CourseRoster roster = mock(CourseRoster.class);
     private final CourseCatalogService service = new CourseCatalogService(courseRepository, sectionRepository,
-            lessonRepository, userDirectory, enrollmentCounts, courseRatings, new CourseMapperImpl(new CategoryMapperImpl()));
+            lessonRepository, userDirectory, enrollmentCounts, courseRatings, new CourseMapperImpl(new CategoryMapperImpl()),
+            new CourseVisibility(roster));
 
     // --- yönetici listesi (#59) ---
 
@@ -384,6 +386,16 @@ class CourseCatalogServiceTest {
         stubCourse(CourseStatus.UNPUBLISHED);
 
         assertThat(service.getDetail(5L, 1L, true).status()).isEqualTo(CourseStatus.UNPUBLISHED);
+    }
+
+    /** #123: yayından kaldırılan kursa önceden kaydolan kursiyer detayı görmeye devam eder; kayıtsız kullanıcı 404. */
+    @Test
+    void getDetail_unpublishedCourse_isVisibleToEnrolledStudent_butNotToOthers() {
+        stubCourse(CourseStatus.UNPUBLISHED);
+        given(roster.isEnrolled(5L, 42L)).willReturn(true);
+
+        assertThat(service.getDetail(5L, 42L, false).status()).isEqualTo(CourseStatus.UNPUBLISHED);
+        assertThatThrownBy(() -> service.getDetail(5L, 43L, false)).isInstanceOf(NotFoundException.class);
     }
 
     @Test

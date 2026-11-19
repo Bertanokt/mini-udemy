@@ -45,7 +45,7 @@ class ModuleArchitectureTest {
             Map.entry("quiz", Set.of("course", "enrollment")),
             Map.entry("certificate", Set.of("course", "enrollment", "progress", "quiz")),
             Map.entry("review", Set.of("auth", "course", "enrollment")),
-            Map.entry("notification", Set.of("auth")),
+            Map.entry("notification", Set.of("auth", "course", "enrollment")),
             Map.entry("admin", Set.of("auth", "course", "enrollment", "progress", "certificate", "review")));
 
     private static final String COMMON = "common";

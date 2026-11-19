@@ -213,6 +213,20 @@ class EnrollmentServiceTest {
         assertThat(service.findEnrollmentIdsByCourse(5L)).containsExactly(9L, 10L);
     }
 
+    @Test
+    void findStudentIdsByCourse_returnsEnrolledStudentIds() {
+        given(repository.findStudentIdsByCourseId(5L)).willReturn(List.of(42L, 43L));
+
+        assertThat(service.findStudentIdsByCourse(5L)).containsExactly(42L, 43L);
+    }
+
+    @Test
+    void findStudentIdsByCourse_courseWithoutEnrollments_returnsEmptyList() {
+        given(repository.findStudentIdsByCourseId(5L)).willReturn(List.of());
+
+        assertThat(service.findStudentIdsByCourse(5L)).isEmpty();
+    }
+
     // --- ilerleme özeti (#119) ---
 
     @Test
