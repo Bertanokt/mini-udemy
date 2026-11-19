@@ -99,6 +99,13 @@ public class ProgressService {
                 .orElse(new ResumeResponse(courseId, null, null, null, percent, lastAccessedAt));
     }
 
+    /** Kursiyerin kursta tamamladığı derslerin id'leri; sertifika uygunluğu için (#129). Kayıtlı değilse 403. */
+    @Transactional(readOnly = true)
+    public Set<Long> completedLessonIds(Long studentId, Long courseId) {
+        Long enrollmentId = enrollments.requireEnrollmentId(studentId, courseId);
+        return new HashSet<>(lessonProgress.findLessonIdsByEnrollmentId(enrollmentId));
+    }
+
     /** Kursa kayıtlı herkesin yüzdesini yeniden yazar; ders silinince çağrılır. */
     @Transactional
     public void recalculateCourse(Long courseId) {
