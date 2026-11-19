@@ -4,6 +4,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -23,8 +25,14 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
     @Query("select e.id from Enrollment e where e.courseId = :courseId")
     List<Long> findIdsByCourseId(@Param("courseId") Long courseId);
 
+    @Query("select e.studentId from Enrollment e where e.courseId = :courseId order by e.studentId")
+    List<Long> findStudentIdsByCourseId(@Param("courseId") Long courseId);
+
     /** En son kaydolunan önce; aynı anda oluşanlarda id'ye göre, böylece sıra kararlıdır. */
     List<Enrollment> findAllByStudentIdOrderByEnrolledAtDescIdDesc(Long studentId);
+
+    /** Kursun kayıtları; sıra {@code pageable} ile gelir (eğitmenin kursiyer listesi). */
+    Page<Enrollment> findByCourseId(Long courseId, Pageable pageable);
 
     /** Verilen kursların kayıt sayısı tek sorguda; kaydı olmayan kurs sonuçta yer almaz. */
     @Query("select e.courseId as courseId, count(e) as total from Enrollment e "

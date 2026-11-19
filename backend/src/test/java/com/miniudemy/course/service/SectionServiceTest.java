@@ -1,5 +1,6 @@
 package com.miniudemy.course.service;
 
+import com.miniudemy.course.domain.ContentFileDetached;
 import static com.miniudemy.course.CourseFixtures.course;
 import static com.miniudemy.course.CourseFixtures.lesson;
 import static com.miniudemy.course.CourseFixtures.section;
@@ -17,10 +18,13 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 
 import com.miniudemy.common.exception.ApiException;
+import com.miniudemy.course.CourseFixtures;
 import com.miniudemy.course.domain.Course;
+import com.miniudemy.course.domain.CourseLessonsChanged;
 import com.miniudemy.course.domain.CourseStatus;
 import com.miniudemy.course.domain.Section;
 import com.miniudemy.course.dto.SectionRequest;
@@ -38,13 +42,15 @@ class SectionServiceTest {
 
     private final SectionRepository sectionRepository = mock(SectionRepository.class);
     private final CourseRepository courseRepository = mock(CourseRepository.class);
+    private final ApplicationEventPublisher events = mock(ApplicationEventPublisher.class);
+    private final CourseRoster roster = mock(CourseRoster.class);
     private SectionService service;
 
     @BeforeEach
     void setUp() {
         CourseOwnershipService ownership = new CourseOwnershipService(courseRepository, sectionRepository);
         service = new SectionService(sectionRepository, courseRepository, ownership,
-                new CourseMapperImpl(new CategoryMapperImpl()));
+                new CourseMapperImpl(new CategoryMapperImpl()), events, new CourseVisibility(roster));
         given(courseRepository.findById(99L)).willReturn(Optional.empty());
         given(sectionRepository.findById(999L)).willReturn(Optional.empty());
     }
@@ -107,6 +113,19 @@ class SectionServiceTest {
                 .satisfies(ex -> assertStatus(ex, HttpStatus.NOT_FOUND));
         assertThat(service.listSections(1L, OWNER, false)).isEmpty();
         assertThat(service.listSections(1L, 1L, true)).isEmpty();
+    }
+
+    /** #123: yayından kaldırılan kursun dersleri, önceden kaydolan kursiyerin oynatıcısında açılmaya devam eder. */
+    @Test
+    void listSections_unpublishedCourse_isVisibleToEnrolledStudent_butNotToOthers() {
+        stored(course(1L, OWNER, "Kaldırılan kurs", CourseStatus.UNPUBLISHED));
+        given(roster.isEnrolled(1L, 42L)).willReturn(true);
+
+        assertThat(service.listSections(1L, 42L, false)).isEmpty();
+        assertThatThrownBy(() -> service.listSections(1L, 43L, false))
+                .satisfies(ex -> assertStatus(ex, HttpStatus.NOT_FOUND));
+        assertThatThrownBy(() -> service.listSections(1L, null, false))
+                .satisfies(ex -> assertStatus(ex, HttpStatus.NOT_FOUND));
     }
 
     @Test
@@ -253,5 +272,46 @@ class SectionServiceTest {
 
         assertThatThrownBy(() -> service.moveSection(11L, OTHER_INSTRUCTOR, 2))
                 .satisfies(ex -> assertStatus(ex, HttpStatus.FORBIDDEN));
+    }
+
+    // ders sayısı (#249)
+
+    @Test
+    void deleteSection_publishesCourseLessonsChanged_butCreateRenameAndMoveDoNot() {
+        Course course = CourseFixtures.course(5L, 7L, "Kurs", CourseStatus.DRAFT);
+        Section first = CourseFixtures.section(course, 1L, "Giriş", 0);
+        CourseFixtures.lesson(first, 11L, "Kurulum", 60, 0, null);
+        Section second = CourseFixtures.section(course, 2L, "Güvenlik", 1);
+        given(courseRepository.findById(5L)).willReturn(Optional.of(course));
+        given(sectionRepository.findById(1L)).willReturn(Optional.of(first));
+        given(sectionRepository.findById(2L)).willReturn(Optional.of(second));
+        given(sectionRepository.saveAndFlush(any(Section.class))).willAnswer(call -> call.getArgument(0));
+
+        service.createSection(5L, 7L, new SectionRequest("Test"));
+        service.updateSection(2L, 7L, new SectionRequest("Güvenlik ve yetki"));
+        service.moveSection(2L, 7L, 0);
+        verify(events, never()).publishEvent(any(Object.class));
+
+        service.deleteSection(1L, 7L);
+        verify(events).publishEvent(new CourseLessonsChanged(5L));
+    }
+
+    // dosya bağı (#112)
+
+    @Test
+    void deleteSection_publishesContentFileDetachedForEveryLessonFile() {
+        Course course = CourseFixtures.course(5L, 7L, "Kurs", CourseStatus.DRAFT);
+        Section section = CourseFixtures.section(course, 1L, "Giriş", 0);
+        CourseFixtures.lesson(section, 11L, "Bir", 60, 0, 900L);
+        CourseFixtures.lesson(section, 12L, "İki", 60, 1, null);
+        CourseFixtures.lesson(section, 13L, "Üç", 60, 2, 901L);
+        given(courseRepository.findById(5L)).willReturn(Optional.of(course));
+        given(sectionRepository.findById(1L)).willReturn(Optional.of(section));
+
+        service.deleteSection(1L, 7L);
+
+        verify(events).publishEvent(new ContentFileDetached(900L));
+        verify(events).publishEvent(new ContentFileDetached(901L));
+        verify(events, never()).publishEvent(new ContentFileDetached(null));
     }
 }

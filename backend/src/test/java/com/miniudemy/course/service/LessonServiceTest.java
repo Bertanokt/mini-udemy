@@ -1,5 +1,6 @@
 package com.miniudemy.course.service;
 
+import com.miniudemy.course.domain.ContentFileDetached;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -24,6 +25,7 @@ import com.miniudemy.common.exception.ForbiddenException;
 import com.miniudemy.common.exception.NotFoundException;
 import com.miniudemy.course.CourseFixtures;
 import com.miniudemy.course.domain.Course;
+import com.miniudemy.course.domain.CourseLessonsChanged;
 import com.miniudemy.course.domain.CourseStatus;
 import com.miniudemy.course.domain.Lesson;
 import com.miniudemy.course.domain.LessonContentType;
@@ -94,7 +96,7 @@ class LessonServiceTest {
     // create
 
     @Test
-    void create_inDraftCourse_appendsAtTheEnd_withTheGivenFields_andPublishesNoEvent() {
+    void create_inDraftCourse_appendsAtTheEnd_withTheGivenFields_andPublishesOnlyCourseLessonsChanged() {
         LessonResponse response = service.create(OWNER, 20L, request("Dört", LessonContentType.PDF, false, 120));
 
         assertThat(response.id()).isEqualTo(100L);
@@ -106,7 +108,8 @@ class LessonServiceTest {
         assertThat(response.position()).isEqualTo(3);
         assertThat(response.hasContent()).isFalse();
         assertThat(titles()).containsExactly("Bir", "İki", "Üç", "Dört");
-        verify(events, never()).publishEvent(any(Object.class));
+        verify(events).publishEvent(new CourseLessonsChanged(5L));
+        verify(events, never()).publishEvent(any(LessonPublished.class));
     }
 
     @Test
@@ -115,23 +118,24 @@ class LessonServiceTest {
 
         service.create(OWNER, 20L, request("Dört", LessonContentType.VIDEO, true, 300));
 
-        ArgumentCaptor<Object> event = ArgumentCaptor.forClass(Object.class);
+        ArgumentCaptor<LessonPublished> event = ArgumentCaptor.forClass(LessonPublished.class);
         verify(events).publishEvent(event.capture());
-        assertThat(event.getValue()).isInstanceOf(LessonPublished.class);
-        LessonPublished published = (LessonPublished) event.getValue();
+        verify(events).publishEvent(new CourseLessonsChanged(5L));
+        LessonPublished published = event.getValue();
         assertThat(published.lessonId()).isEqualTo(100L);
         assertThat(published.courseId()).isEqualTo(5L);
         assertThat(published.publishedAt()).isNotNull();
     }
 
     @Test
-    void create_inUnpublishedCourse_works_andPublishesNoEvent() {
+    void create_inUnpublishedCourse_works_andPublishesOnlyCourseLessonsChanged() {
         build(CourseStatus.UNPUBLISHED);
 
         service.create(OWNER, 20L, request("Dört", LessonContentType.VIDEO, true, 300));
 
         assertThat(section.getLessons()).hasSize(4);
-        verify(events, never()).publishEvent(any(Object.class));
+        verify(events).publishEvent(new CourseLessonsChanged(5L));
+        verify(events, never()).publishEvent(any(LessonPublished.class));
     }
 
     @Test
@@ -218,6 +222,7 @@ class LessonServiceTest {
         assertThat(titles()).containsExactly("İki", "Üç");
         assertThat(positions()).containsExactly(0, 1);
         verify(lessonRepository).flush();
+        verify(events).publishEvent(new CourseLessonsChanged(5L));
     }
 
     @ParameterizedTest
@@ -227,6 +232,7 @@ class LessonServiceTest {
 
         assertThatThrownBy(() -> service.delete(OWNER, 31L)).isInstanceOf(ConflictException.class);
         assertThat(section.getLessons()).hasSize(3);
+        verify(events, never()).publishEvent(any(Object.class));
     }
 
     @Test
@@ -296,5 +302,41 @@ class LessonServiceTest {
         given(lessonRepository.findById(99L)).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.move(OWNER, 99L, 0)).isInstanceOf(NotFoundException.class);
+    }
+
+    // ders sayısı değişmeyen işlemler (#249)
+
+    @Test
+    void updateAndMove_doNotChangeTheLessonCount_andPublishNothing() {
+        service.update(OWNER, 31L, request("Bir+", LessonContentType.VIDEO, true, 60));
+        service.move(OWNER, 31L, 2);
+
+        verify(events, never()).publishEvent(any(Object.class));
+    }
+
+    // dosya bağı (#112)
+
+    @Test
+    void update_withAnotherContentType_publishesContentFileDetachedForTheOldFile() {
+        service.update(OWNER, 32L, request("İki", LessonContentType.PDF, true, 60));
+
+        verify(events).publishEvent(new ContentFileDetached(900L));
+    }
+
+    @Test
+    void update_withTheSameContentType_orWithoutAFile_publishesNoContentFileDetached() {
+        service.update(OWNER, 32L, request("İki", LessonContentType.VIDEO, true, 60));
+        service.update(OWNER, 31L, request("Bir", LessonContentType.PDF, true, 60));
+
+        verify(events, never()).publishEvent(any(ContentFileDetached.class));
+    }
+
+    @Test
+    void delete_ofALessonWithContent_publishesContentFileDetached_andOfOneWithoutDoesNot() {
+        service.delete(OWNER, 31L);
+        verify(events, never()).publishEvent(any(ContentFileDetached.class));
+
+        service.delete(OWNER, 32L);
+        verify(events).publishEvent(new ContentFileDetached(900L));
     }
 }

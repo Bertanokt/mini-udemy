@@ -77,6 +77,33 @@ class ProgressServiceTest {
     }
 
     @Test
+    void getMyProgress_noLessonCompleted_isZero_forCourseAndEverySection() {
+        enrolled();
+        twentyLessons();
+        given(lessonProgress.findLessonIdsByEnrollmentId(ENROLLMENT)).willReturn(List.of());
+
+        CourseProgressResponse response = service.getMyProgress(STUDENT, COURSE);
+
+        assertThat(response.progressPercent()).isZero();
+        assertThat(response.completedLessonIds()).isEmpty();
+        assertThat(response.sections()).containsExactly(new SectionProgress(1L, 0.0), new SectionProgress(2L, 0.0));
+    }
+
+    @Test
+    void getMyProgress_allTwentyCompleted_is100_forCourseAndEverySection() {
+        enrolled();
+        twentyLessons();
+        given(lessonProgress.findLessonIdsByEnrollmentId(ENROLLMENT)).willReturn(completed(10));
+
+        CourseProgressResponse response = service.getMyProgress(STUDENT, COURSE);
+
+        assertThat(response.progressPercent()).isEqualTo(100.0);
+        assertThat(response.completedLessonIds()).hasSize(20);
+        assertThat(response.sections()).containsExactly(new SectionProgress(1L, 100.0),
+                new SectionProgress(2L, 100.0));
+    }
+
+    @Test
     void getMyProgress_perSection_usesSameRule() {
         enrolled();
         twentyLessons();
@@ -288,5 +315,22 @@ class ProgressServiceTest {
         given(enrollments.requireEnrollmentId(STUDENT, COURSE)).willThrow(new ForbiddenException("Bu kursa kayıtlı değilsiniz."));
 
         assertThatThrownBy(() -> service.getMyResumePoint(STUDENT, COURSE)).isInstanceOf(ForbiddenException.class);
+    }
+
+    // --- sertifika uygunluğu için tamamlanan dersler (#129) ---
+
+    @Test
+    void completedLessonIds_returnsTheLessonsCompletedInThatEnrollment() {
+        given(enrollments.requireEnrollmentId(STUDENT, COURSE)).willReturn(ENROLLMENT);
+        given(lessonProgress.findLessonIdsByEnrollmentId(ENROLLMENT)).willReturn(List.of(11L, 13L));
+
+        assertThat(service.completedLessonIds(STUDENT, COURSE)).containsExactlyInAnyOrder(11L, 13L);
+    }
+
+    @Test
+    void completedLessonIds_notEnrolled_returns403() {
+        given(enrollments.requireEnrollmentId(STUDENT, COURSE)).willThrow(new ForbiddenException("Bu kursa kayıtlı değilsiniz."));
+
+        assertThatThrownBy(() -> service.completedLessonIds(STUDENT, COURSE)).isInstanceOf(ForbiddenException.class);
     }
 }

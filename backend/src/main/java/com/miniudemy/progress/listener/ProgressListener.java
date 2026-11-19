@@ -7,6 +7,7 @@ import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 import com.miniudemy.content.domain.LessonOpened;
+import com.miniudemy.course.domain.CourseLessonsChanged;
 import com.miniudemy.progress.domain.LessonCompleted;
 import com.miniudemy.progress.service.ProgressService;
 
@@ -32,5 +33,12 @@ public class ProgressListener {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onLessonOpened(LessonOpened event) {
         progressService.recordLessonOpened(event.studentId(), event.courseId(), event.lessonId(), event.openedAt());
+    }
+
+    /** Kursun ders sayısı değişince kayıtlıların yüzde önbelleğini yeniden hesaplar (#249). AFTER_COMMIT, kendi işlemi. */
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void onCourseLessonsChanged(CourseLessonsChanged event) {
+        progressService.recalculateCourse(event.courseId());
     }
 }

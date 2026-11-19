@@ -4,6 +4,8 @@ Bu repo bir Yazılım Tasarımı ve Mimarisi dersi projesi. Notun %70'i tasarım
 
 Kapsamın tek kaynağı hocanın proje tanım dokümanıdır (modüller A–L, senaryo 1–5, bölüm 5–7). Issue'lar bu dokümana göre yazıldı; issue'nun kabul kriterleri dışına çıkma, çıkman gerekiyorsa dur ve sor.
 
+**Yalnız Bertan'ın (@Bertanokt) oturumu için:** hangi kararların kendiliğinden verilip hangilerinde sorulacağı `docs/karar-ilkeleri.md`'dedir. Diğer ekip üyelerinin oturumlarında geçerli değildir; onlar için akış `CONTRIBUTING.md` ve `docs/claude-code-workflow.md`'deki gibidir.
+
 ## Komutlar
 
 ```bash
@@ -51,7 +53,7 @@ Desenler bilinçli kullanılıyor; her birinin ADR'si `docs/adr/` altında. Dese
 | Desen | Yer | Kural |
 |---|---|---|
 | State | `course` — `CourseState` ve durum sınıfları (Taslak / İncelemede / Yayımlandı / Yayından kaldırıldı) | Kurs durumuna bağlı her izin ve geçiş durum nesnesine sorulur (`course.submit()`, `course.assertEditable()` …); serviste `status` için if/switch yok. Red: İncelemede → Taslak, gerekçe kursta saklanır. Geçiş tablosu `docs/architecture.md` › Kurs durumları (ADR-010). |
-| Observer | olaylar ilgili modülün `domain` paketinde; dinleyiciler `progress`, `certificate`, `notification` | Bir modülün işi başka modülü tetikleyecekse olay yayınla (`EnrollmentCreated`, `LessonPublished`, `LessonOpened`, `LessonCompleted`, `CourseApproved`, `CourseRejected`, `QuizCompleted`, `CertificateIssued`); dinleyiciyi doğrudan çağırma. |
+| Observer | olaylar ilgili modülün `domain` paketinde; dinleyiciler `progress`, `certificate`, `notification` | Bir modülün işi başka modülü tetikleyecekse olay yayınla (`EnrollmentCreated`, `LessonPublished`, `LessonOpened`, `LessonCompleted`, `CourseLessonsChanged`, `CourseApproved`, `CourseRejected`, `QuizCompleted`, `CertificateIssued`); dinleyiciyi doğrudan çağırma. |
 | Strategy | `quiz` — `ScoringStrategy` ve uygulamaları | Puanlama kuralı sınavın `scoringType`'ına göre seçilen stratejidedir; yeni kural = yeni strateji sınıfı. |
 | Factory Method | `content` — `LessonContentFactory` ve tür fabrikaları (VIDEO, PDF, DOCUMENT), seçim `LessonContentFactories` | Türe özgü biçim, boyut ve sunuluş kuralları türün fabrikası/ürünündedir; yükleme servisi yalnız ortak arayüzü bilir (ADR-011). |
 | DTO + Mapper | her modülün `dto` ve `mapper` paketi | Entity API'ye çıkmaz; dönüşüm yalnız mapper'da. Mapper bir MapStruct arayüzüdür: `@Mapper(config = MapStructConfig.class)`; eşlenmemiş alan derleme hatasıdır (ADR-006), alanı bilerek boş bırakacaksan `@Mapping(target = "…", ignore = true)` yaz. Dönüşümü controller ya da service'te elle yazma. |
@@ -80,7 +82,7 @@ Tüm hatalar `common/exception`'daki global handler'dan aynı gövdeyle döner:
 - Hata belirli bir alanla ilgiliyse alan hatasını da ver ki frontend mesajı o alanın altında göstersin: `throw new ConflictException("Bu e-posta adresi zaten kayıtlı.", Map.of("email", "Bu e-posta adresi zaten kayıtlı."))`. Birden fazla alan varsa formdaki sırayla dönmeleri için `LinkedHashMap` kullan (`Map.of` sırasızdır).
 - Bozuk JSON, yanlış tipte/eksik parametre (400), olmayan adres (404), yanlış HTTP yöntemi (405), desteklenmeyen yanıt biçimi (406) ve beklenmeyen hatalar (500) handler'da zaten aynı gövdeye çevrilir; ayrıca bir şey yazma. Spring'in kodunu kendisi taşıyan istisnaları (`ResponseStatusException` dahil) kendi koduyla ve genel bir Türkçe mesajla döner; yine de kendi kodunda `ResponseStatusException` değil `ApiException` alt sınıflarını kullan, yoksa mesajın kullanıcıya ulaşmaz. Hata gövdesi istemcinin `Accept` başlığından bağımsız olarak her zaman JSON'dur.
 - Güvenlik hataları (#10) da aynı gövdeyle ve `common/security/SecurityMessages`'taki sözleşme mesajlarıyla döner: token yok/geçersiz/süresi dolmuş → 401; rol yetersiz → 403; hesap pasif → 403 "Hesabınız devre dışı bırakılmış.". Filtrede oluşanları `JsonSecurityErrorHandler`, controller/service içinde oluşanları (`@PreAuthorize` reddi) `GlobalExceptionHandler` yazar; ikisine de elle yanıt ekleme.
-- Yetki: `/api/admin/**` ve `/api/instructor/**` adres kuralıyla korunur; diğer rol kuralları ucun kendisinde `@PreAuthorize("hasRole('…')")` ile yazılır. Rol token'dan değil, her istekte veritabanından (`AccountLookup`) gelir. Yeni bir herkese açık uç ekliyorsan hem sözleşmede `security: []` yap hem `SecurityConfig`'teki `PUBLIC_GET`/`PUBLIC_POST` listesine ekle.
+- Yetki: `/api/admin/**` ve `/api/instructor/**` adres kuralıyla korunur; diğer rol kuralları ucun kendisinde `@PreAuthorize("hasRole('…')")` ile yazılır. Rol token'dan değil, her istekte veritabanından (`AccountLookup`) gelir. Yeni bir herkese açık uç ekliyorsan hem sözleşmede `security: []` yap hem `SecurityConfig`'teki `PUBLIC_GET`/`PUBLIC_POST` listesine ekle. Tek istisna: `GET /api/lessons/{id}/content?token=` filtreden kimliksiz geçer, token'ı ve yetkiyi içerik servisi doğrular (ADR-012); bu kuralı başka uca genişletme.
 - `message` kullanıcıya gösterilebilir Türkçe bir cümle; stack trace ya da iç ayrıntı içermez.
 - Yeni bir hata türü gerekiyorsa `ApiException`'dan türeyen yeni bir sınıf yaz; handler değişmez. O durum kodu için `docs/api/openapi.yaml` › `components.responses`'a da bir yanıt ekle. Handler'a yalnız Spring'in yakalanmamış bir istisnası (şu an 500'e düşen) için yeni metot eklenir.
 

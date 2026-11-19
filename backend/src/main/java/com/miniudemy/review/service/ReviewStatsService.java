@@ -34,6 +34,13 @@ public class ReviewStatsService implements CourseRatings {
         return ratingsByCourses(List.of(courseId)).get(courseId);
     }
 
+    @Override
+    public Map<String, Long> distributionOf(Long courseId) {
+        Map<Integer, Long> counts = new HashMap<>();
+        repository.countVisibleByRating(courseId).forEach(row -> counts.put(row.getRating(), row.getTotal()));
+        return RatingMath.summarize(counts).distribution();
+    }
+
     /** Verilen her kurs id'si için bir kayıt döner (yorumsuz kurs: null, 0); kurs sayısından bağımsız tek sorgu. */
     @Override
     public Map<Long, CourseRating> ratingsByCourses(Collection<Long> courseIds) {

@@ -102,6 +102,13 @@ public class Lesson {
         this.durationSeconds = durationSeconds;
     }
 
+    /** İçerik dosyasını değiştirir; önceki dosyanın id'sini döner (yoksa null), diskten silmek content'in işidir. */
+    public Long replaceContent(Long fileId) {
+        Long previous = contentFileId;
+        contentFileId = fileId;
+        return previous;
+    }
+
     public Long getId() {
         return id;
     }

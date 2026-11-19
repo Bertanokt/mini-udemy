@@ -37,7 +37,10 @@ import com.miniudemy.course.mapper.CategoryMapperImpl;
 import com.miniudemy.course.mapper.CourseMapperImpl;
 import com.miniudemy.course.repository.CourseRepository;
 
-/** Onaya gönder (#27): sahiplik → durum (409) → içerik (400) → İncelemede; yanıt güncel kurs. */
+/**
+ * Onaya gönder (#27): sahiplik → durum (409) → içerik (400) → İncelemede; yanıt güncel kurs. Yönetici onayı ve reddi
+ * (#59), yayından kaldırma (#123; Yayından kaldırıldı → İncelemede de onaya gönder testindedir).
+ */
 class CourseLifecycleServiceTest {
 
     private final CourseOwnershipService ownership = mock(CourseOwnershipService.class);
@@ -153,6 +156,67 @@ class CourseLifecycleServiceTest {
         assertThatThrownBy(() -> service.reject(5L, " ")).isInstanceOf(IllegalArgumentException.class);
         verify(courseRepository, never()).saveAndFlush(any());
         verifyNoInteractions(events);
+    }
+
+    // --- yayından kaldırma (#123) ---
+
+    @Test
+    void unpublishOwn_publishedOwnCourse_movesToUnpublished_withOptionalReason() {
+        Course course = submittable(CourseStatus.PUBLISHED);
+        given(ownership.requireOwnedCourse(5L, 7L)).willReturn(course);
+
+        CourseResponse response = service.unpublishOwn(5L, 7L, null);
+
+        assertThat(course.getStatus()).isEqualTo(CourseStatus.UNPUBLISHED);
+        verify(courseRepository).saveAndFlush(course);
+        assertThat(response.status()).isEqualTo(CourseStatus.UNPUBLISHED);
+        assertThat(response.unpublishReason()).isNull();
+        verifyNoInteractions(events);
+    }
+
+    @Test
+    void unpublishOwn_someoneElsesOrMissingCourse_propagates403And404() {
+        given(ownership.requireOwnedCourse(5L, 8L)).willThrow(new ForbiddenException("Bu kurs size ait değil."));
+        given(ownership.requireOwnedCourse(6L, 7L)).willThrow(new NotFoundException("Kurs bulunamadı."));
+
+        assertThatThrownBy(() -> service.unpublishOwn(5L, 8L, null)).isInstanceOf(ForbiddenException.class);
+        assertThatThrownBy(() -> service.unpublishOwn(6L, 7L, null)).isInstanceOf(NotFoundException.class);
+        verify(courseRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void unpublish_byAdmin_storesTheReason_andReturnsIt() {
+        Course course = submittable(CourseStatus.PUBLISHED);
+        given(courseRepository.findById(5L)).willReturn(java.util.Optional.of(course));
+
+        CourseResponse response = service.unpublish(5L, "Telif şikâyeti alındı.");
+
+        assertThat(course.getStatus()).isEqualTo(CourseStatus.UNPUBLISHED);
+        verify(courseRepository).saveAndFlush(course);
+        assertThat(response.status()).isEqualTo(CourseStatus.UNPUBLISHED);
+        assertThat(response.unpublishReason()).isEqualTo("Telif şikâyeti alındı.");
+        verifyNoInteractions(events);
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = CourseStatus.class, names = {"DRAFT", "IN_REVIEW", "UNPUBLISHED"})
+    void unpublish_notPublished_returns409_forInstructorAndAdmin_andSavesNothing(CourseStatus from) {
+        given(ownership.requireOwnedCourse(5L, 7L)).willReturn(submittable(from));
+        given(courseRepository.findById(5L)).willReturn(java.util.Optional.of(submittable(from)));
+
+        assertThatThrownBy(() -> service.unpublishOwn(5L, 7L, null)).isInstanceOf(CourseStateException.class);
+        assertThatThrownBy(() -> service.unpublish(5L, "Telif şikâyeti alındı."))
+                .isInstanceOf(CourseStateException.class);
+        verify(courseRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void unpublish_byAdmin_missingCourse_returns404() {
+        given(courseRepository.findById(6L)).willReturn(java.util.Optional.empty());
+
+        assertThatThrownBy(() -> service.unpublish(6L, "Telif şikâyeti alındı."))
+                .isInstanceOf(NotFoundException.class).hasMessage("Kurs bulunamadı.");
+        verify(courseRepository, never()).saveAndFlush(any());
     }
 
     @Test

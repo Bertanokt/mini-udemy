@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import type { Role } from "@/lib/api/auth";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { HOME_BY_ROLE } from "@/lib/auth/routes";
+import { useHasMounted } from "@/lib/useHasMounted";
 
 /** Rolün kendi sayfası: eğitmen/yönetici paneli, öğrencinin kayıtlı kursları (#37). */
 const PANEL_LINKS: Partial<Record<Role, { href: string; label: string }>> = {
@@ -17,9 +18,14 @@ const PANEL_LINKS: Partial<Record<Role, { href: string; label: string }>> = {
 /**
  * Üst menü (#19). Girişsizken Giriş/Kayıt; girişliyken rolün paneli, bildirim alanı yeri, kullanıcı adı ve Çıkış.
  * 600 px altında menü düğmesiyle açılıp kapanır.
+ *
+ * Oturuma bağlı kısım yalnız bileşen tarayıcıda bağlandıktan sonra çizilir (#256). Oturum localStorage'da durduğu
+ * için sunucu onu bilemez; Header layout'ta geç hydrate olan bir Suspense sınırının içinde olduğundan, o arada oturum
+ * yüklenirse ilk istemci çizimi sunucunun HTML'inden farklı olur ve React hydration hatası verir.
  */
 export function Header() {
   const { status, user, logout } = useAuth();
+  const mounted = useHasMounted();
   const router = useRouter();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -66,7 +72,7 @@ export function Header() {
           <Link href="/" onClick={close}>
             Kurslar
           </Link>
-          {status === "anonymous" && (
+          {mounted && status === "anonymous" && (
             <>
               <Link href="/login" onClick={close}>
                 Giriş
@@ -76,7 +82,7 @@ export function Header() {
               </Link>
             </>
           )}
-          {status === "authenticated" && user && (
+          {mounted && status === "authenticated" && user && (
             <>
               {panel && (
                 <Link href={panel.href} onClick={close}>

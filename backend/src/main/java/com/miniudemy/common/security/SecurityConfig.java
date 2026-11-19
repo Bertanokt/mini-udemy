@@ -1,5 +1,8 @@
 package com.miniudemy.common.security;
 
+import java.util.regex.Pattern;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -11,7 +14,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * HTTP güvenliği: durumsuz (stateless) JWT, sözleşmeye göre herkese açık uçlar, rol kuralları.
@@ -56,6 +59,18 @@ public class SecurityConfig {
         "/api/auth/password-reset/confirm",
     };
 
+    private static final Pattern LESSON_CONTENT = Pattern.compile("/api/lessons/\\d+/content");
+
+    /**
+     * {@code GET /api/lessons/{id}/content?token=…} (ADR-012): tarayıcının medya etiketleri {@code Authorization}
+     * başlığı gönderemediği için bu istek filtreden kimliksiz geçer. Token'ı (imza, süre, ders) ve yetkiyi (hesap, rol,
+     * kayıt) içerik servisi doğrular; geçersizse 401. Başka hiçbir uç ya da yöntem token parametresiyle açılmaz.
+     */
+    static boolean isLessonContentWithToken(HttpServletRequest request) {
+        return HttpMethod.GET.matches(request.getMethod()) && request.getParameter("token") != null
+                && LESSON_CONTENT.matcher(request.getRequestURI()).matches();
+    }
+
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http, AccountLookup accountLookup,
             ObjectMapper objectMapper) throws Exception {
@@ -73,6 +88,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.GET, PUBLIC_GET).permitAll()
                         .requestMatchers(HttpMethod.POST, PUBLIC_POST).permitAll()
+                        .requestMatchers(SecurityConfig::isLessonContentWithToken).permitAll()
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/instructor/**").hasRole("INSTRUCTOR")
