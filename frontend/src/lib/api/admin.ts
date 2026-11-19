@@ -1,6 +1,6 @@
 import { apiFetch } from "./client";
 import type { Role } from "./auth";
-import type { CategoryResponse, CourseStatus, CourseSummaryPage, PageMeta } from "./catalog";
+import type { CategoryResponse, CourseStatus, CourseSummaryPage, PageMeta, UserSummary } from "./catalog";
 import type { CourseResponse } from "./instructor";
 
 // Tipler docs/api/openapi.yaml'daki şemalarla aynıdır (CategoryRequest). Liste herkese açık uç olduğundan
@@ -119,5 +119,35 @@ export function unpublishCourse(id: number, reason: string): Promise<CourseRespo
   return apiFetch<CourseResponse>(`/api/admin/courses/${id}/unpublish`, {
     method: "POST",
     body: JSON.stringify({ reason }),
+  });
+}
+
+// Şikâyet incelemesi (#144, #146): ComplaintResponse, ComplaintPage, ComplaintStatusRequest. Şikâyet ya bir kursa
+// (courseId) ya bir yoruma (reviewId) aittir. Yönetici yalnız REVIEWED ya da REJECTED seçebilir.
+export type ComplaintStatus = "OPEN" | "REVIEWED" | "REJECTED";
+
+export interface ComplaintResponse {
+  id: number;
+  reporter: UserSummary;
+  courseId: number | null;
+  reviewId: number | null;
+  reason: string;
+  status: ComplaintStatus;
+  createdAt: string;
+  resolvedAt: string | null;
+}
+
+export interface ComplaintPage extends PageMeta {
+  content: ComplaintResponse[];
+}
+
+export function listComplaints(page: number, size: number): Promise<ComplaintPage> {
+  return apiFetch<ComplaintPage>(`/api/admin/complaints?page=${page}&size=${size}`);
+}
+
+export function setComplaintStatus(id: number, status: Exclude<ComplaintStatus, "OPEN">): Promise<ComplaintResponse> {
+  return apiFetch<ComplaintResponse>(`/api/admin/complaints/${id}/status`, {
+    method: "PUT",
+    body: JSON.stringify({ status }),
   });
 }

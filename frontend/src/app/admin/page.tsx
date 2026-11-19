@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   title: "Yönetici paneli · Mini Udemy",
 };
 
-/** Giriş sonrası yönetici ana sayfası (#18): kurs onayı (#62), kategori (#118), kullanıcı (#63) yönetimi ve platform raporu (#147). */
+/** Giriş sonrası yönetici ana sayfası (#18): kurs onayı (#62), kategori (#118), kullanıcı (#63) yönetimi, şikâyetler (#146) ve platform raporu (#147). */
 export default function Page() {
   return (
     <section className="placeholder-page">
@@ -19,6 +19,9 @@ export default function Page() {
         </li>
         <li>
           <Link href="/admin/users">Kullanıcı yönetimi</Link>
+        </li>
+        <li>
+          <Link href="/admin/complaints">Şikâyetler</Link>
         </li>
         <li>
           <Link href="/admin/reports">Platform raporu</Link>

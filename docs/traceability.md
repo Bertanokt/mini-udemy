@@ -138,7 +138,7 @@ Dört durumun hepsi testli: uçtan uca `Bolum6CriticalCasesIT` (case1–case4) v
 | FR-38 | Yönetici (gerekçeyle) ya da kursun eğitmeni yayımlanmış kursu yayından kaldırabilir | K, B | P1 | #123 ✓, #62 | U, E: #61 ✓ | `CourseLifecycleServiceTest.unpublish*`, `CourseVisibilityTest`, `CourseUnpublishIT` |
 | FR-39 | Yönetici kullanıcıları ve eğitmenleri listeleyip hesaplarını pasifleştirebilir/aktifleştirebilir | K | P2 | #60 ✓, #63 ✓ | U: – | `AdminUserServiceTest`, `UserAccountServiceTest`, `AdminUserControllerTest`, `SecurityConfigTest` (pasif hesap 403) |
 | FR-40 | Yönetici kategorileri ekler, düzenler ve siler | K | P2 | #118 ✓, #109 ✓, #146 | U: – | `CategoryServiceTest`, `AdminCategoryControllerTest` |
-| FR-41 | Kullanıcı bir kursu ya da yorumu gerekçeyle şikâyet edebilir; yönetici şikâyetleri inceler | K | P2 | #144, #146 | U: – | – (#144 açık) |
+| FR-41 | Kullanıcı bir kursu ya da yorumu gerekçeyle şikâyet edebilir; yönetici şikâyetleri inceler | K | P2 | #144, #146 | U: – | `ComplaintTest`, `ComplaintServiceTest`, `ComplaintControllerTest`, `ReviewServiceTest.assertVisible*`, `ComplaintIT` |
 | FR-42 | Yönetici platform raporlarını görür | K | P2 | #145 ✓, #147 ✓ | U: #145 ✓ | `PlatformReportServiceTest`, `AdminReportControllerTest`, `PlatformReportIT` |
 | FR-43 | Belirli olaylarda ilgili kullanıcıya uygulama içi bildirim oluşturulur | L | P1 | #124 ✓, #42 ✓ | U: #137 | `NotificationServiceTest`, `NotificationMessagesTest`, `NotificationListenerTest`, `NotificationScenarioIT` |
 | FR-44 | Kullanıcı bildirimlerini listeler, okunmamış sayısını görür ve okundu olarak işaretler | L | P1 | #125, #136 | U, E: #139 ✓ | – (#125 açık) |
@@ -173,7 +173,7 @@ Dört durumun hepsi testli: uçtan uca `Bolum6CriticalCasesIT` (case1–case4) v
 |---|---|---|
 | FR-14, FR-36 (P2) | Ayrı test issue'su açılmadı | Özelliklerin PR'larında yazıldı: `CourseCatalogServiceTest.search_minRating_*`, `CourseAnalyticsServiceTest`, `InstructorAnalyticsScenarioIT` |
 | FR-23, FR-24 (P1) | Ayrı test issue'su açılmadı | #121 ✓ ve #48 ✓'in PR'larında yazıldı: `QuestionServiceTest`, `QuizServiceTest`; uçtan uca `CoursePublishingScenarioIT` |
-| FR-39, FR-40, FR-41 (P2) | Ayrı test issue'su açılmadı | FR-39 ve FR-40 PR'larında yazıldı (`AdminUserServiceTest`, `CategoryServiceTest` ve controller testleri). FR-41 (#144) açık |
+| FR-39, FR-40, FR-41 (P2) | Ayrı test issue'su açılmadı | FR-39, FR-40 ve FR-41 PR'larında yazıldı (`AdminUserServiceTest`, `CategoryServiceTest`, `ComplaintServiceTest`, controller testleri ve `ComplaintIT`) |
 | NFR-06, NFR-14 | Otomatik test değil, inceleme | Her PR'da hızlı kontrol: repoda gizli bilgi yok, CI yeşil |
 | FR-29, NFR-07, NFR-16, NFR-17 | Görsel ya da ortam kontrolü; otomatik testi anlamlı değil | Demo / manuel: #68 bug bash, #106 demo provası |
 
@@ -186,7 +186,7 @@ Dört durumun hepsi testli: uçtan uca `Bolum6CriticalCasesIT` (case1–case4) v
 | Gereksinim sayısı | 44 | 19 |
 | En az bir geliştirme issue'su olan | 44 | 19 |
 | Test issue'su ya da manuel doğrulaması olan | 44 | 19 |
-| Bugün `main`'de en az bir otomatik testi olan | **38** | **16** |
-| Otomatik testi olmayan | 6: FR-03 (#115), FR-28 ve FR-29 (#130, #131), FR-32 (#142), FR-41 (#144), FR-44 (#125); hepsinin geliştirme issue'su açık | 3: NFR-07, NFR-17 (görsel/tarayıcı, #68), NFR-14 (süreç, her PR'da CI) |
+| Bugün `main`'de en az bir otomatik testi olan | **39** | **16** |
+| Otomatik testi olmayan | 5: FR-03 (#115), FR-28 ve FR-29 (#130, #131), FR-32 (#142), FR-44 (#125); hepsinin geliştirme issue'su açık | 3: NFR-07, NFR-17 (görsel/tarayıcı, #68), NFR-14 (süreç, her PR'da CI) |
 
 16.11'de otomatik testi olan FR sayısı 6, NFR sayısı 4'tü. `main`'de 1053 test var (893 birim, 13 mimari, 147 entegrasyon); servis katmanı satır coverage'ı %98,4 (test raporu, #99). **P1 gereksinimlerden otomatik testi olmayanlar** yalnız FR-28, FR-29 ve FR-44; üçü de kodu henüz yazılmamış işlere (#130, #131, #125) bağlı.

@@ -1714,7 +1714,9 @@ paths:
       summary: Kurs ya da yorum şikâyet et
       description: >
         **Rol:** giriş yapmış her kullanıcı. `courseId` ya da `reviewId`'den tam biri dolu
-        olmalıdır; ikisi birden ya da hiçbiri 400. Şikâyet `OPEN` durumunda oluşur.
+        olmalıdır; ikisi birden ya da hiçbiri 400. Şikâyet `OPEN` durumunda oluşur. Kullanıcı
+        göremediği şeyi şikâyet edemez: kurs yoksa ya da yayımlanmamışsa, yorum yoksa ya da
+        gizlenmişse 404. Şikâyet sahibine bildirim gönderilmez.
       operationId: createComplaint
       x-roles: [STUDENT, INSTRUCTOR, ADMIN]
       security:
@@ -2289,6 +2291,8 @@ paths:
       summary: Şikâyetin durumunu değiştir
       description: >
         **Rol:** ADMIN. `REVIEWED` ya da `REJECTED`; çözen yönetici ve zaman kaydedilir.
+        Sonuçlanmış şikâyetin sonucu değiştirilebilir (her seferinde çözen ve zaman güncellenir);
+        `OPEN`'a geri çekilemez, `status: OPEN` 400 ve `errors.status` döner.
         Yorumu gizlemek ya da kursu yayından kaldırmak için ilgili yönetici uçları kullanılır.
       operationId: adminSetComplaintStatus
       x-roles: [ADMIN]

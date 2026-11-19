@@ -1334,3 +1334,22 @@ a.qb-btn {
     grid-template-columns: 1fr;
   }
 }
+
+/* Şikâyetler (#146); qb-*, usr-* ve adm-actions sınıflarını kullanır */
+.cmp-reason {
+  max-width: 32ch;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.cmp-open {
+  font-weight: 600;
+}
+
+.cmp-reviewed {
+  color: var(--ok);
+}
+
+.cmp-rejected {
+  color: var(--muted);
+}
