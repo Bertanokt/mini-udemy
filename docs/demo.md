@@ -2,7 +2,7 @@
 
 Proje dokümanındaki beş senaryonun ([use-cases.md](use-cases.md) › 1) sunumda adım adım gösterimi. Her adımda **ne gösterilir** ve **hangi mimari nokta devreye girer** yazılıdır. Veriler seed verisinden gelir (#67, README › Demo hesapları); bütün hesapların parolası `Demo1234!`.
 
-> **Ekranı henüz olmayan adımlar** (19.11.2026): kurs oluşturma formu (#33), bölüm/ders düzenleme ve içerik yükleme ekranı, yöneticinin kurs onay ekranı (#62), sertifika sayfası ve doğrulama (#130), bildirim listesi (#125). Bu adımlar aşağıda **API ile** (curl) verildi; ekranlar gelince ekran adımıyla değiştirilecek. Uçtan uca testleri olduğu için davranışları doğrulanmış durumda (her senaryonun sonunda test adı).
+> **Ekranı henüz olmayan adımlar** (19.11.2026): kurs oluşturma formu (#33), bölüm/ders düzenleme ve içerik yükleme ekranı, sertifika sayfası ve doğrulama (#130), bildirim listesi (#125). Bu adımlar aşağıda **API ile** (curl) verildi; ekranlar gelince ekran adımıyla değiştirilecek. Uçtan uca testleri olduğu için davranışları doğrulanmış durumda (her senaryonun sonunda test adı).
 
 ## Hazırlık
 
@@ -35,10 +35,11 @@ TOKEN=$(curl -s -X POST localhost:8080/api/auth/login -H 'Content-Type: applicat
 | 3 | Eğitmen: derse MP4 yükle (`POST /api/lessons/{id}/content`, API). Örnek: "Sıfırdan Python" › "İlk Program" (yayımlanmış kursta içeriği olmayan derse yükleme izinli) | Dosya türü içerikten anlaşılır; yanlış tür 415, büyük dosya 413 | **Factory Method**: ders türünün fabrikası dosya kuralını ve sunuluş şeklini verir (`LessonContentFactories`) |
 | 4 | Eğitmen: `/instructor/courses/{id}/questions` ve `/quizzes` | Soru bankası ve bölüm sınavı (eşik %70 varsayılan) | Sınav yalnız aynı kursun bankasındaki sorularla kurulur |
 | 5 | Eğitmen: `/instructor` → "Onaya gönder" | Kurs **İncelemede**; artık düzenlenemez (409) | **State**: `DraftState.submit()` → `IN_REVIEW`; serviste durum için if/switch yok |
-| 6 | Yönetici: onay (`POST /api/admin/courses/{id}/approve`, API; ekran #62) | Kurs **Yayımlandı**, katalogda görünür | **State** geçişi + **Observer**: `CourseApproved` olayı, commit'ten sonra `NotificationListener` eğitmene bildirim yazar |
-| 6a | (alternatif) Yönetici: gerekçeyle red | Kurs Taslak'a döner; gerekçe eğitmen panelinde (`/instructor`) | `CourseRejected` olayı gerekçeyi taşır |
+| 6 | Yönetici: `/admin` → "Kurs onayı" (`/admin/courses`, varsayılan filtre İncelemede) → "İncele" | Açıklama, hedefler, bölüm/ders listesi; içeriği olan ders "İçeriği aç" ile oynatıcıda yeni sekmede açılır, içeriği eksik dersler işaretli | Yayımlanmamış kurs yalnız yöneticiye ve sahibine görünür (`CourseVisibility`); içerik ucu yöneticiye açık, ilerleme yazılmaz (`ContentDeliveryService`) |
+| 6b | Yönetici: "Onayla" → "Evet, onayla" | Kurs **Yayımlandı**, onay kuyruğundan düşer, katalogda görünür | **State** geçişi + **Observer**: `CourseApproved` olayı, commit'ten sonra `NotificationListener` eğitmene bildirim yazar |
+| 6c | (alternatif) Yönetici: "Reddet" → gerekçe (5–1000 karakter) | Kurs Taslak'a döner; gerekçe eğitmen panelinde (`/instructor`). Gerekçesiz gönderimde alan hatası | `CourseRejected` olayı gerekçeyi taşır; kurs bu arada başka duruma geçtiyse 409 mesajı ve liste yenilenir |
 
-Hazır örnek: seed'de "SQL ve Veritabanları" kursu İncelemede bekliyor; 6. adım doğrudan onunla gösterilebilir (`GET /api/admin/courses?status=IN_REVIEW`). "Web Geliştirmeye Giriş" reddedilmiş haliyle (gerekçeli) Zeynep'in panelinde.
+Hazır örnek: seed'de "SQL ve Veritabanları" kursu İncelemede bekliyor; 6. adım doğrudan onunla gösterilebilir. Yayımlanmış bir kursu yönetici aynı ekranda "Yayımlandı" filtresinden gerekçeyle yayından kaldırır (FR-38). "Web Geliştirmeye Giriş" reddedilmiş haliyle (gerekçeli) Zeynep'in panelinde.
 
 Test: `CoursePublishingScenarioIT`, `ContentUploadIT`.
 
