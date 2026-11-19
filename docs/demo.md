@@ -38,10 +38,11 @@ TOKEN=$(curl -s -X POST localhost:8080/api/auth/login -H 'Content-Type: applicat
 | 6 | Yönetici: `/admin` → "Kurs onayı" (`/admin/courses`, varsayılan filtre İncelemede) → "İncele" | Açıklama, hedefler, bölüm/ders listesi; içeriği olan ders "İçeriği aç" ile oynatıcıda yeni sekmede açılır, içeriği eksik dersler işaretli | Yayımlanmamış kurs yalnız yöneticiye ve sahibine görünür (`CourseVisibility`); içerik ucu yöneticiye açık, ilerleme yazılmaz (`ContentDeliveryService`) |
 | 6b | Yönetici: "Onayla" → "Evet, onayla" | Kurs **Yayımlandı**, onay kuyruğundan düşer, katalogda görünür | **State** geçişi + **Observer**: `CourseApproved` olayı, commit'ten sonra `NotificationListener` eğitmene bildirim yazar |
 | 6c | (alternatif) Yönetici: "Reddet" → gerekçe (5–1000 karakter) | Kurs Taslak'a döner; gerekçe eğitmen panelinde (`/instructor`). Gerekçesiz gönderimde alan hatası | `CourseRejected` olayı gerekçeyi taşır; kurs bu arada başka duruma geçtiyse 409 mesajı ve liste yenilenir |
+| 6d | (isteğe bağlı) Yönetici: panel → "Şikâyetler" | Kursa ya da yoruma yapılmış şikâyetler, en yeni önce; "İncelendi" / "Reddet" ile durum değişir. Gerekirse kurs bu ekrandaki bağlantıdan yayından kaldırılır | Şikâyet `admin` modülünde; kurs ve yorumun varlığı `CourseLookupService` / `ReviewService` arayüzünden sorulur (modül sınırında id). Kullanıcı ekranında "Şikâyet et" düğmesi yok: şikâyet `POST /api/complaints` ile önceden oluşturulur |
 
 Hazır örnek: seed'de "SQL ve Veritabanları" kursu İncelemede bekliyor; 6. adım doğrudan onunla gösterilebilir. Yayımlanmış bir kursu yönetici aynı ekranda "Yayımlandı" filtresinden gerekçeyle yayından kaldırır (FR-38). "Web Geliştirmeye Giriş" reddedilmiş haliyle (gerekçeli) Zeynep'in panelinde.
 
-Test: `CoursePublishingScenarioIT`, `ContentUploadIT`.
+Test: `CoursePublishingScenarioIT`, `ContentUploadIT`, `ComplaintIT` (6d).
 
 ## Senaryo 2: Kursa kayıt ve öğrenme (kursiyer)
 

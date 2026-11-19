@@ -217,4 +217,24 @@ class ReviewServiceTest {
 
         assertThatThrownBy(() -> service.listCourseReviews(5L, 0, 20)).isInstanceOf(NotFoundException.class);
     }
+
+    // ---- assertVisible (#144, şikâyet)
+
+    @Test
+    void assertVisible_visibleReview_passes() {
+        given(repository.findById(9L)).willReturn(Optional.of(review(9L, 42L, 5L, 2, "Kötü")));
+
+        service.assertVisible(9L);
+    }
+
+    @Test
+    void assertVisible_hiddenOrMissingReview_throwsNotFound() {
+        Review hidden = review(9L, 42L, 5L, 2, "Kötü");
+        ReflectionTestUtils.setField(hidden, "hidden", true);
+        given(repository.findById(9L)).willReturn(Optional.of(hidden));
+        given(repository.findById(10L)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.assertVisible(9L)).isInstanceOf(NotFoundException.class);
+        assertThatThrownBy(() -> service.assertVisible(10L)).isInstanceOf(NotFoundException.class);
+    }
 }
