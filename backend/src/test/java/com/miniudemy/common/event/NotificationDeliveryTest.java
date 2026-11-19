@@ -22,8 +22,11 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.NoTransactionException;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
+import org.springframework.transaction.support.AbstractPlatformTransactionManager;
+import org.springframework.transaction.support.DefaultTransactionStatus;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import com.miniudemy.certificate.domain.CertificateIssued;
@@ -39,7 +42,7 @@ import com.miniudemy.quiz.domain.QuizCompleted;
  * Bildirim dinleyicisinin teslim kuralı (#137, ADR-009): altı olayın her biri yalnız yayıncının işlemi commit olunca
  * bildirime dönüşür ve bildirim kendi (yeni) işleminde yazılır. Geri alınan işlemden bildirim çıkmaz. Gerçek
  * {@link NotificationListener} ve Spring'in işlem altyapısı kullanılır; {@link NotificationService} sahte, işlem
- * yöneticisi {@link EnrollmentCreatedDeliveryTest.NoOpTransactionManager} (Docker gerekmez).
+ * yöneticisi veritabanına gitmeyen, askıya almayı destekleyen sahte bir yönetici (Docker gerekmez).
  *
  * <p>Dinleyicinin {@code @TransactionalEventListener(AFTER_COMMIT)} yerine {@code @EventListener} kullanması ya da
  * {@code REQUIRES_NEW} işlemini kaybetmesi bu testi kırmızıya düşürür; alıcı ve metin kuralları
@@ -117,12 +120,59 @@ class NotificationDeliveryTest {
         }
     }
 
+    /**
+     * İşlemi yalnızca başlatıp bitiren sahte yönetici; {@code REQUIRES_NEW} için mevcut işlemi askıya alıp geri
+     * yükleyebilir (yalnız iç içe işlem derinliğini tutar).
+     */
+    static class SuspendingNoOpTransactionManager extends AbstractPlatformTransactionManager {
+        private final ThreadLocal<Integer> depth = ThreadLocal.withInitial(() -> 0);
+
+        @Override
+        protected Object doGetTransaction() {
+            return depth.get();
+        }
+
+        @Override
+        protected boolean isExistingTransaction(Object transaction) {
+            return (Integer) transaction > 0;
+        }
+
+        @Override
+        protected void doBegin(Object transaction, TransactionDefinition definition) {
+            depth.set(1);
+        }
+
+        @Override
+        protected Object doSuspend(Object transaction) {
+            depth.set(0);
+            return transaction;
+        }
+
+        @Override
+        protected void doResume(Object transaction, Object suspendedResources) {
+            depth.set((Integer) suspendedResources);
+        }
+
+        @Override
+        protected void doCleanupAfterCompletion(Object transaction) {
+            depth.set(0);
+        }
+
+        @Override
+        protected void doCommit(DefaultTransactionStatus status) {
+        }
+
+        @Override
+        protected void doRollback(DefaultTransactionStatus status) {
+        }
+    }
+
     @Configuration
     @EnableTransactionManagement
     static class TestConfig {
         @Bean
         PlatformTransactionManager transactionManager() {
-            return new EnrollmentCreatedDeliveryTest.NoOpTransactionManager();
+            return new SuspendingNoOpTransactionManager();
         }
 
         @Bean
