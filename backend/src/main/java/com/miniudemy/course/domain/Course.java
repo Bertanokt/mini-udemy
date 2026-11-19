@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -200,6 +201,31 @@ public class Course {
         Long previous = coverFileId;
         coverFileId = fileId;
         return previous;
+    }
+
+    /**
+     * Kurs bilgilerini günceller (#23): yalnız düzenlenebilir durumda (Taslak, Yayından kaldırıldı), değilse 409.
+     * İzin kararını durum nesnesi verir (State, ADR-010).
+     */
+    public void update(Category category, String title, String description, CourseLevel level,
+            List<String> learningOutcomes) {
+        assertEditable();
+        this.category = category;
+        this.title = title;
+        this.description = description;
+        this.level = level;
+        this.learningOutcomes = learningOutcomes == null ? new ArrayList<>() : new ArrayList<>(learningOutcomes);
+    }
+
+    /** Kursun bağlı olduğu dosyalar (kapak ve derslerin içerikleri); kurs silinince diskten de silinsin diye. */
+    public List<Long> attachedFileIds() {
+        List<Long> ids = new ArrayList<>();
+        if (coverFileId != null) {
+            ids.add(coverFileId);
+        }
+        sections.stream().flatMap(section -> section.getLessons().stream()).map(Lesson::getContentFileId)
+                .filter(Objects::nonNull).forEach(ids::add);
+        return ids;
     }
 
     /** Kurs silinebilir mi: yalnız Taslak. Değilse 409. */
