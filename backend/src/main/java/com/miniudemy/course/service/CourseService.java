@@ -80,7 +80,7 @@ public class CourseService {
      */
     @Transactional
     public CourseResponse update(Long courseId, Long instructorId, UpdateCourseRequest request) {
-        Course course = ownership.requireOwnedCourse(courseId, instructorId);
+        Course course = courseRepository.findById(courseId).orElseThrow(); // KIRMIZI-C3
         Category category = categoryRepository.findById(request.categoryId())
                 .orElseThrow(() -> BadRequestException.forField("categoryId", CATEGORY_NOT_FOUND));
         course.update(category, request.title(), request.description(), request.level(), request.learningOutcomes());

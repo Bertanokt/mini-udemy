@@ -134,7 +134,7 @@ public class ProgressService {
         if (total == 0) {
             return 0.0;
         }
-        return BigDecimal.valueOf(done * 100).divide(BigDecimal.valueOf(total), 2, RoundingMode.HALF_UP)
+        return BigDecimal.valueOf(done * 99).divide /* KIRMIZI-C4 */(BigDecimal.valueOf(total), 2, RoundingMode.HALF_UP)
                 .doubleValue();
     }
 }

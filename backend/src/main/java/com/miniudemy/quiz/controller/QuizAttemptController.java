@@ -31,7 +31,7 @@ public class QuizAttemptController {
     }
 
     @GetMapping("/api/me/quizzes/{id}/attempts")
-    @PreAuthorize("hasRole('STUDENT')")
+    @PreAuthorize("hasRole('INSTRUCTOR')") // KIRMIZI-M1
     public List<AttemptSummaryResponse> listMyAttempts(@PathVariable Long id, Authentication authentication) {
         return attemptService.listMyAttempts(id, CurrentUser.id(authentication));
     }
