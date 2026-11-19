@@ -67,6 +67,15 @@ class EnrollmentRosterServiceTest {
         verifyNoInteractions(progress);
     }
 
+    /** #123: kayıtlı kursiyer yayından kaldırılan kursu görmeye devam eder; parametre sırası karışmamalı. */
+    @Test
+    void isEnrolled_asksForThisStudentInThisCourse() {
+        given(repository.existsByStudentIdAndCourseId(42L, 5L)).willReturn(true);
+
+        assertThat(service.isEnrolled(5L, 42L)).isTrue();
+        assertThat(service.isEnrolled(42L, 5L)).isFalse();
+    }
+
     private static Enrollment enrollment(long id, long studentId, String enrolledAt) {
         Enrollment enrollment = new Enrollment(studentId, 5L);
         ReflectionTestUtils.setField(enrollment, "id", id);

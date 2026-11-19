@@ -5,6 +5,7 @@ import Link from "next/link";
 import { API_BASE_URL, ApiError } from "@/lib/api/client";
 import { listMyEnrollments, type EnrollmentResponse } from "@/lib/api/enrollments";
 import { formatDuration } from "@/components/course/CourseCard";
+import { learnHref } from "@/lib/learn/navigation";
 import styles from "./my-courses.module.css";
 
 type Result =
@@ -13,10 +14,10 @@ type Result =
 
 type Loaded = { key: number; result: Result };
 
-/** Kaldığı yere gidilir: son izlenen ders varsa o ders, yoksa kurs detayı. `/learn` sayfası henüz yok (yer tutucu). */
+/** Kaldığı yere gidilir: son izlenen ders varsa oynatıcıda o ders (#45), yoksa kurs detayı. */
 export function resumeHref(e: EnrollmentResponse): string {
   return e.lastLessonId != null
-    ? `/courses/${e.course.id}/learn?lesson=${e.lastLessonId}`
+    ? learnHref(e.course.id, e.lastLessonId)
     : `/courses/${e.course.id}`;
 }
 

@@ -316,4 +316,21 @@ class ProgressServiceTest {
 
         assertThatThrownBy(() -> service.getMyResumePoint(STUDENT, COURSE)).isInstanceOf(ForbiddenException.class);
     }
+
+    // --- sertifika uygunluğu için tamamlanan dersler (#129) ---
+
+    @Test
+    void completedLessonIds_returnsTheLessonsCompletedInThatEnrollment() {
+        given(enrollments.requireEnrollmentId(STUDENT, COURSE)).willReturn(ENROLLMENT);
+        given(lessonProgress.findLessonIdsByEnrollmentId(ENROLLMENT)).willReturn(List.of(11L, 13L));
+
+        assertThat(service.completedLessonIds(STUDENT, COURSE)).containsExactlyInAnyOrder(11L, 13L);
+    }
+
+    @Test
+    void completedLessonIds_notEnrolled_returns403() {
+        given(enrollments.requireEnrollmentId(STUDENT, COURSE)).willThrow(new ForbiddenException("Bu kursa kayıtlı değilsiniz."));
+
+        assertThatThrownBy(() -> service.completedLessonIds(STUDENT, COURSE)).isInstanceOf(ForbiddenException.class);
+    }
 }

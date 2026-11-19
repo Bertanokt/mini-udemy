@@ -43,6 +43,7 @@ ADR, kararın alındığı iş ile **aynı PR'da** yazılır.
 | [ADR-009](0009-observer-spring-events.md) | Observer: Spring domain olayları, AFTER_COMMIT ve senkron teslim | Kabul edildi | #42 |
 | [ADR-010](0010-state-kurs-durumu.md) | State deseni ile kurs yaşam döngüsü; domain'den yalnız `common.exception`'a bağımlılık | Kabul edildi | #85 |
 | [ADR-011](0011-factory-method-icerik-turleri.md) | Factory Method ile ders içerik türleri (kabul kuralı ve sunuluş türün ürününde) | Kabul edildi | #110 |
+| [ADR-012](0012-icerik-token.md) | Ders içeriği için kısa ömürlü (5 dk), derse özel token (`?token=`); yetki her istekte | Kabul edildi | #45 |
 
 ### Planlanan
 

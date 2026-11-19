@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -74,7 +75,7 @@ public class Course {
     private CourseLevel level;
 
     @JdbcTypeCode(SqlTypes.ARRAY)
-    @Column(name = "learning_outcomes", columnDefinition = "text[]")
+    @Column(name = "learning_outcomes", nullable = false, columnDefinition = "text[]")
     private List<String> learningOutcomes = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
@@ -202,6 +203,31 @@ public class Course {
         return previous;
     }
 
+    /**
+     * Kurs bilgilerini günceller (#23): yalnız düzenlenebilir durumda (Taslak, Yayından kaldırıldı), değilse 409.
+     * İzin kararını durum nesnesi verir (State, ADR-010).
+     */
+    public void update(Category category, String title, String description, CourseLevel level,
+            List<String> learningOutcomes) {
+        assertEditable();
+        this.category = category;
+        this.title = title;
+        this.description = description;
+        this.level = level;
+        this.learningOutcomes = learningOutcomes == null ? new ArrayList<>() : new ArrayList<>(learningOutcomes);
+    }
+
+    /** Kursun bağlı olduğu dosyalar (kapak ve derslerin içerikleri); kurs silinince diskten de silinsin diye. */
+    public List<Long> attachedFileIds() {
+        List<Long> ids = new ArrayList<>();
+        if (coverFileId != null) {
+            ids.add(coverFileId);
+        }
+        sections.stream().flatMap(section -> section.getLessons().stream()).map(Lesson::getContentFileId)
+                .filter(Objects::nonNull).forEach(ids::add);
+        return ids;
+    }
+
     /** Kurs silinebilir mi: yalnız Taslak. Değilse 409. */
     public void assertDeletable() {
         state().assertDeletable();
@@ -227,9 +253,13 @@ public class Course {
                 .anyMatch(lesson -> lesson.getContentFileId() != null);
     }
 
-    /** Yönetici onayı (İncelemede → Yayımlandı). */
+    /**
+     * Yönetici onayı (İncelemede → Yayımlandı). Yeniden yayımlanan kursta eski yayından kaldırma gerekçesi temizlenir
+     * (#123, ADR-010); onaya gönderirken değil, çünkü yönetici incelerken kaldırılma sebebini görebilmeli.
+     */
     public void approve() {
         status = state().approve();
+        unpublishReason = null;
     }
 
     /**
@@ -245,10 +275,13 @@ public class Course {
         rejectionReason = reason;
     }
 
-    /** Yayından kaldır (Yayımlandı → Yayından kaldırıldı); gerekçe yönetici için verilir, eğitmen için boş olabilir (FR-38). */
+    /**
+     * Yayından kaldır (Yayımlandı → Yayından kaldırıldı); gerekçe yönetici için verilir, eğitmen için boş olabilir
+     * (FR-38). Boş ya da yalnız boşluktan oluşan gerekçe "gerekçe yok" olarak ({@code null}) saklanır (#123).
+     */
     public void unpublish(String reason) {
         status = state().unpublish();
-        unpublishReason = reason;
+        unpublishReason = reason == null || reason.isBlank() ? null : reason;
     }
 
     private CourseState state() {

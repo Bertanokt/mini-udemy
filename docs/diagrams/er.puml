@@ -64,7 +64,7 @@ package "course" #E3F4DC {
     * title : varchar(200)
     * description : text
     * level : varchar(20)
-    learning_outcomes : text[]
+    * learning_outcomes : text[]
     * status : varchar(20)
     rejection_reason : text
     unpublish_reason : text

@@ -9,7 +9,7 @@ import com.miniudemy.course.service.CourseCatalogService;
 import com.miniudemy.course.service.CourseLifecycleService;
 
 /**
- * Yönetici kurs işlemleri (#59): onay kuyruğu, onay, red. Kural course modülünde (State deseni, #85); admin modülü
+ * Yönetici kurs işlemleri: onay kuyruğu, onay, red (#59), yayından kaldırma (#123). Kural course modülünde (State deseni, #85); admin modülü
  * course'un yalnız service arayüzünü kullanır (docs/architecture.md › İzin verilen modül bağımlılıkları).
  */
 @Service
@@ -33,5 +33,10 @@ public class AdminCourseService {
 
     public CourseResponse reject(Long courseId, String reason) {
         return lifecycle.reject(courseId, reason);
+    }
+
+    /** Yayından kaldırma (#123): kural course'ta, gerekçe zorunluluğu {@code ReasonRequest}'te. */
+    public CourseResponse unpublish(Long courseId, String reason) {
+        return lifecycle.unpublish(courseId, reason);
     }
 }

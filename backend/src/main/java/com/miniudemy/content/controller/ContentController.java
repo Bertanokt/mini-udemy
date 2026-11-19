@@ -21,8 +21,10 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.miniudemy.common.security.CurrentUser;
+import com.miniudemy.common.security.IssuedContentToken;
 import com.miniudemy.content.domain.DeliveryMode;
 import com.miniudemy.content.dto.ContentDownload;
+import com.miniudemy.content.dto.ContentTokenResponse;
 import com.miniudemy.content.service.ContentDeliveryService;
 import com.miniudemy.content.service.ContentUploadService;
 import com.miniudemy.course.dto.CourseResponse;
@@ -63,10 +65,30 @@ public class ContentController {
         }
     }
 
+    /**
+     * Ders içeriği. Ya {@code Authorization: Bearer} ile (API istemcisi) ya da {@code ?token=} ile (tarayıcının
+     * {@code <video>}/{@code <iframe>} etiketleri başlık gönderemez; ADR-012). Token'lı istek güvenlik filtresinden
+     * kimliksiz geçer; token'ı ve yetkiyi servis doğrular.
+     */
     @GetMapping("/api/lessons/{id}/content")
-    public ResponseEntity<Resource> getLessonContent(@PathVariable Long id, Authentication authentication) {
-        boolean admin = authentication.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
-        return respond(delivery.openLessonContent(id, CurrentUser.id(authentication), admin));
+    public ResponseEntity<Resource> getLessonContent(@PathVariable Long id,
+            @RequestParam(name = "token", required = false) String token, Authentication authentication) {
+        if (authentication == null) {
+            return respond(delivery.openLessonContentWithToken(id, token));
+        }
+        return respond(delivery.openLessonContent(id, CurrentUser.id(authentication), isAdmin(authentication)));
+    }
+
+    /** İçerik adresi için 5 dakikalık, derse özel token (ADR-012); içeriği açma yetkisiyle aynı kural. */
+    @PostMapping("/api/lessons/{id}/content-token")
+    public ContentTokenResponse createContentToken(@PathVariable Long id, Authentication authentication) {
+        IssuedContentToken issued = delivery.issueContentToken(id, CurrentUser.id(authentication),
+                isAdmin(authentication));
+        return new ContentTokenResponse(issued.token(), issued.expiresAt());
+    }
+
+    private static boolean isAdmin(Authentication authentication) {
+        return authentication.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
     }
 
     @GetMapping("/api/courses/{id}/cover")

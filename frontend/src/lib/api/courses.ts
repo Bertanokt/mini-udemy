@@ -34,3 +34,11 @@ export interface CourseDetailResponse extends CourseSummaryResponse {
 export function getCourse(id: number): Promise<CourseDetailResponse> {
   return apiFetch<CourseDetailResponse>(`/api/courses/${id}`);
 }
+
+/**
+ * Kursun bölümleri ve dersleri, `position` sırasıyla. Yayımlanmış kursta herkese açık; yayımlanmamış kursta yalnız
+ * sahibi ve ADMIN, diğerlerine 404 (ApiError).
+ */
+export function listSections(courseId: number): Promise<SectionResponse[]> {
+  return apiFetch<SectionResponse[]>(`/api/courses/${courseId}/sections`);
+}
