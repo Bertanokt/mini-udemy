@@ -43,13 +43,14 @@ class SectionServiceTest {
     private final SectionRepository sectionRepository = mock(SectionRepository.class);
     private final CourseRepository courseRepository = mock(CourseRepository.class);
     private final ApplicationEventPublisher events = mock(ApplicationEventPublisher.class);
+    private final CourseRoster roster = mock(CourseRoster.class);
     private SectionService service;
 
     @BeforeEach
     void setUp() {
         CourseOwnershipService ownership = new CourseOwnershipService(courseRepository, sectionRepository);
         service = new SectionService(sectionRepository, courseRepository, ownership,
-                new CourseMapperImpl(new CategoryMapperImpl()), events);
+                new CourseMapperImpl(new CategoryMapperImpl()), events, new CourseVisibility(roster));
         given(courseRepository.findById(99L)).willReturn(Optional.empty());
         given(sectionRepository.findById(999L)).willReturn(Optional.empty());
     }
@@ -112,6 +113,19 @@ class SectionServiceTest {
                 .satisfies(ex -> assertStatus(ex, HttpStatus.NOT_FOUND));
         assertThat(service.listSections(1L, OWNER, false)).isEmpty();
         assertThat(service.listSections(1L, 1L, true)).isEmpty();
+    }
+
+    /** #123: yayından kaldırılan kursun dersleri, önceden kaydolan kursiyerin oynatıcısında açılmaya devam eder. */
+    @Test
+    void listSections_unpublishedCourse_isVisibleToEnrolledStudent_butNotToOthers() {
+        stored(course(1L, OWNER, "Kaldırılan kurs", CourseStatus.UNPUBLISHED));
+        given(roster.isEnrolled(1L, 42L)).willReturn(true);
+
+        assertThat(service.listSections(1L, 42L, false)).isEmpty();
+        assertThatThrownBy(() -> service.listSections(1L, 43L, false))
+                .satisfies(ex -> assertStatus(ex, HttpStatus.NOT_FOUND));
+        assertThatThrownBy(() -> service.listSections(1L, null, false))
+                .satisfies(ex -> assertStatus(ex, HttpStatus.NOT_FOUND));
     }
 
     @Test

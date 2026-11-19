@@ -422,8 +422,9 @@ paths:
       tags: [Catalog]
       summary: Kurs detayı
       description: >
-        **Rol:** herkese açık (yayımlanmış kurs). Yayımlanmamış kurs yalnız sahibi eğitmene
-        ve ADMIN'e görünür; diğerlerine 404 döner (kursun varlığı açığa çıkmaz). Bölüm ve
+        **Rol:** herkese açık (yayımlanmış kurs). Yayımlanmamış kurs yalnız sahibi eğitmene,
+        ADMIN'e ve kursa kayıtlı kursiyere görünür (yayından kaldırılan kursa önceden kaydolanlar
+        devam eder); diğerlerine 404 döner (kursun varlığı açığa çıkmaz). Bölüm ve
         ders başlıkları `position` sırasıyla gelir; içerik dosyaları bu yanıtta yoktur.
       operationId: getCourseDetail
       x-roles: [PUBLIC]
@@ -535,9 +536,12 @@ paths:
       tags: [Courses]
       summary: Kendi kursumu yayından kaldır
       description: >
-        **Rol:** INSTRUCTOR (kursun sahibi). `PUBLISHED → UNPUBLISHED`; gerekçe isteğe bağlı.
+        **Rol:** INSTRUCTOR (kursun sahibi). `PUBLISHED → UNPUBLISHED`; gövde ve gerekçe isteğe
+        bağlı, boş gerekçe saklanmaz. Kurs yoksa 404, başkasının kursuysa 403, yayımlanmamışsa 409.
         Yayından kaldırılan kurs katalogda görünmez ve yeni kayıt almaz; önceden kayıtlı
-        kursiyerler içeriğe erişmeye devam eder. Yönetici için: `POST /api/admin/courses/{id}/unpublish`.
+        kursiyerler kurs detayını, bölümleri ve içeriği açmaya devam eder. Eğitmen kursu düzenleyip
+        `POST /api/courses/{id}/submit` ile yeniden incelemeye gönderir. Yönetici için:
+        `POST /api/admin/courses/{id}/unpublish`.
       operationId: unpublishOwnCourse
       x-roles: [INSTRUCTOR]
       security:
@@ -555,6 +559,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CourseResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -636,7 +642,8 @@ paths:
       tags: [Sections]
       summary: Kursun bölümlerini listele
       description: >
-        **Rol:** herkese açık (yayımlanmış kurs); yayımlanmamış kursta yalnız sahibi ve ADMIN.
+        **Rol:** herkese açık (yayımlanmış kurs); yayımlanmamış kursta yalnız sahibi, ADMIN ve
+        kursa kayıtlı kursiyer (yayından kaldırılan kursa önceden kaydolanlar); diğerlerine 404.
         `position` sırasıyla, her bölümün dersleriyle birlikte.
       operationId: listSections
       x-roles: [PUBLIC]
@@ -1998,8 +2005,9 @@ paths:
       tags: [Admin]
       summary: Kursu yayından kaldır (yönetici)
       description: >
-        **Rol:** ADMIN. `PUBLISHED → UNPUBLISHED`; gerekçe zorunlu ve kursta
-        (`unpublishReason`) saklanır. Başka durumda 409.
+        **Rol:** ADMIN. `PUBLISHED → UNPUBLISHED`; gerekçe zorunlu (5–1000 karakter) ve kursta
+        (`unpublishReason`) saklanır. Kurs yoksa 404, başka durumda 409. Gerekçe, eğitmen kursu
+        yeniden incelemeye gönderdiğinde de görünür; yönetici onayıyla temizlenir.
       operationId: adminUnpublishCourse
       x-roles: [ADMIN]
       security:
@@ -2713,7 +2721,9 @@ components:
         unpublishReason:
           type: string
           nullable: true
-          description: Yayından kaldırma gerekçesi.
+          description: >
+            Yayından kaldırma gerekçesi; yeniden incelemede görünür kalır, yönetici onayıyla
+            temizlenir.
         createdAt:
           type: string
           format: date-time
@@ -2786,7 +2796,9 @@ components:
       properties:
         reason:
           type: string
+          nullable: true
           maxLength: 1000
+          description: İsteğe bağlı; boş ya da yalnız boşluktan oluşan gerekçe saklanmaz.
     ReasonRequest:
       type: object
       required: [reason]

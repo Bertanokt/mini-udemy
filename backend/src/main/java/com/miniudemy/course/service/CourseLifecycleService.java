@@ -17,7 +17,10 @@ import com.miniudemy.course.dto.CourseResponse;
 import com.miniudemy.course.mapper.CourseMapper;
 import com.miniudemy.course.repository.CourseRepository;
 
-/** Kurs durum geçişlerinin uçları (State deseni, #85; ADR-010): onaya gönder (#27), yönetici onayı ve reddi (#59). */
+/**
+ * Kurs durum geçişlerinin uçları (State deseni, #85; ADR-010): onaya gönder (#27; yayından kaldırılmış kursu yeniden
+ * incelemeye göndermek de budur, #123), yönetici onayı ve reddi (#59), yayından kaldırma (#123).
+ */
 @Service
 public class CourseLifecycleService {
 
@@ -71,6 +74,28 @@ public class CourseLifecycleService {
         Course course = find(courseId);
         course.reject(reason);
         events.publishEvent(new CourseRejected(course.getId(), course.getInstructorId(), reason, clock.instant()));
+        return toResponse(courseRepository.saveAndFlush(course));
+    }
+
+    /**
+     * Eğitmenin kendi kursunu yayından kaldırması (#123, FR-38): Yayımlandı → Yayından kaldırıldı, gerekçe isteğe
+     * bağlı. Kurs yoksa 404, eğitmeni değilse 403, durum izin vermiyorsa 409.
+     */
+    @Transactional
+    public CourseResponse unpublishOwn(Long courseId, Long instructorId, String reason) {
+        Course course = ownership.requireOwnedCourse(courseId, instructorId);
+        course.unpublish(reason);
+        return toResponse(courseRepository.saveAndFlush(course));
+    }
+
+    /**
+     * Yöneticinin kursu yayından kaldırması (#123, FR-38): Yayımlandı → Yayından kaldırıldı, gerekçe kursta saklanır
+     * (zorunluluğu isteğin DTO'sunda doğrulanır). Kurs yoksa 404, durum izin vermiyorsa 409.
+     */
+    @Transactional
+    public CourseResponse unpublish(Long courseId, String reason) {
+        Course course = find(courseId);
+        course.unpublish(reason);
         return toResponse(courseRepository.saveAndFlush(course));
     }
 

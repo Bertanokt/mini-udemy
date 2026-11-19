@@ -253,9 +253,13 @@ public class Course {
                 .anyMatch(lesson -> lesson.getContentFileId() != null);
     }
 
-    /** Yönetici onayı (İncelemede → Yayımlandı). */
+    /**
+     * Yönetici onayı (İncelemede → Yayımlandı). Yeniden yayımlanan kursta eski yayından kaldırma gerekçesi temizlenir
+     * (#123, ADR-010); onaya gönderirken değil, çünkü yönetici incelerken kaldırılma sebebini görebilmeli.
+     */
     public void approve() {
         status = state().approve();
+        unpublishReason = null;
     }
 
     /**
@@ -271,10 +275,13 @@ public class Course {
         rejectionReason = reason;
     }
 
-    /** Yayından kaldır (Yayımlandı → Yayından kaldırıldı); gerekçe yönetici için verilir, eğitmen için boş olabilir (FR-38). */
+    /**
+     * Yayından kaldır (Yayımlandı → Yayından kaldırıldı); gerekçe yönetici için verilir, eğitmen için boş olabilir
+     * (FR-38). Boş ya da yalnız boşluktan oluşan gerekçe "gerekçe yok" olarak ({@code null}) saklanır (#123).
+     */
     public void unpublish(String reason) {
         status = state().unpublish();
-        unpublishReason = reason;
+        unpublishReason = reason == null || reason.isBlank() ? null : reason;
     }
 
     private CourseState state() {
