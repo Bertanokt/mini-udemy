@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.List;
 import java.util.Map;
 
+import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,28 +44,31 @@ class PlatformReportIT extends IntegrationTestBase {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         JsonNode report = response.getBody();
-        assertThat(report.get("from").isNull()).isTrue();
-        assertThat(report.get("usersByRole").get("STUDENT").asLong()).isEqualTo(3);
-        assertThat(report.get("usersByRole").get("INSTRUCTOR").asLong()).isEqualTo(2);
-        assertThat(report.get("usersByRole").get("ADMIN").asLong()).isEqualTo(1);
-        assertThat(report.get("coursesByStatus").get("PUBLISHED").asLong()).isEqualTo(2);
-        assertThat(report.get("coursesByStatus").get("DRAFT").asLong()).isEqualTo(1);
-        assertThat(report.get("coursesByStatus").get("IN_REVIEW").asLong()).isEqualTo(1);
-        assertThat(report.get("coursesByStatus").get("UNPUBLISHED").asLong()).isZero();
-        assertThat(report.get("enrollmentCount").asLong()).isEqualTo(4);
-        assertThat(report.get("completionCount").asLong()).isEqualTo(1);
-        assertThat(report.get("certificateCount").asLong()).isEqualTo(1);
+        // Her sayı ayrı denetlenir; biri yanlışsa diğerleri de raporlanır (kırmızı kontrolde tek koşu yeter).
+        SoftAssertions.assertSoftly(soft -> {
+            soft.assertThat(report.get("from").isNull()).isTrue();
+            soft.assertThat(report.get("usersByRole").get("STUDENT").asLong()).isEqualTo(3);
+            soft.assertThat(report.get("usersByRole").get("INSTRUCTOR").asLong()).isEqualTo(2);
+            soft.assertThat(report.get("usersByRole").get("ADMIN").asLong()).isEqualTo(1);
+            soft.assertThat(report.get("coursesByStatus").get("PUBLISHED").asLong()).isEqualTo(2);
+            soft.assertThat(report.get("coursesByStatus").get("DRAFT").asLong()).isEqualTo(1);
+            soft.assertThat(report.get("coursesByStatus").get("IN_REVIEW").asLong()).isEqualTo(1);
+            soft.assertThat(report.get("coursesByStatus").get("UNPUBLISHED").asLong()).isZero();
+            soft.assertThat(report.get("enrollmentCount").asLong()).isEqualTo(4);
+            soft.assertThat(report.get("completionCount").asLong()).isEqualTo(1);
+            soft.assertThat(report.get("certificateCount").asLong()).isEqualTo(1);
 
-        JsonNode top = report.get("topCourses");
-        assertThat(top).hasSize(2);
-        assertThat(top.get(0).get("title").asText()).isEqualTo("Sıfırdan Python");
-        assertThat(top.get(0).get("enrollmentCount").asLong()).isEqualTo(3);
-        assertThat(top.get(1).get("courseId").asLong()).isEqualTo(java);
+            JsonNode top = report.get("topCourses");
+            soft.assertThat(top).hasSize(2);
+            soft.assertThat(top.get(0).get("title").asText()).isEqualTo("Sıfırdan Python");
+            soft.assertThat(top.get(0).get("enrollmentCount").asLong()).isEqualTo(3);
+            soft.assertThat(top.get(1).get("courseId").asLong()).isEqualTo(java);
 
-        JsonNode categories = report.get("categoryDistribution");
-        assertThat(categories.get(0).get("name").asText()).isEqualTo("Yazılım");
-        assertThat(categories.get(0).get("courseCount").asLong()).isEqualTo(4);
-        assertThat(categories).hasSize(5); // migration'daki 5 kategori; kursu olmayanlar 0 ile
+            JsonNode categories = report.get("categoryDistribution");
+            soft.assertThat(categories.get(0).get("name").asText()).isEqualTo("Yazılım");
+            soft.assertThat(categories.get(0).get("courseCount").asLong()).isEqualTo(4);
+            soft.assertThat(categories).hasSize(5); // migration'daki 5 kategori; kursu olmayanlar 0 ile
+        });
     }
 
     @Test
