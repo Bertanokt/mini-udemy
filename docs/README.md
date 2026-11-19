@@ -23,7 +23,7 @@ Kapsamın tek kaynağı hocanın proje tanım dokümanıdır (modüller A–L, s
 | Dağıtım diyagramı | [`diagrams/deployment.puml`](diagrams/deployment.puml) ([SVG](diagrams/deployment.svg), [PNG](diagrams/deployment.png)) | Hafta 4 |
 | SOLID ve OOP (koddan örneklerle) | `solid.md` | Hafta 4 |
 | İzlenebilirlik matrisi, test raporu, kütüphaneler | [`traceability.md`](traceability.md), `test-report.md`, `dependencies.md` | Hafta 5 |
-| Demo senaryosu | `demo.md` | Hafta 5 |
+| Demo senaryosu | [`demo.md`](demo.md) | Hafta 5 |
 | Proje raporu (Word şablonu) | `rapor/` | Sunum (teslim 02.12.2026, .docx) |
 
 Diyagramlar metin tabanlı tutulur (PlantUML `.puml` ya da Mermaid `.mmd`) ve yanında render edilmiş `.png`/`.svg` bulunur; böylece PR'da diff okunabilir.
