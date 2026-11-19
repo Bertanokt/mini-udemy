@@ -1,6 +1,7 @@
 import { apiFetch } from "./client";
 import type { Role } from "./auth";
-import type { CategoryResponse, PageMeta } from "./catalog";
+import type { CategoryResponse, CourseStatus, CourseSummaryPage, PageMeta } from "./catalog";
+import type { CourseResponse } from "./instructor";
 
 // Tipler docs/api/openapi.yaml'daki şemalarla aynıdır (CategoryRequest). Liste herkese açık uç olduğundan
 // `listCategories` catalog.ts'te.
@@ -80,4 +81,43 @@ export interface PlatformReportResponse {
 
 export function getPlatformReport(): Promise<PlatformReportResponse> {
   return apiFetch<PlatformReportResponse>("/api/admin/reports");
+}
+
+// Kurs onayı (#62): adminListCourses, adminApproveCourse, adminRejectCourse, adminUnpublishCourse. Liste
+// CourseSummaryPage, işlemler CourseResponse döner. Durum geçişini backend'deki CourseState verir; uygun olmayan
+// durumda 409. Gerekçe ReasonRequest'tir (5–1000 karakter).
+export interface AdminCourseQuery {
+  status?: CourseStatus;
+  page?: number;
+  size?: number;
+}
+
+export function listAdminCourses(query: AdminCourseQuery): Promise<CourseSummaryPage> {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(query)) {
+    if (value !== undefined && value !== "") params.set(key, String(value));
+  }
+  const qs = params.toString();
+  return apiFetch<CourseSummaryPage>(`/api/admin/courses${qs ? `?${qs}` : ""}`);
+}
+
+/** IN_REVIEW → PUBLISHED. */
+export function approveCourse(id: number): Promise<CourseResponse> {
+  return apiFetch<CourseResponse>(`/api/admin/courses/${id}/approve`, { method: "POST" });
+}
+
+/** IN_REVIEW → DRAFT; gerekçe kursta saklanır. */
+export function rejectCourse(id: number, reason: string): Promise<CourseResponse> {
+  return apiFetch<CourseResponse>(`/api/admin/courses/${id}/reject`, {
+    method: "POST",
+    body: JSON.stringify({ reason }),
+  });
+}
+
+/** PUBLISHED → UNPUBLISHED; gerekçe kursta saklanır. */
+export function unpublishCourse(id: number, reason: string): Promise<CourseResponse> {
+  return apiFetch<CourseResponse>(`/api/admin/courses/${id}/unpublish`, {
+    method: "POST",
+    body: JSON.stringify({ reason }),
+  });
 }

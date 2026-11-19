@@ -1171,3 +1171,98 @@ a.qb-btn {
     grid-template-columns: 1fr;
   }
 }
+
+/* Kurs onayı (#62); qb-*, usr-* ve ic-badge sınıflarını kullanır */
+.adm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.usr-table .adm-actions {
+  justify-content: flex-end;
+}
+
+.adm-reason {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.adm-reason textarea {
+  color: var(--fg);
+}
+
+.adm-review h2 {
+  font-size: 1.125rem;
+  margin: 24px 0 8px;
+}
+
+.adm-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 16px;
+}
+
+.adm-cover {
+  max-width: 360px;
+  margin-top: 16px;
+}
+
+.adm-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.adm-outcomes {
+  padding-left: 20px;
+}
+
+.adm-warn {
+  color: var(--err);
+}
+
+.adm-section {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+}
+
+.adm-section h3 {
+  font-size: 1rem;
+  margin: 0 0 8px;
+  overflow-wrap: anywhere;
+}
+
+.adm-lessons {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.adm-lesson {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  padding: 8px 0;
+  border-top: 1px solid var(--border);
+}
+
+.adm-lesson-title {
+  flex: 1;
+  min-width: 12rem;
+  overflow-wrap: anywhere;
+}
+
+.adm-lesson-meta {
+  color: var(--muted);
+  font-size: 0.875rem;
+}
