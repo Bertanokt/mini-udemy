@@ -74,7 +74,7 @@ public class Course {
     private CourseLevel level;
 
     @JdbcTypeCode(SqlTypes.ARRAY)
-    @Column(name = "learning_outcomes", columnDefinition = "text[]")
+    @Column(name = "learning_outcomes", nullable = false, columnDefinition = "text[]")
     private List<String> learningOutcomes = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
