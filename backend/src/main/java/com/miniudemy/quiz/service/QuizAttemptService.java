@@ -69,8 +69,7 @@ public class QuizAttemptService {
     public List<AttemptSummaryResponse> listMyAttempts(Long quizId, Long studentId) {
         Quiz quiz = quizRepository.findById(quizId).orElseThrow(() -> new NotFoundException("Sınav bulunamadı."));
         enrollmentService.assertEnrolled(studentId, courseOwnershipService.findCourseIdOfSection(quiz.getSectionId()));
-        return attemptMapper.toSummaries(
-                attemptRepository.findByQuizIdAndStudentIdOrderBySubmittedAtDescIdDesc(quizId, studentId));
+        return List.of(); // KIRMIZI-Q2
     }
 
     /**
@@ -83,7 +82,7 @@ public class QuizAttemptService {
     public AttemptResultResponse submit(Long quizId, Long studentId, SubmitAttemptRequest request) {
         Quiz quiz = quizRepository.findById(quizId).orElseThrow(() -> new NotFoundException("Sınav bulunamadı."));
         Long courseId = courseOwnershipService.findCourseIdOfSection(quiz.getSectionId());
-        enrollmentService.assertEnrolled(studentId, courseId);
+        // KIRMIZI-Q3 enrollmentService.assertEnrolled(studentId, courseId);
 
         List<Question> questions = loadQuestions(quiz);
         Map<Long, Set<Long>> selected = validateAnswers(questions, request.answers());

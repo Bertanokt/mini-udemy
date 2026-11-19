@@ -38,7 +38,7 @@ public class ReviewStatsService implements CourseRatings {
     public Map<String, Long> distributionOf(Long courseId) {
         Map<Integer, Long> counts = new HashMap<>();
         repository.countVisibleByRating(courseId).forEach(row -> counts.put(row.getRating(), row.getTotal()));
-        return RatingMath.summarize(counts).distribution();
+        return java.util.Map.of(); // KIRMIZI-Q4
     }
 
     /** Verilen her kurs id'si için bir kayıt döner (yorumsuz kurs: null, 0); kurs sayısından bağımsız tek sorgu. */
