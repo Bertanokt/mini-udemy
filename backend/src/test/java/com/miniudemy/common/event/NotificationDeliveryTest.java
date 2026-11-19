@@ -58,8 +58,14 @@ class NotificationDeliveryTest {
     private ApplicationEventPublisher events;
     @Autowired
     private PlatformTransactionManager transactionManager;
-    @Autowired
-    private NotificationService notifications;
+    /**
+     * Bean değil: {@code NotificationService} {@code @Transactional} metotlar taşıdığı için bean olsaydı Spring mock'u
+     * işlem proxy'siyle sarardı ve doğrulamalar proxy'ye giderdi.
+     */
+    private static final NotificationService notifications = mock(NotificationService.class, invocation -> {
+        NEW_TRANSACTION.add(inNewTransaction());
+        return null;
+    });
 
     @BeforeEach
     void setUp() {
@@ -120,16 +126,8 @@ class NotificationDeliveryTest {
         }
 
         @Bean
-        NotificationService notificationService() {
-            return mock(NotificationService.class, invocation -> {
-                NEW_TRANSACTION.add(inNewTransaction());
-                return null;
-            });
-        }
-
-        @Bean
-        NotificationListener notificationListener(NotificationService notificationService) {
-            return new NotificationListener(notificationService);
+        NotificationListener notificationListener() {
+            return new NotificationListener(notifications);
         }
     }
 }
