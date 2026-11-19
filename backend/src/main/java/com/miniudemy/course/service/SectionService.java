@@ -24,8 +24,8 @@ import com.miniudemy.course.repository.SectionRepository;
  * Bölüm işlemleri (#24, FR-08). Kurallar docs/api/openapi.yaml › Sections'tandır.
  *
  * <ul>
- *   <li>Liste herkese açık; yayımlanmamış kursun bölümleri yalnız sahibine ve yöneticiye görünür, diğerlerine
- *       kursun varlığı açığa çıkmadan 404 (kurs detayıyla aynı kural).</li>
+ *   <li>Liste herkese açık; yayımlanmamış kursun bölümleri yalnız sahibine, yöneticiye ve kayıtlı kursiyere görünür,
+ *       diğerlerine kursun varlığı açığa çıkmadan 404 (kurs detayıyla aynı kural, {@link CourseVisibility}).</li>
  *   <li>Değiştiren her işlem: kurs ya da bölüm yoksa 404, kullanıcı kursun eğitmeni değilse 403, kurs düzenlenemez
  *       durumdaysa 409 (sahiplik {@link CourseOwnershipService}'te, düzenlenebilirlik kursun durum nesnesinde).</li>
  *   <li>Bölüm silinince dersleri de gider; içerik dosyaları için {@link ContentFileDetached} yayınlanır (#112).</li>
@@ -43,14 +43,17 @@ public class SectionService {
     private final CourseOwnershipService ownership;
     private final CourseMapper mapper;
     private final ApplicationEventPublisher events;
+    private final CourseVisibility visibility;
 
     public SectionService(SectionRepository sectionRepository, CourseRepository courseRepository,
-            CourseOwnershipService ownership, CourseMapper mapper, ApplicationEventPublisher events) {
+            CourseOwnershipService ownership, CourseMapper mapper, ApplicationEventPublisher events,
+            CourseVisibility visibility) {
         this.sectionRepository = sectionRepository;
         this.courseRepository = courseRepository;
         this.ownership = ownership;
         this.mapper = mapper;
         this.events = events;
+        this.visibility = visibility;
     }
 
     /** Kursun bölümleri, dersleriyle birlikte `position` sırasıyla (tek sorgu). */
@@ -58,10 +61,7 @@ public class SectionService {
     public List<SectionResponse> listSections(Long courseId, Long viewerId, boolean viewerIsAdmin) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new NotFoundException(COURSE_NOT_FOUND));
-        boolean owner = viewerId != null && viewerId.equals(course.getInstructorId());
-        if (!course.isPublished() && !owner && !viewerIsAdmin) {
-            throw new NotFoundException(COURSE_NOT_FOUND);
-        }
+        visibility.assertVisible(course, viewerId, viewerIsAdmin);
         return sectionRepository.findAllWithLessonsByCourseId(courseId).stream()
                 .map(mapper::toSectionResponse)
                 .toList();

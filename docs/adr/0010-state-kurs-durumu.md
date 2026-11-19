@@ -29,7 +29,8 @@ Kurs durumu **State** deseniyle yazılır; kodu `course/domain` paketindedir.
 - **Gerekçeler:**
   - Red gerekçesi zorunludur ve `rejection_reason`'da saklanır. Boşsa `IllegalArgumentException` fırlar; istekte `@NotBlank` ile doğrulanması #59'un işidir.
   - Onaya gönderince önceki red gerekçesi temizlenir (#27'nin kriteri, ama geçişin parçası).
-  - Yayından kaldırma gerekçesi isteğe bağlıdır: yönetici gerekçeyle, eğitmen gerekçesiz kaldırabilir (FR-38). `unpublish_reason`'da saklanır.
+  - Yayından kaldırma gerekçesi isteğe bağlıdır: yönetici gerekçeyle, eğitmen gerekçesiz kaldırabilir (FR-38). `unpublish_reason`'da saklanır; boş gerekçe `null` olur (#123).
+  - Yayından kaldırma gerekçesi yeniden onaya gönderince silinmez, çünkü yönetici incelerken kursun neden kaldırıldığını görmelidir. Yönetici onayında (`approve()`) temizlenir, böylece yeniden yayımlanan kursta eski gerekçe kalmaz (#123).
 
 **Geçiş tablosu** (satır: şu anki durum, sütun: işlem; ✓ izinli kontrol, → hedef durum, 409 red):
 
@@ -107,11 +108,12 @@ Durumlar, olaylar ve geçişler bir yapılandırmayla tanımlanır; kütüphane 
 - 6 yeni sınıf (arayüz, dört durum, istisna); kural tablosu birkaç dosyaya bölünüyor. Tablonun tamamı `docs/architecture.md`'de ve testte tek yerde duruyor.
 - Domain'den `common.exception`'a bir bağımlılık (yukarıda gerekçesi ve sınırı).
 - **Katalog görünürlüğü iki yerde:** katalog sorgusu (`CourseRepository`) "yalnız Yayımlandı" filtresini veritabanında uyguluyor (`c.status = PUBLISHED`). Bu bir iş kuralı değil, sorgu filtresi; ama görünürlük kuralı değişirse hem `PublishedState.isPublished()` hem bu sorgu değişmeli.
-- **Eski yayından kaldırma gerekçesi kalıyor:** yeniden onaylanan bir kursta önceki `unpublish_reason` silinmiyor. Proje dokümanı bunu tanımlamıyor; onay ucu yazılırken (#59) karar verilecek.
+- **Eski yayından kaldırma gerekçesi (karara bağlandı, #123):** proje dokümanı tanımlamıyor. Gerekçe incelemede görünür kalır ve onayda temizlenir (yukarıda, Gerekçeler). Alternatif olan "onaya gönderince temizle", yöneticiyi kaldırılma sebebini görmeden karar vermeye zorlardı.
 
 **Kararın kodda nasıl korunduğu:**
 
 - `CourseStateTest`: 4 durum × 7 işlemin 28 birleşiminin tamamı (izinsizde 409 ve değişmeyen durum), gerekçelerin yazılıp temizlenmesi, gerekçesiz red ve her `CourseStatus`'un kendi durum nesnesine eşlendiği. Her durum sınıfında, eşlemede ve `Course`'ta kural bilerek bozulduğunda bu test kırıldı (#85 PR'ı).
 - `CourseOwnershipServiceTest`: sahiplik servisinin düzenlenebilirliği durum nesnesine sorduğu.
+- `CourseStateTest.unpublishReason_survivesResubmit_andIsClearedOnApproval` ve `CourseUnpublishIT` (#123): yayından kaldırma gerekçesinin incelemede kalıp onayda temizlendiği; yayından kaldırma ve yeniden incelemeye gönderme uçlarının geçişi yalnız `Course` üzerinden yaptığı.
 - `LayerArchitectureTest.domainOnlyDependsOnPersistenceJavaAndCommonException` (#86): domain'in yalnız izin verilen paketlere bağımlı olduğu (yukarıdaki kural biçimi); domain'e `common.security` bağımlılığı bilerek eklendiğinde kırıldı.
 - `CLAUDE.md` › Tasarım desenleri: "Kurs durumuna bağlı her izin ve geçiş durum nesnesine sorulur; serviste status için if/switch yok."
