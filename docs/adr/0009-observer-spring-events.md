@@ -59,4 +59,5 @@ Yayıncıyı dinleyici süresinden ayırır, ama hata yönetimi, thread havuzu v
 
 - `ObserverArchitectureTest`: `..service..` paketindeki sınıflar `..listener..` paketlerine bağımlı olamaz (yalnız bu kural yazılıdır; genel katman ve modül sınırı kuralları #86'dadır).
 - `EnrollmentCreatedDeliveryTest`: gerçek `EnrollmentService` ile olayın commit öncesi teslim edilmediği, commit sonrası edildiği, rollback ve hata durumunda hiç edilmediği gösterilir.
+- `NotificationScenarioIT` (#124): gerçek HTTP ve PostgreSQL ile altı bildirim olayı commit'ten sonra doğru alıcıya tek bildirim yazar; yayıncının işi başarısız olunca (mükerrer kayıt 409) bildirim yazılmaz.
 - Yeni bir olay ya da dinleyici eklenince `docs/architecture.md` tablosu aynı PR'da güncellenir.
