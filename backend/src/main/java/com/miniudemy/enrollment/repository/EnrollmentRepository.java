@@ -25,6 +25,9 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
     @Query("select e.id from Enrollment e where e.courseId = :courseId")
     List<Long> findIdsByCourseId(@Param("courseId") Long courseId);
 
+    @Query("select e.studentId from Enrollment e where e.courseId = :courseId order by e.studentId")
+    List<Long> findStudentIdsByCourseId(@Param("courseId") Long courseId);
+
     /** En son kaydolunan önce; aynı anda oluşanlarda id'ye göre, böylece sıra kararlıdır. */
     List<Enrollment> findAllByStudentIdOrderByEnrolledAtDescIdDesc(Long studentId);
 
