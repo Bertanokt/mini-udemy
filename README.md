@@ -54,7 +54,7 @@ Bütün hesapların parolası: **`Demo1234!`** (yalnız yerel demo için).
 | Kursiyer | `deniz.arslan@miniudemy.dev` | Python %0 (yeni kayıt) |
 | Kursiyer | `selin.koc@miniudemy.dev` | Java %50, Python'a kayıtlı değil |
 
-"Sıfırdan Python": 3 bölüm, 6 ders (3 PDF, 1 doküman, 2 video), 4 soruluk soru bankası, 2 zorunlu bölüm sınavı, 3 değerlendirme. Video derslerinin dosyası yok; demoda eğitmen hesabıyla yükleme ucundan (MP4/WebM) eklenir. Bildirimler, bildirim modülü (#124) gelince eklenecek.
+"Sıfırdan Python": 3 bölüm, 6 ders (3 PDF, 1 doküman, 2 video), 4 soruluk soru bankası, 2 zorunlu bölüm sınavı, 3 değerlendirme. Video derslerinin dosyası yok; demoda eğitmen hesabıyla yükleme ucundan (MP4/WebM) eklenir. Seed 15 bildirim de yazar (kayıt → eğitmene, onay/red → eğitmene, sınav sonucu ve sertifika → kursiyere); son 7 günün 5 bildirimi okunmamış. Bildirim listesi ekranı #125 ile gelecek.
 
 ## Geliştirme ortamı (hot reload)
 

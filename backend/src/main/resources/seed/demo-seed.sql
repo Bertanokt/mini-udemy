@@ -272,3 +272,53 @@ FROM (VALUES
 ) AS r (email, course_title, rating, comment)
 JOIN users u ON u.email = r.email
 JOIN courses co ON co.title = r.course_title;
+
+-- ---------------------------------------------------------------------------
+-- Bildirimler (#124): yukarıdaki kayıt, onay/red, sınav ve sertifika satırlarından üretilir. Metin ve bağlantılar
+-- NotificationMessages ile aynıdır (DemoSeedIT karşılaştırır). 7 günden eski olanlar okunmuş, yeniler okunmamış.
+-- ---------------------------------------------------------------------------
+INSERT INTO notifications (user_id, type, title, body, link, read_at, created_at)
+SELECT n.user_id, n.type, n.title, n.body, n.link,
+       CASE WHEN n.created_at < now() - make_interval(days => 7) THEN n.created_at + make_interval(hours => 1) END,
+       n.created_at
+FROM (
+    -- Kursa kayıt → eğitmene
+    SELECT co.instructor_id AS user_id, 'ENROLLMENT_CREATED' AS type, 'Kursunuza yeni kayıt' AS title,
+           st.full_name || ' "' || co.title || '" kursunuza kaydoldu.' AS body,
+           '/instructor/courses/' || co.id || '/analytics' AS link, en.enrolled_at AS created_at
+    FROM enrollments en
+    JOIN courses co ON co.id = en.course_id
+    JOIN users st ON st.id = en.student_id
+    UNION ALL
+    -- Kurs onayı → eğitmene (ilk kayıtlardan önce)
+    SELECT co.instructor_id, 'COURSE_APPROVED', 'Kursunuz onaylandı',
+           '"' || co.title || '" kursunuz onaylandı ve katalogda yayımlandı.',
+           '/courses/' || co.id, now() - make_interval(days => 25)
+    FROM courses co
+    WHERE co.status = 'PUBLISHED'
+    UNION ALL
+    -- Kurs reddi → eğitmene, gerekçeyle
+    SELECT co.instructor_id, 'COURSE_REJECTED', 'Kursunuz reddedildi',
+           '"' || co.title || '" kursunuz reddedildi. Gerekçe: ' || co.rejection_reason,
+           '/instructor', now() - make_interval(days => 3)
+    FROM courses co
+    WHERE co.rejection_reason IS NOT NULL
+    UNION ALL
+    -- Sınav sonucu → kursiyere
+    SELECT at.student_id, 'QUIZ_COMPLETED',
+           CASE WHEN at.passed THEN 'Sınavı geçtiniz' ELSE 'Sınavı geçemediniz' END,
+           '"' || co.title || '" kursundaki sınavı ' || CASE WHEN at.passed THEN 'geçtiniz.' ELSE 'geçemediniz.' END,
+           '/quizzes/' || at.quiz_id || '/attempts', at.submitted_at
+    FROM quiz_attempts at
+    JOIN quizzes qz ON qz.id = at.quiz_id
+    JOIN sections se ON se.id = qz.section_id
+    JOIN courses co ON co.id = se.course_id
+    UNION ALL
+    -- Sertifika → kursiyere
+    SELECT en.student_id, 'CERTIFICATE_ISSUED', 'Sertifikanız hazır',
+           '"' || co.title || '" kursunu tamamladınız; sertifikanız oluşturuldu.',
+           '/my-courses', ce.issued_at
+    FROM certificates ce
+    JOIN enrollments en ON en.id = ce.enrollment_id
+    JOIN courses co ON co.id = en.course_id
+) AS n;
