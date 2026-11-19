@@ -4,7 +4,7 @@
 
 ## Kendin karar ver, bana yalnız bildir
 
-- **Merge:** CI yeşil, main'le birleşik tam derleme (`./mvnw clean verify`) yeşil ve ArchUnit geçiyorsa kendi PR'larımı ve kontrol ettiğin ekip PR'larını merge et.
+- **Merge:** CI yeşil, main'le birleşik tam derleme (`./mvnw clean verify`) yeşil ve ArchUnit geçiyorsa kendi PR'larımı ve kontrol ettiğin ekip PR'larını merge et. **Ek şart:** PR'da Kalite ve Süreç sorumlusunun "Kontrol edildi ✓" yorumu da olmalı (`CONTRIBUTING.md` › DoD: "CI yeşil + Kalite ve Süreç sorumlusunun hızlı kontrolü"; risk R6). Bu yorum yoksa merge etme, bana bildir.
 - **Doküman çakışmaları:** ekip PR'larında yalnız doküman ya da javadoc çakışması varsa iki tarafı koruyarak çöz (merge commit, force push yok) ve PR'a not bırak.
 - **Atıf satırı:** PR açıklamasındaki Claude atıf satırını sil ve devam et.
 - **Plan seçenekleri:** planda önerdiğin seçenek proje dokümanı, sözleşme ve ADR'lerle uyumluysa ve geri alınabilirse önerinle ilerle; gerekçeyi PR'a yaz.
