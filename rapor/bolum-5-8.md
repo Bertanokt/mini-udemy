@@ -225,9 +225,10 @@ Frontend http://localhost:3000, backend http://localhost:8080. Veritabanı boşs
 **Eğitmen olarak** (`mehmet.kaya@…`)
 
 1. Eğitmen panelinde (`/instructor`) kurslarınız durumlarıyla görünür; reddedilen kursta yöneticinin gerekçesi yazar.
-2. Taslak kursu "Onaya gönder"; yayındaki kursu gerekçeyle "Yayından kaldır".
-3. Soru bankası (`/instructor/courses/{id}/questions`) ve bölüm sınavları (`/instructor/courses/{id}/quizzes`).
-4. Analitik (`/instructor/courses/{id}/analytics`): kayıt sayısı, ortalama ilerleme, tamamlanma oranı, sınav başarısı, puan dağılımı ve kursiyer listesi.
+2. "Yeni kurs" (`/instructor/courses/new`): başlık, açıklama, kategori, seviye, öğrenme hedefleri (eklenir, silinir, sırası değiştirilir) ve kapak (jpg/png/webp, en fazla 2 MB; seçince önizlenir) → "Kursu oluştur". Kurs Taslak olarak oluşur. Taslak ya da yayından kaldırılmış kursun bilgileri "Düzenle" ile değiştirilir; incelemedeki ve yayındaki kursta form salt okunurdur.
+3. Taslak kursu "Onaya gönder"; yayındaki kursu gerekçeyle "Yayından kaldır".
+4. Soru bankası (`/instructor/courses/{id}/questions`) ve bölüm sınavları (`/instructor/courses/{id}/quizzes`).
+5. Analitik (`/instructor/courses/{id}/analytics`): kayıt sayısı, ortalama ilerleme, tamamlanma oranı, sınav başarısı, puan dağılımı ve kursiyer listesi.
 
 **Yönetici olarak** (`admin@…`)
 
@@ -236,7 +237,7 @@ Frontend http://localhost:3000, backend http://localhost:8080. Veritabanı boşs
 3. İncelemedeki kursu "Onayla" ya da gerekçeyle (5–1000 karakter) "Reddet"; yayındaki kursu gerekçeyle "Yayından kaldır". Liste ve durum hemen güncellenir, eğitmene bildirim yazılır.
 4. Diğer sayfalar: kullanıcılar (rol ve pasifleştirme, `/admin/users`), kategoriler (`/admin/categories`), platform raporu (`/admin/reports`).
 
-**Ekranı henüz olmayan işlemler** (19.11.2026; API ile yapılır, adımlar [`docs/demo.md`](../docs/demo.md)'de): kurs oluşturma formu (#33), bölüm/ders düzenleme ve içerik yükleme (#34), dersi "tamamlandı" işaretleme düğmesi (#46), sertifika sayfası ve doğrulama (#130, #131), bildirim listesi (#136). ⟨01.12'de ekranı gelenler adımlara eklenecek, ekran görüntüleri #72'den.⟩
+**Ekranı henüz olmayan işlemler** (19.11.2026; API ile yapılır, adımlar [`docs/demo.md`](../docs/demo.md)'de): bölüm/ders düzenleme ve içerik yükleme (#34), dersi "tamamlandı" işaretleme düğmesi (#46), sertifika sayfası ve doğrulama (#130, #131), bildirim listesi (#136). ⟨01.12'de ekranı gelenler adımlara eklenecek, ekran görüntüleri #72'den.⟩
 
 ### 7.5 Test planı ve test raporu özeti
 
@@ -285,7 +286,7 @@ Plan: [`docs/test-plan.md`](../docs/test-plan.md) (#92). Rapor: `docs/test-repor
 
 | Hedef | Durum (19.11.2026) |
 |---|---|
-| Üç rollü (kursiyer, eğitmen, yönetici) çevrim içi eğitim platformu | Backend'in 10 modülü çalışıyor; 44 FR'nin 38'inin otomatik testi var. Frontend'de 19 ekran. ⟨01.12 durumu⟩ |
+| Üç rollü (kursiyer, eğitmen, yönetici) çevrim içi eğitim platformu | Backend'in 10 modülü çalışıyor; 44 FR'nin 38'inin otomatik testi var. Frontend'de 21 ekran. ⟨01.12 durumu⟩ |
 | Beş demo senaryosu (kurs yayımlama, kayıt ve öğrenme, kaldığı yerden devam, sınav ve sertifika, eğitmen analitiği) | Beşi de uçtan uca testli. Bazı adımların ekranı yok, API ile gösteriliyor (7.4). |
 | Tasarım desenleri: State, Strategy, Factory Method, Observer, DTO + Mapper | Beşi de kodda; sınıf diyagramlarında (#51) ve SOLID dokümanında (#95) gösterildi. |
 | Modüler monolit, modül sınırları | 10 modül; sınırlar ArchUnit testleriyle CI'da denetleniyor, ihlal yok. |
