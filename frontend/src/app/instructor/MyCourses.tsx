@@ -94,6 +94,9 @@ export function MyCourses() {
     <section className="qb ic">
       <div className="qb-head">
         <h1>Kurslarım</h1>
+        <Link className="qb-btn qb-primary" href="/instructor/courses/new">
+          Yeni kurs
+        </Link>
       </div>
 
       <label className="ic-filter">
@@ -187,6 +190,13 @@ export function MyCourses() {
                         {c.status === "DRAFT" ? "Onaya gönder" : "Yeniden incelemeye gönder"}
                       </button>
                     )}
+                    <Link
+                      className="qb-btn"
+                      href={`/instructor/courses/${c.id}/edit`}
+                      aria-label={`${c.title} kursunu ${c.status === "DRAFT" || c.status === "UNPUBLISHED" ? "düzenle" : "görüntüle"}`}
+                    >
+                      {c.status === "DRAFT" || c.status === "UNPUBLISHED" ? "Düzenle" : "Bilgiler"}
+                    </Link>
                     <Link className="qb-btn" href={`/instructor/courses/${c.id}/questions`}>
                       Soru bankası
                     </Link>

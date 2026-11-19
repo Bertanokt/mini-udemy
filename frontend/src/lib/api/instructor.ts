@@ -33,6 +33,32 @@ export function listMyCourses(status?: CourseStatus): Promise<CourseResponse[]> 
   return apiFetch<CourseResponse[]>(`/api/instructor/courses${qs}`);
 }
 
+/** docs/api/openapi.yaml › CreateCourseRequest (UpdateCourseRequest aynı şema). */
+export interface CourseRequest {
+  title: string;
+  description: string;
+  categoryId: number;
+  level: CourseLevel;
+  learningOutcomes: string[];
+}
+
+/** createCourse: INSTRUCTOR; kurs DRAFT oluşur. 400 alan hataları (`errors`), olmayan kategori `errors.categoryId`. */
+export function createCourse(request: CourseRequest): Promise<CourseResponse> {
+  return apiFetch<CourseResponse>("/api/courses", { method: "POST", body: JSON.stringify(request) });
+}
+
+/** updateCourse: kursun sahibi; yalnız DRAFT/UNPUBLISHED (State), aksi 409. 403 sahibi değil, 404 kurs yok. */
+export function updateCourse(id: number, request: CourseRequest): Promise<CourseResponse> {
+  return apiFetch<CourseResponse>(`/api/courses/${id}`, { method: "PUT", body: JSON.stringify(request) });
+}
+
+/** uploadCourseCover: jpg/png/webp, en fazla 2 MB (tür içerikten denetlenir). 413 büyük, 415 tür, 409 durum. */
+export function uploadCourseCover(id: number, file: File): Promise<CourseResponse> {
+  const body = new FormData();
+  body.append("file", file);
+  return apiFetch<CourseResponse>(`/api/courses/${id}/cover`, { method: "POST", body });
+}
+
 /** submitCourse: DRAFT/UNPUBLISHED → IN_REVIEW. 400 eksik içerik, 409 geçersiz durum. */
 export function submitCourse(id: number): Promise<CourseResponse> {
   return apiFetch<CourseResponse>(`/api/courses/${id}/submit`, { method: "POST" });

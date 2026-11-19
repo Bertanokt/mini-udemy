@@ -41,7 +41,8 @@ export function setUnauthorizedHandler(handler: () => void): void {
 
 async function send(path: string, init: RequestInit, token: string | null): Promise<Response> {
   const headers = new Headers(init.headers);
-  if (init.body !== undefined && !headers.has("Content-Type")) {
+  // FormData (dosya yükleme) için Content-Type'ı tarayıcı multipart sınırıyla (boundary) kendisi yazar.
+  if (init.body !== undefined && !(init.body instanceof FormData) && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
   if (token) {

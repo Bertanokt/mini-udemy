@@ -1266,3 +1266,71 @@ a.qb-btn {
   color: var(--muted);
   font-size: 0.875rem;
 }
+
+/* Eğitmen kurs formu (#33); soru bankasının qb-* ve sınav formunun qz-* sınıflarını kullanır */
+.cf select {
+  font: inherit;
+  color: inherit;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+
+.cf select[aria-invalid="true"] {
+  border-color: var(--err);
+}
+
+.cf-fields {
+  gap: 16px;
+  padding: 0;
+  margin: 0;
+}
+
+.cf-fields:disabled {
+  opacity: 0.75;
+}
+
+.cf-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.cf-outcome {
+  width: 100%;
+}
+
+.cf-cover-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.cf-cover {
+  width: 240px;
+  max-width: 100%;
+  margin-bottom: 0;
+}
+
+.cf-cover-actions {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cf-locked {
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+
+@media (max-width: 600px) {
+  .cf-row {
+    grid-template-columns: 1fr;
+  }
+}
