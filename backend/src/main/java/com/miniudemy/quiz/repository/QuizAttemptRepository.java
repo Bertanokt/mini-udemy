@@ -15,6 +15,11 @@ public interface QuizAttemptRepository extends JpaRepository<QuizAttempt, Long> 
     /** Öğrencinin sınavdaki denemeleri, en yeni önce (ix_quiz_attempts_quiz_student); tek sorgu. */
     List<QuizAttempt> findByQuizIdAndStudentIdOrderBySubmittedAtDescIdDesc(Long quizId, Long studentId);
 
+    /** Verilen sınavlardan kursiyerin en az bir geçen denemesi olanların sayısı (#129). */
+    @Query("select count(distinct a.quizId) from QuizAttempt a "
+            + "where a.studentId = :studentId and a.passed = true and a.quizId in :quizIds")
+    long countPassedQuizzes(@Param("studentId") Long studentId, @Param("quizIds") Collection<Long> quizIds);
+
     /** Sınav başına deneme sayısı ve geçen deneme sayısı tek sorguda; denemesi olmayan sınav sonuçta yer almaz. */
     @Query("select a.quizId as quizId, count(a) as attemptCount, "
             + "sum(case when a.passed = true then 1 else 0 end) as passedCount "

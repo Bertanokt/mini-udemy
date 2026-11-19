@@ -1,6 +1,8 @@
 package com.miniudemy.course.service;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,5 +35,14 @@ public class CourseStructureService {
         return sectionRepository.findAllWithLessonsByCourseId(courseId).stream()
                 .map(s -> new SectionLessons(s.getId(), s.getLessons().stream().map(Lesson::getId).toList()))
                 .toList();
+    }
+
+    /** Kursun zorunlu derslerinin id'leri; sertifika uygunluğu için (#129). */
+    public Set<Long> mandatoryLessonIds(Long courseId) {
+        return sectionRepository.findAllWithLessonsByCourseId(courseId).stream()
+                .flatMap(s -> s.getLessons().stream())
+                .filter(Lesson::isMandatory)
+                .map(Lesson::getId)
+                .collect(Collectors.toSet());
     }
 }

@@ -107,7 +107,7 @@ Bir modül başka bir modülle **yalnız iki yoldan** konuşur:
 | `content` | `course`, `enrollment` | – |
 | `progress` | `course`, `enrollment` | `LessonCompleted`, `LessonOpened`, `CourseLessonsChanged` |
 | `quiz` | `course`, `enrollment` | – |
-| `certificate` | `course`, `progress`, `quiz` | `LessonCompleted`, `QuizCompleted` |
+| `certificate` | `course`, `enrollment`, `progress`, `quiz` | `LessonCompleted`, `QuizCompleted` |
 | `review` | `auth`, `course`, `enrollment` | – |
 | `notification` | `auth` | Tüm bildirim olayları (bölüm 5) |
 | `admin` | `auth`, `course`, `enrollment`, `progress`, `certificate`, `review` | – |
@@ -162,14 +162,14 @@ AFTER_COMMIT dinleyicisi, işlem bittiği için veritabanı yazması gerekiyorsa
 | `LessonPublished` | `course` | `LessonService.create` (yayımlanmış kursa ders eklenince, #25) | `notification` (kayıtlı kursiyerlere) | Yayıncı var; dinleyici sonra |
 | `CourseApproved` | `course` | `CourseLifecycleService.approve` (#59) | `notification` (eğitmene) | Yayıncı var; dinleyici #124 |
 | `CourseRejected` (gerekçeli) | `course` | `CourseLifecycleService.reject` (#59) | `notification` (eğitmene) | Yayıncı var; dinleyici #124 |
-| `LessonCompleted` | `progress` | `LessonCompletionService.complete` (#41), yalnız ilk tamamlamada | `progress` (`ProgressListener`, kurs yüzdesi), `certificate` (uygunluk) | Yayıncı ve `progress` dinleyicisi (#43) var; `certificate` dinleyicisi sonra |
-| `QuizCompleted` | `quiz` | `QuizAttemptService.submit` (#54) | `certificate` (uygunluk), `notification` (kursiyere) | Yayıncı var; dinleyiciler sonra |
+| `LessonCompleted` | `progress` | `LessonCompletionService.complete` (#41), yalnız ilk tamamlamada | `progress` (`ProgressListener`, kurs yüzdesi), `certificate` (`CertificateListener`, uygunluk) | Yayıncı ve iki dinleyici var (#43, #129) |
+| `QuizCompleted` | `quiz` | `QuizAttemptService.submit` (#54) | `certificate` (`CertificateListener`, yalnız geçen denemede uygunluk), `notification` (kursiyere) | Yayıncı ve `certificate` dinleyicisi (#129) var; `notification` dinleyicisi sonra |
 | `LessonOpened` | `content` | `ContentDeliveryService.openLessonContent` (#119), yalnız kayıtlı kursiyer açınca; eğitmen ve yönetici açınca yok | `progress` (`ProgressListener`, son izlenen ders) | Yayıncı ve dinleyici var |
 | `CourseLessonsChanged` | `course` | `LessonService.create` / `delete`, `SectionService.deleteSection` (#249): kursun ders sayısı değişince, her durumda | `progress` (`ProgressListener`, kayıtlıların yüzde önbelleği) | Yayıncı ve dinleyici var |
 | `ContentFileDetached` | `course` | `ContentLinkService` (kapak ya da ders içeriği değişince, #112), `LessonService.update` (içerik türü değişince) ve `delete`, `SectionService.deleteSection`: dosya hiçbir yerde kullanılmaz olunca | `content` (`StoredFileCleanupListener`, dosyayı diskten ve `stored_files`'tan siler) | Yayıncı ve dinleyici var |
-| `CertificateIssued` | `certificate` | sertifika verme | `notification` (kursiyere) | Yalnız tip; yayıncı ve dinleyici sonra |
+| `CertificateIssued` | `certificate` | `CertificateIssuingService.issueIfEligible` (#129), yalnız sertifika yazılınca | `notification` (kursiyere) | Yayıncı var; dinleyici sonra |
 
-Bugün `EnrollmentCreated`, `LessonPublished`, `CourseApproved`, `CourseRejected`, `LessonCompleted`, `QuizCompleted`, `LessonOpened`, `CourseLessonsChanged` ve `ContentFileDetached` gerçekten yayınlanıyor. `ContentFileDetached` dosya id'sini taşır; `course` content'e bağımlı olamayacağı için dosyayı kendisi silmez, bağı koparıp olayı yayınlar, silmeyi commit'ten sonra `content` yapar (silme başarısız olursa yalnız loglanır, kullanıcının isteği geri alınmaz). `CourseLessonsChanged`'i ders ekleme, ders silme ve bölüm silme yayınlar; `ProgressListener` commit'ten sonra kursa kayıtlı herkesin yüzde önbelleğini `ProgressService.recalculateCourse` ile yeniden yazar (#249). `LessonPublished`'ın yalnız yayımlanmış kursta yayınlandığı `LessonServiceTest`'te denetlenir. `LessonOpened`'ı ders içeriği ucu (`GET /api/lessons/{id}/content`, #119) yayınlar; `ProgressListener` commit'ten sonra `course_progress`'e son açılan dersi ve zamanı yazar (her istekte; video oynatıcının Range istekleri de dahil, satır tek kalır). `QuizCompleted`'ı sınav çözme ucu (`POST /api/quizzes/{id}/attempts`, #54) yayınlar. `EnrollmentCreated`, `CourseApproved` ve `CourseRejected`'ın henüz üretim dinleyicisi yok; teslim kuralı `EnrollmentCreatedDeliveryTest` ile gösterilir. `LessonCompleted`'ı ders tamamlama ucu (`POST /api/lessons/{id}/complete`, #41) yayınlar; `ProgressListener` commit'ten sonra kurs yüzdesini günceller (`LessonCompletedDeliveryTest`). Diğer olayların yayıncıları ilgili issue'larda eklenir; tipleri şimdiden tanımlıdır ve alanları o issue'larda gerekirse genişletilir.
+Bugün `EnrollmentCreated`, `LessonPublished`, `CourseApproved`, `CourseRejected`, `LessonCompleted`, `QuizCompleted`, `LessonOpened`, `CourseLessonsChanged`, `ContentFileDetached` ve `CertificateIssued` gerçekten yayınlanıyor. `ContentFileDetached` dosya id'sini taşır; `course` content'e bağımlı olamayacağı için dosyayı kendisi silmez, bağı koparıp olayı yayınlar, silmeyi commit'ten sonra `content` yapar (silme başarısız olursa yalnız loglanır, kullanıcının isteği geri alınmaz). `CourseLessonsChanged`'i ders ekleme, ders silme ve bölüm silme yayınlar; `ProgressListener` commit'ten sonra kursa kayıtlı herkesin yüzde önbelleğini `ProgressService.recalculateCourse` ile yeniden yazar (#249). `LessonPublished`'ın yalnız yayımlanmış kursta yayınlandığı `LessonServiceTest`'te denetlenir. `LessonOpened`'ı ders içeriği ucu (`GET /api/lessons/{id}/content`, #119) yayınlar; `ProgressListener` commit'ten sonra `course_progress`'e son açılan dersi ve zamanı yazar (her istekte; video oynatıcının Range istekleri de dahil, satır tek kalır). `QuizCompleted`'ı sınav çözme ucu (`POST /api/quizzes/{id}/attempts`, #54) yayınlar. `EnrollmentCreated`, `CourseApproved` ve `CourseRejected`'ın henüz üretim dinleyicisi yok; teslim kuralı `EnrollmentCreatedDeliveryTest` ile gösterilir. `LessonCompleted`'ı ders tamamlama ucu (`POST /api/lessons/{id}/complete`, #41) yayınlar; `ProgressListener` commit'ten sonra kurs yüzdesini günceller (`LessonCompletedDeliveryTest`). Diğer olayların yayıncıları ilgili issue'larda eklenir; tipleri şimdiden tanımlıdır ve alanları o issue'larda gerekirse genişletilir.
 
 ## 6. Diyagramlar
 
@@ -207,6 +207,16 @@ flowchart TB
 
 Düz ok: service çağrısı. Kesikli ok: domain olayı (yayınlayan → dinleyen). Noktalı çizgi: `course`'un tanımladığı istatistik arayüzünü uygulama.
 
+### Sertifika verme kuralı (#129)
+
+- **Koşul (proje dokümanı H):** kursun bütün **zorunlu** (`lessons.mandatory`) dersleri tamamlanmış **ve** kursun bölümlerindeki bütün **zorunlu** (`quizzes.required`) sınavların her birinin en az bir geçen denemesi var. İsteğe bağlı dersler ve zorunlu olmayan sınavlar koşula girmez. "Geçti" bilgisi denemenin kendisinde saklanır (deneme anındaki eşiğe göre).
+- **Ne zaman kontrol edilir:** `CertificateListener`, `LessonCompleted` ve geçen `QuizCompleted` olaylarında, yayıncının işlemi commit edildikten sonra kendi işleminde (AFTER_COMMIT + REQUIRES_NEW, ADR-009). Kalınan deneme koşulu sağlatamayacağı için kontrol edilmez.
+- **Kayıt başına tek sertifika:** `certificates.enrollment_id` tekil. Ekleme `ON CONFLICT DO NOTHING` ile tek komuttur; aynı anda gelen iki olayda (son ders ve son sınav) biri yazar, diğeri hiçbir şey yapmaz ve `CertificateIssued` bir kez yayınlanır.
+- **Doğrulama kodu:** `XXXX-XXXX-XX`, `SecureRandom` ile 31 karakterlik okunaklı alfabeden (0/O, 1/I/L yok) 10 karakter (~49 bit). Kod tekil; çakışırsa yeni kodla en fazla 5 kez denenir.
+- **Kullanılan servisler:** zorunlu dersler `course/service/CourseStructureService`, tamamlanan dersler `progress/service/ProgressService`, zorunlu sınavlar `quiz/service/QuizRequirementService`, kayıt id'si `enrollment/service/EnrollmentService` (tablodaki `course`, `enrollment`, `progress`, `quiz` bağımlılıkları).
+- **Koşulu sonradan değişen kurslar:** sertifika verildikten sonra kursa zorunlu ders ya da sınav eklenirse sertifika geri alınmaz; henüz sertifikası olmayan kursiyer bir sonraki ders tamamlamasında ya da geçen sınav denemesinde yeni koşula göre değerlendirilir.
+- **Zorunlu dersi ve zorunlu sınavı olmayan kurs:** koşul boş olduğu için kursiyerin ilk ders tamamlaması (ya da geçen ilk sınavı) sertifika verir.
+
 ### İlerleme yüzdesi hesaplama kuralı (#43)
 
 - **Kurs yüzdesi** = kaydın tamamladığı ders sayısı / kurstaki toplam ders sayısı × 100, iki ondalığa yuvarlanır (HALF_UP). Örnek: 20 dersin 15'i 75.00; 3 dersin 1'i 33.33.
@@ -231,6 +241,7 @@ flowchart LR
   quiz --> course
   quiz --> enrollment
   certificate --> course
+  certificate --> enrollment
   certificate --> progress
   certificate --> quiz
   review --> auth
