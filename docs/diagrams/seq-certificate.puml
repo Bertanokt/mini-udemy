@@ -1,0 +1,177 @@
+@startuml seq-certificate
+' UML sekans diyagramı: sertifika oluşturma ve bildirim (#140; Observer, ADR-009).
+' Sınıf ve metot adları koddakiyle birebir; diyagram–kod tutarlılık tablosu PR #140'ta.
+' Render (sekans diyagramı Graphviz gerektirmez; PNG ve SVG ayrı komutlarla):
+'   java -Duser.language=en -Duser.country=US -jar plantuml.jar -tpng docs/diagrams/seq-certificate.puml
+'   java -Duser.language=en -Duser.country=US -jar plantuml.jar -tsvg docs/diagrams/seq-certificate.puml
+
+skinparam shadowing false
+skinparam defaultFontSize 12
+skinparam sequenceMessageAlign left
+skinparam responseMessageBelowArrow true
+skinparam maxMessageSize 260
+skinparam sequence {
+  LifeLineBorderColor #888888
+  ParticipantBackgroundColor #F7F7F7
+  ParticipantBorderColor #444444
+  GroupBorderColor #666666
+  GroupBackgroundColor #F2F2F2
+}
+skinparam note {
+  BackgroundColor #FFF8E1
+  BorderColor #8D6E63
+}
+
+title Mini Udemy - Sekans: sertifika oluşturma ve bildirim (Observer)
+
+actor "Kursiyer" as student
+
+box "progress" #EEF5FB
+  participant "LessonCompletionController" as lcc
+  participant "LessonCompletionService" as lcs
+  participant "ProgressListener" as pl
+end box
+box "quiz" #F3EEFB
+  participant "QuizAttemptController" as qac
+  participant "QuizAttemptService" as qas
+end box
+participant "ApplicationEventPublisher\n(Spring olay yayını)" as bus
+box "certificate" #EEF8EE
+  participant "CertificateListener" as cl
+  participant "CertificateIssuingService" as cis
+  participant "VerificationCodeGenerator" as vcg
+  participant "CertificateRepository" as cr
+end box
+participant "EnrollmentService\nCourseStructureService\nProgressService\nQuizRequirementService" as deps
+box "notification" #FBF1EE
+  participant "NotificationListener" as nl
+  participant "NotificationService" as ns
+end box
+
+== 1. Tetikleyici olay (yayıncının işlemi) ==
+
+alt Ders tamamlama (#41)
+  student -> lcc : POST /api/lessons/{id}/complete
+  activate lcc
+  lcc -> lcs : complete(studentId, lessonId)
+  activate lcs
+  note right of lcs : @Transactional (işlem 1)
+  lcs -> lcs : lessonProgress.insertIfAbsent(enrollmentId, lessonId, now)
+  opt yalnız ilk tamamlamada (satır sayısı = 1)
+    lcs -> bus : publishEvent(new LessonCompleted(studentId, courseId, lessonId, now))
+  end
+  lcs -> lcs : progress.getMyProgress(studentId, courseId)
+  note right of lcs : İşlem 1 commit; olay ancak şimdi teslim edilir (AFTER_COMMIT).\nRollback olursa hiç teslim edilmez.
+else Sınav gönderme (#54)
+  student -> qac : POST /api/quizzes/{id}/attempts
+  activate qac
+  qac -> qas : submit(quizId, studentId, request)
+  activate qas
+  note right of qas : @Transactional (işlem 1)
+  qas -> qas : ScoringStrategy ile puanla,\nattemptRepository.save(...)
+  qas -> bus : publishEvent(new QuizCompleted(attempt.getId(), quizId, courseId, studentId, passed, attempt.getSubmittedAt()))
+  note right of qas : İşlem 1 commit; olay ancak şimdi teslim edilir (AFTER_COMMIT).
+end
+
+== 2. Sertifika koşulu (AFTER_COMMIT, aynı thread, senkron) ==
+
+note over bus, nl
+  Yayıncı dinleyicileri tanımaz. Aynı olayın diğer dinleyicileri de çalışır:
+  LessonCompleted → ProgressListener.onLessonCompleted (kurs yüzdesi),
+  QuizCompleted → NotificationListener.onQuizCompleted (sınav sonucu bildirimi).
+  Dinleyiciler arası sıra tanımsızdır.
+end note
+bus -->> pl : onLessonCompleted(event)
+
+alt LessonCompleted
+  bus -->> cl : onLessonCompleted(event)
+  cl -> cis : issueIfEligible(studentId, courseId)
+else QuizCompleted
+  bus -->> cl : onQuizCompleted(event)
+  alt event.passed() == false
+    note right of cl : Kalınan deneme koşulu sağlatamaz:\nservis çağrılmaz, sertifika ve olay yok.
+  else event.passed() == true
+    cl -> cis : issueIfEligible(studentId, courseId)
+  end
+end
+
+group @Transactional(propagation = REQUIRES_NEW) — işlem 2
+  activate cis
+  cis -> deps : enrollments.requireEnrollmentId(studentId, courseId)
+  deps --> cis : enrollmentId
+  cis -> cr : existsByEnrollmentId(enrollmentId)
+  cr --> cis : boolean
+
+  alt Sertifika zaten var
+    cis --> cl : Optional.empty()
+    note right of cis : Koşul kontrol edilmez (||, kısa devre);\nsertifika yazılmaz, CertificateIssued yayınlanmaz.
+  else Sertifika yok
+    cis -> cis : eligible(studentId, courseId)
+    activate cis
+    cis -> deps : structure.mandatoryLessonIds(courseId)
+    cis -> deps : progress.completedLessonIds(studentId, courseId)
+    cis -> deps : quizzes.allRequiredQuizzesPassed(studentId, courseId)
+    deactivate cis
+
+  alt Koşul sağlanmadı (zorunlu ders eksik ya da zorunlu sınav geçilmemiş)
+    cis --> cl : Optional.empty()
+    note right of cis : Sertifika yazılmaz, CertificateIssued yayınlanmaz.
+  else Koşul sağlandı
+    loop en fazla MAX_CODE_ATTEMPTS (5) kez
+      cis -> vcg : next()
+      vcg --> cis : verificationCode
+      cis -> cr : insertIfAbsent(enrollmentId, code, now)
+      note right of cr : INSERT ... ON CONFLICT DO NOTHING
+      alt 1 satır yazıldı
+        cis -> cr : findByEnrollmentId(enrollmentId)
+        cr --> cis : Certificate
+        cis -> bus : publishEvent(new CertificateIssued(certificateId, studentId, courseId, now))
+        cis --> cl : Optional.of(certificateId)
+      else 0 satır ve existsByEnrollmentId(enrollmentId) == true
+        cis --> cl : Optional.empty()
+        note right of cis : Eşzamanlı başka olay (son ders ve son sınav)\nsertifikayı yazdı; olayı o yayınladı.
+      else 0 satır, sertifika yok (doğrulama kodu çakıştı)
+        note right of cis : Yeni kodla tekrar dene.
+      end
+    end
+    note right of cis : 5 denemede de kod çakışırsa\nIllegalStateException.
+  end
+  end
+  deactivate cis
+end
+note right of cl : İşlem 2 commit; CertificateIssued ancak şimdi teslim edilir.
+
+== 3. Sertifika bildirimi (AFTER_COMMIT, aynı thread, senkron) ==
+
+bus -->> nl : onCertificateIssued(event)
+activate nl
+group @Transactional(propagation = REQUIRES_NEW) — işlem 3
+  nl -> ns : notifyCertificateIssued(courseId, studentId)
+  activate ns
+  ns -> ns : courses.findSummaries(Set.of(courseId))
+  alt Kurs bulundu
+    ns -> ns : NotificationMessages.certificateIssued(course.title())
+    ns -> ns : notifications.saveAll(...)\n(alıcı: kursiyer, tek bildirim)
+  else Kurs bulunamadı (olaydan sonra silinmiş)
+    ns -> ns : log.warn(...); bildirim yazılmaz
+  end
+  deactivate ns
+end
+note right of nl : Bildirim yazılamazsa sertifika geri alınmaz;\nsertifika yazılamazsa ders/sınav sonucu geri alınmaz.
+deactivate nl
+
+== 4. Yanıt (dinleyiciler bittikten sonra) ==
+
+alt Ders tamamlama
+  lcs --> lcc : CourseProgressResponse
+  deactivate lcs
+  lcc --> student : 200 CourseProgressResponse
+  deactivate lcc
+else Sınav gönderme
+  qas --> qac : AttemptResultResponse
+  deactivate qas
+  qac --> student : 201 AttemptResultResponse
+  deactivate qac
+end
+
+@enduml
