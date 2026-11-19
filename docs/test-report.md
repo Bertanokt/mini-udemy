@@ -1,6 +1,6 @@
 # Test raporu (#99)
 
-> **TASLAK (19.11.2026).** Bug bash (#68) bulguları ve JaCoCo coverage sayıları eklenince tamamlanacak. Sayılar aşağıdaki CI çalışmasından alınmıştır.
+> **TASLAK (19.11.2026).** Bug bash (#68) bulguları eklenince tamamlanacak. Sayılar aşağıdaki CI çalışmasından alınmıştır.
 
 Test planına ([test-plan.md](test-plan.md)) göre gerçekleşen sonuçlar. FR → issue → test izlenebilirliği [traceability.md](traceability.md)'de.
 
@@ -38,12 +38,14 @@ Test sayısının gelişimi: 10.11'de 1, 17.11 sonunda 404, 19.11'de 1053 (ilerl
 
 Hedef (test-plan › 7.4): servis katmanında (`com.miniudemy.*.service`) satır coverage'ı en az %70.
 
-| Kapsam | Satır coverage | Hedef |
-|---|---|---|
-| Servis katmanı | _doldurulacak_ | ≥ %70 |
-| Genel | _doldurulacak_ | bilgi amaçlı |
+| Kapsam | Satır coverage | Dal (branch) coverage | Hedef |
+|---|---|---|---|
+| **Servis katmanı** (`*.service`) | **%98,4** (1347 satırın 1326'sı) | %93,9 | ≥ %70 ✓ |
+| Genel | %96,1 (2952 satırın 2836'sı) | %80,7 | bilgi amaçlı |
 
-Rapor her CI çalışmasında `jacoco-report` artifact'ı olarak üretiliyor; sayılar son `main` çalışmasının artifact'ından alınacak.
+Modül bazında servis katmanı: admin, auth, certificate, enrollment, notification, progress, review %100; quiz %99,2; course %98,9; content %93,1. Servis katmanında %90'ın altında kalan tek sınıf `LocalDiskStorageService` (%85,1; kapsanmayan 10 satır çoğunlukla disk G/Ç hata dalları).
+
+Kaynak: aynı CI çalışmasının `jacoco-report` artifact'ı (`jacoco.csv`). JaCoCo ajanı birim ve entegrasyon testlerinde aynı `jacoco.exec`'e yazar; rapor `verify` aşamasında, entegrasyon testlerinden sonra üretilir.
 
 ## 3. Senaryo 1–5 entegrasyon testleri
 
@@ -102,7 +104,7 @@ _Bug bash yapılınca doldurulacak:_ bulunan hata, öncelik (P1/P2), issue, duru
 | 1. `main`'de CI yeşil | ✓ |
 | 2. Tüm P1 FR'lerin otomatik testi ya da yazılı manuel kontrolü | izlenebilirlik matrisinde (#98) güncellenecek |
 | 3. Bölüm 6 testleri mevcut ve yeşil, `@Disabled` yok | ✓ |
-| 4. Servis katmanında satır coverage ≥ %70 | _coverage eklenince_ |
+| 4. Servis katmanında satır coverage ≥ %70 | ✓ %98,4 |
 | 5. ArchUnit ihlali yok, kurallar gevşetilmemiş | ✓ (13 mimari test) |
 | 6. Bug bash'teki P1 hataların hepsi kapalı | _bug bash sonrası_ |
 | 7. Demo provasında senaryo 1–5 hatasız | _#106_ |
