@@ -24,7 +24,7 @@ import com.miniudemy.quiz.service.QuizRequirementService;
 public class CertificateIssuingService {
 
     /** Doğrulama kodu çakışırsa yeni kodla en fazla bu kadar denenir. */
-    static final int MAX_CODE_ATTEMPTS = 1; // KIRMIZI-C4
+    static final int MAX_CODE_ATTEMPTS = 5;
 
     private final EnrollmentService enrollments;
     private final CourseStructureService structure;
@@ -52,7 +52,7 @@ public class CertificateIssuingService {
     @Transactional
     public Optional<Long> issueIfEligible(Long studentId, Long courseId) {
         Long enrollmentId = enrollments.requireEnrollmentId(studentId, courseId);
-        if (!eligible(studentId, courseId)) { // KIRMIZI-C3
+        if (certificates.existsByEnrollmentId(enrollmentId) || !eligible(studentId, courseId)) {
             return Optional.empty();
         }
         Instant now = clock.instant();
@@ -73,7 +73,7 @@ public class CertificateIssuingService {
 
     private boolean eligible(Long studentId, Long courseId) {
         Set<Long> mandatory = structure.mandatoryLessonIds(courseId);
-        return true /* KIRMIZI-C1 */
-                && true; // KIRMIZI-C2
+        return progress.completedLessonIds(studentId, courseId).containsAll(mandatory)
+                && quizzes.allRequiredQuizzesPassed(studentId, courseId);
     }
 }
