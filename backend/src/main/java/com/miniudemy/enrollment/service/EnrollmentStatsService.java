@@ -2,8 +2,10 @@ package com.miniudemy.enrollment.service;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,5 +36,18 @@ public class EnrollmentStatsService implements EnrollmentCounts {
             repository.countByCourseIds(courseIds).forEach(row -> counts.put(row.getCourseId(), row.getTotal()));
         }
         return counts;
+    }
+
+    /** Bütün kayıtların sayısı (platform raporu, #145). */
+    public long countAll() {
+        return repository.count();
+    }
+
+    /** En çok kayıt alan {@code limit} kurs: kurs id → kayıt sayısı, çoktan aza (platform raporu, #145). */
+    public Map<Long, Long> topCourses(int limit) {
+        Map<Long, Long> top = new LinkedHashMap<>();
+        repository.findTopCourses(PageRequest.of(0, limit))
+                .forEach(row -> top.put(row.getCourseId(), row.getTotal()));
+        return top;
     }
 }
