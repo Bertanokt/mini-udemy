@@ -57,7 +57,7 @@ public class NotificationService {
         course(courseId).ifPresent(course -> {
             String studentName = Optional.ofNullable(users.findSummaries(Set.of(studentId)).get(studentId))
                     .map(UserSummary::fullName).orElse(UNKNOWN_STUDENT);
-            save(List.of(course.instructor().id()),
+            save(List.of(studentId) /* KIRMIZI-N1 */,
                     NotificationMessages.enrollmentCreated(courseId, course.title(), studentName));
         });
     }
@@ -108,7 +108,7 @@ public class NotificationService {
 
     private void save(Collection<Long> recipients, NotificationContent content) {
         Instant now = clock.instant();
-        notifications.saveAll(recipients.stream().distinct()
+        notifications.saveAll(recipients.stream() /* KIRMIZI-N3 */
                 .map(userId -> new Notification(userId, content, now)).toList());
     }
 }

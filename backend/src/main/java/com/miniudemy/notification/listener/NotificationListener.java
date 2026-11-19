@@ -61,6 +61,6 @@ public class NotificationListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onCertificateIssued(CertificateIssued event) {
-        notifications.notifyCertificateIssued(event.courseId(), event.studentId());
+        // KIRMIZI-N4 notifications.notifyCertificateIssued(event.courseId(), event.studentId());
     }
 }

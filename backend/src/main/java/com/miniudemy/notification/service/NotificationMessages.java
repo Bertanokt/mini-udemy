@@ -36,13 +36,13 @@ public final class NotificationMessages {
     /** Kurs reddi → eğitmene; yöneticinin gerekçesi gövdede. */
     public static NotificationContent courseRejected(String courseTitle, String reason) {
         return new NotificationContent(NotificationType.COURSE_REJECTED, "Kursunuz reddedildi",
-                "\"" + courseTitle + "\" kursunuz reddedildi. Gerekçe: " + reason,
+                "\"" + courseTitle + "\" kursunuz reddedildi." /* KIRMIZI-N2 */,
                 "/instructor");
     }
 
     /** Sınav sonucu → kursiyere. */
     public static NotificationContent quizCompleted(Long quizId, String courseTitle, boolean passed) {
-        String title = passed ? "Sınavı geçtiniz" : "Sınavı geçemediniz";
+        String title = "Sınavı geçtiniz"; // KIRMIZI-N5
         String body = passed
                 ? "\"" + courseTitle + "\" kursundaki sınavı geçtiniz."
                 : "\"" + courseTitle + "\" kursundaki sınavı geçemediniz.";
