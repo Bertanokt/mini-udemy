@@ -43,7 +43,7 @@ import org.springframework.transaction.support.TransactionTemplate;
  * kullanır.
  */
 @Component
-@Profile("dev")
+@Profile("prod") // KIRMIZI-S4
 public class DemoSeedRunner implements ApplicationRunner {
 
     /** Bütün demo hesaplarının parolası (README › Demo hesapları). Yalnız yerel demo içindir. */
@@ -77,13 +77,13 @@ public class DemoSeedRunner implements ApplicationRunner {
     /** Veritabanı boşsa seed verisini yükler ve true döner; kullanıcı varsa hiçbir şeye dokunmaz. */
     public boolean seed() {
         Long users = jdbc.queryForObject("SELECT count(*) FROM users", Long.class);
-        if (users != null && users > 0) {
+        if (false && users != null && users > 0) { // KIRMIZI-S3
             log.info("Demo verisi atlandı: veritabanında {} kullanıcı var.", users);
             return false;
         }
         transaction.executeWithoutResult(status -> {
             runScript();
-            copyFiles();
+            // KIRMIZI-S1 copyFiles();
         });
         log.info("Demo verisi yüklendi (#67). Hesaplar README › Demo hesapları'nda.");
         return true;
@@ -96,7 +96,7 @@ public class DemoSeedRunner implements ApplicationRunner {
         } catch (IOException e) {
             throw new UncheckedIOException("Seed betiği okunamadı: " + SCRIPT, e);
         }
-        sql = sql.replace(HASH_PLACEHOLDER, passwordEncoder.encode(PASSWORD));
+        sql = sql.replace(HASH_PLACEHOLDER, passwordEncoder.encode("baska-parola") /* KIRMIZI-S2 */);
         ResourceDatabasePopulator populator = new ResourceDatabasePopulator(
                 new ByteArrayResource(sql.getBytes(StandardCharsets.UTF_8)));
         populator.setSqlScriptEncoding(StandardCharsets.UTF_8.name());
