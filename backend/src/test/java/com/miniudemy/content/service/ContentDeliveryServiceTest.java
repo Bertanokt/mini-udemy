@@ -26,6 +26,11 @@ import org.springframework.core.io.Resource;
 
 import com.miniudemy.common.exception.ForbiddenException;
 import com.miniudemy.common.exception.NotFoundException;
+import com.miniudemy.common.exception.UnauthorizedException;
+import com.miniudemy.common.security.AccountLookup;
+import com.miniudemy.common.security.ContentTokens;
+import com.miniudemy.common.security.IssuedContentToken;
+import com.miniudemy.common.security.SecurityMessages;
 import com.miniudemy.content.domain.DeliveryMode;
 import com.miniudemy.content.domain.LessonOpened;
 import com.miniudemy.content.dto.ContentDownload;
@@ -54,9 +59,11 @@ class ContentDeliveryServiceTest {
     private final StorageService storage = mock(StorageService.class);
     private static final Instant NOW = Instant.parse("2026-11-18T15:00:00Z");
     private final ApplicationEventPublisher events = mock(ApplicationEventPublisher.class);
+    private final ContentTokens contentTokens = mock(ContentTokens.class);
+    private final AccountLookup accounts = mock(AccountLookup.class);
     private final ContentDeliveryService service = new ContentDeliveryService(lessons, courses, enrollments, storage,
             new LessonContentFactories(List.of(new VideoContentFactory(), new PdfContentFactory(),
-                    new DocumentContentFactory())), events, Clock.fixed(NOW, ZoneOffset.UTC));
+                    new DocumentContentFactory())), events, Clock.fixed(NOW, ZoneOffset.UTC), contentTokens, accounts);
 
     private final Resource bytes = new ByteArrayResource("0123456789".getBytes());
 
@@ -173,5 +180,82 @@ class ContentDeliveryServiceTest {
         assertThatThrownBy(() -> service.openLessonContent(11L, 43L, false)).isInstanceOf(ForbiddenException.class);
         assertThatThrownBy(() -> service.openLessonContent(12L, STUDENT, false)).isInstanceOf(NotFoundException.class);
         verifyNoInteractions(events);
+    }
+
+    // --- içerik token'ı (#45, ADR-012) ---
+
+    @Test
+    void issueContentToken_allowedViewer_getsATokenForThatLesson() {
+        IssuedContentToken issued = new IssuedContentToken("t", NOW.plusSeconds(300));
+        given(contentTokens.issue(STUDENT, 11L)).willReturn(issued);
+
+        assertThat(service.issueContentToken(11L, STUDENT, false)).isSameAs(issued);
+        verifyNoInteractions(events);
+    }
+
+    @Test
+    void issueContentToken_unenrolledStudent_returns403_andIssuesNothing() {
+        assertThatThrownBy(() -> service.issueContentToken(11L, 43L, false)).isInstanceOf(ForbiddenException.class);
+        verifyNoInteractions(contentTokens);
+    }
+
+    @Test
+    void issueContentToken_lessonWithoutContent_returns404() {
+        given(lessons.contentRefOf(12L)).willReturn(new LessonContentRef(12L, 3L, INSTRUCTOR, LessonContentType.PDF, null));
+
+        assertThatThrownBy(() -> service.issueContentToken(12L, STUDENT, false)).isInstanceOf(NotFoundException.class);
+        verifyNoInteractions(contentTokens);
+    }
+
+    @Test
+    void openWithToken_validToken_opensForTheTokenUser_andRecordsTheLessonOpened() {
+        given(contentTokens.verify("t", 11L)).willReturn(Optional.of(STUDENT));
+        given(accounts.findById(STUDENT)).willReturn(Optional.of(new AccountLookup.AccountSnapshot(true, "STUDENT")));
+
+        ContentDownload download = service.openLessonContentWithToken(11L, "t");
+
+        assertThat(download.resource()).isSameAs(bytes);
+        verify(events).publishEvent(new LessonOpened(STUDENT, 3L, 11L, NOW));
+    }
+
+    @Test
+    void openWithToken_adminRoleComesFromTheDatabase() {
+        given(contentTokens.verify("t", 11L)).willReturn(Optional.of(ADMIN));
+        given(accounts.findById(ADMIN)).willReturn(Optional.of(new AccountLookup.AccountSnapshot(true, "ADMIN")));
+
+        assertThat(service.openLessonContentWithToken(11L, "t").resource()).isSameAs(bytes);
+        verifyNoInteractions(events);
+    }
+
+    @Test
+    void openWithToken_tokenUserNoLongerEnrolled_returns403() {
+        given(contentTokens.verify("t", 11L)).willReturn(Optional.of(43L));
+        given(accounts.findById(43L)).willReturn(Optional.of(new AccountLookup.AccountSnapshot(true, "STUDENT")));
+
+        assertThatThrownBy(() -> service.openLessonContentWithToken(11L, "t")).isInstanceOf(ForbiddenException.class);
+    }
+
+    @Test
+    void openWithToken_invalidOrExpiredToken_returns401_andOpensNothing() {
+        given(contentTokens.verify("x", 11L)).willReturn(Optional.empty());
+        // Hesap aktif ve kayıtlı: 401'in tek sebebi token olsun.
+        given(accounts.findById(STUDENT)).willReturn(Optional.of(new AccountLookup.AccountSnapshot(true, "STUDENT")));
+
+        assertThatThrownBy(() -> service.openLessonContentWithToken(11L, "x"))
+                .isInstanceOf(UnauthorizedException.class).hasMessage(SecurityMessages.UNAUTHORIZED);
+        verify(storage, never()).open(anyLong());
+    }
+
+    @Test
+    void openWithToken_deletedUser_returns401_andDisabledUser_returns403() {
+        given(contentTokens.verify("gone", 11L)).willReturn(Optional.of(77L));
+        given(accounts.findById(77L)).willReturn(Optional.empty());
+        given(contentTokens.verify("off", 11L)).willReturn(Optional.of(STUDENT));
+        given(accounts.findById(STUDENT)).willReturn(Optional.of(new AccountLookup.AccountSnapshot(false, "STUDENT")));
+
+        assertThatThrownBy(() -> service.openLessonContentWithToken(11L, "gone")).isInstanceOf(UnauthorizedException.class);
+        assertThatThrownBy(() -> service.openLessonContentWithToken(11L, "off"))
+                .isInstanceOf(ForbiddenException.class).hasMessage(SecurityMessages.ACCOUNT_DISABLED);
+        verify(storage, never()).open(anyLong());
     }
 }
