@@ -299,7 +299,7 @@ FROM (
     UNION ALL
     -- Kurs reddi → eğitmene, gerekçeyle
     SELECT co.instructor_id, 'COURSE_REJECTED', 'Kursunuz reddedildi',
-           '"' || co.title || '" kursunuz reddedildi. Neden: ' || co.rejection_reason,
+           '"' || co.title || '" kursunuz reddedildi. Gerekçe: ' || co.rejection_reason,
            '/instructor', now() - make_interval(days => 3)
     FROM courses co
     WHERE co.rejection_reason IS NOT NULL
