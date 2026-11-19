@@ -125,7 +125,7 @@ public class LocalDiskStorageService implements StorageService {
             int n;
             while ((n = content.read(buffer)) != -1) {
                 total += n;
-                if (total > policy.maxBytes() * 2) { // KIRMIZI-C5
+                if (total > policy.maxBytes()) {
                     throw new PayloadTooLargeException(policy.tooLargeMessage());
                 }
                 out.write(buffer, 0, n);

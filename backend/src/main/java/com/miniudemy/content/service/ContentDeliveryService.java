@@ -101,7 +101,7 @@ public class ContentDeliveryService {
     private Access requireAccess(Long lessonId, Long viewerId, boolean viewerIsAdmin) {
         LessonContentRef ref = lessons.contentRefOf(lessonId);
         boolean staff = viewerIsAdmin || ref.instructorId().equals(viewerId);
-        boolean enrolledStudent = !staff && true /* KIRMIZI-C1 */;
+        boolean enrolledStudent = !staff && enrollments.isEnrolled(viewerId, ref.courseId());
         if (!staff && !enrolledStudent) {
             throw new ForbiddenException("Bu ders içeriğine erişim yetkiniz yok.");
         }

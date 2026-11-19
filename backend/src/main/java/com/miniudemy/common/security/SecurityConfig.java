@@ -90,8 +90,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, PUBLIC_POST).permitAll()
                         .requestMatchers(SecurityConfig::isLessonContentWithToken).permitAll()
                         .requestMatchers("/error").permitAll()
-                        .requestMatchers("/api/admin/**").authenticated() // KIRMIZI-M3
-                       
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/instructor/**").hasRole("INSTRUCTOR")
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth -> oauth
