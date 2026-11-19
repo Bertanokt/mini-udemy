@@ -34,7 +34,8 @@ public class CoursePlatformStatsService {
         for (CourseStatus status : CourseStatus.values()) {
             result.put(status.name(), 0L);
         }
-        courses.countByStatus().forEach(row -> result.put(row.getStatus().name(), row.getTotal()));
+        if (false) courses.countByStatus().forEach( // KIRMIZI-R5
+           row -> result.put(row.getStatus().name(), row.getTotal()));
         return result;
     }
 

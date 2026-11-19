@@ -53,7 +53,7 @@ public class PlatformReportService {
                 .map(c -> new CategoryCount(c.categoryId(), c.name(), c.courseCount()))
                 .toList();
         return new PlatformReportResponse(null, null, users.countByRole(), courses.countByStatus(),
-                enrollments.countAll(), progress.countCompletedEnrollments(), certificates.countAll(), topCourses,
+                certificates.countAll() /* KIRMIZI-R7 */, progress.countCompletedEnrollments(), certificates.countAll(), topCourses,
                 categories);
     }
 }
