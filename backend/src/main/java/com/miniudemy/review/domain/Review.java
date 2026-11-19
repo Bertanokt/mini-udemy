@@ -12,6 +12,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import com.miniudemy.common.exception.BadRequestException;
+
 /**
  * Bir kullanıcının bir kursa puanı ve yorumu.
  *
@@ -70,6 +72,25 @@ public class Review {
         this.rating = rating;
         this.comment = comment;
         this.updatedAt = Instant.now();
+    }
+
+    /**
+     * Yönetici moderasyonu (#142): yorum herkese açık listeden ve ortalamadan çıkar, gerekçe saklanır. Zaten gizliyse
+     * gerekçe güncellenir. Gerekçe boşsa 400 ({@code errors.reason}). {@code updatedAt} yazarın düzenleme zamanıdır,
+     * moderasyonla değişmez.
+     */
+    public void hide(String reason) {
+        if (reason == null || reason.isBlank()) {
+            throw BadRequestException.forField("reason", "Gizleme gerekçesi zorunludur.");
+        }
+        this.hidden = true;
+        this.moderationReason = reason.strip();
+    }
+
+    /** Yorumu geri açar; moderasyon geçmişi tutulmadığı için gerekçe de silinir (#142 ince kapsam). */
+    public void unhide() {
+        this.hidden = false;
+        this.moderationReason = null;
     }
 
     public Long getId() {

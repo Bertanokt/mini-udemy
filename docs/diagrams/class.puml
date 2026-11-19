@@ -378,10 +378,13 @@ package "com.miniudemy.review" as review {
       - createdAt : Instant
       - updatedAt : Instant
       + edit(rating : int, comment : String) : void
+      + hide(reason : String) : void
+      + unhide() : void
     }
   }
   package "review.service" {
     class ReviewService
+    class ReviewModerationService
     class ReviewStatsService
     class RatingMath
   }
@@ -448,6 +451,7 @@ package "com.miniudemy.admin" as admin {
   }
   package "admin.service" {
     class AdminCourseService
+    class AdminReviewService
     class AdminUserService
     class PlatformReportService
     class ComplaintService

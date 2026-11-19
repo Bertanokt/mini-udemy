@@ -1335,6 +1335,35 @@ a.qb-btn {
   }
 }
 
+/* Yorum moderasyonu (#146) */
+.rvm-comment {
+  min-width: 200px;
+  max-width: 420px;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.rvm-reason {
+  display: block;
+  margin-top: 6px;
+}
+
+.rvm-muted {
+  color: var(--muted);
+}
+
+.rvm-quote {
+  border-left: 3px solid var(--border);
+  padding-left: 10px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.rvm-act {
+  white-space: nowrap;
+}
+
 /* Şikâyetler (#146); qb-*, usr-* ve adm-actions sınıflarını kullanır */
 .cmp-reason {
   max-width: 32ch;

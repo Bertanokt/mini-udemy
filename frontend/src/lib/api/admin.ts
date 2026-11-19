@@ -2,6 +2,7 @@ import { apiFetch } from "./client";
 import type { Role } from "./auth";
 import type { CategoryResponse, CourseStatus, CourseSummaryPage, PageMeta, UserSummary } from "./catalog";
 import type { CourseResponse } from "./instructor";
+import type { ReviewResponse } from "./reviews";
 
 // Tipler docs/api/openapi.yaml'daki şemalarla aynıdır (CategoryRequest). Liste herkese açık uç olduğundan
 // `listCategories` catalog.ts'te.
@@ -119,6 +120,36 @@ export function unpublishCourse(id: number, reason: string): Promise<CourseRespo
   return apiFetch<CourseResponse>(`/api/admin/courses/${id}/unpublish`, {
     method: "POST",
     body: JSON.stringify({ reason }),
+  });
+}
+
+// Yorum moderasyonu (#142, #146): adminListReviews (ReviewPage), adminSetReviewVisibility (ReviewVisibilityRequest).
+// Gizli yorum herkese açık listede görünmez ve ortalamaya katılmaz; gerekçe yalnız bu uçların yanıtında döner.
+// Gizlerken gerekçe zorunludur (en fazla 1000 karakter); geri açınca sunucu gerekçeyi siler.
+export interface ReviewPage extends PageMeta {
+  content: ReviewResponse[];
+}
+
+export interface AdminReviewQuery {
+  courseId?: number;
+  hidden?: boolean;
+  page?: number;
+  size?: number;
+}
+
+export function listAdminReviews(query: AdminReviewQuery): Promise<ReviewPage> {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(query)) {
+    if (value !== undefined && value !== "") params.set(key, String(value));
+  }
+  const qs = params.toString();
+  return apiFetch<ReviewPage>(`/api/admin/reviews${qs ? `?${qs}` : ""}`);
+}
+
+export function setReviewVisibility(id: number, hidden: boolean, reason?: string): Promise<ReviewResponse> {
+  return apiFetch<ReviewResponse>(`/api/admin/reviews/${id}/visibility`, {
+    method: "PUT",
+    body: JSON.stringify(hidden ? { hidden, reason } : { hidden }),
   });
 }
 

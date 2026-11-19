@@ -50,12 +50,13 @@ Test: `CoursePublishingScenarioIT`, `ContentUploadIT`, `ComplaintIT` (6d).
 |---|---|---|---|
 | 1 | Ziyaretçi: ana sayfa → katalogda "python" ara, kategori/seviye/puan filtresi | Yalnız yayımlanmış kurslar; "Python 2 (eski)" yok | Tek JPQL sorgusu, sayfalı (N+1 yok); katalog kartı DTO'su |
 | 2 | "Sıfırdan Python" detay sayfası | Hedefler, bölüm/ders listesi, süre, 3 yorum (ortalama 4,3) | Herkese açık uç; yayımlanmamış kurs başkasına 404 |
+| 2b | (ek) Yönetici: `/admin` → "Yorum moderasyonu" (`/admin/reviews`) → Ayşe'nin 5 puanlı yorumunda "Gizle" → gerekçe → detay sayfasını yenile; sonra "Gizli" filtresinden "Geri aç" | Yorum listeden kalkar, ortalama 4,3 → 4,0 (2 yorum); gerekçe yalnız yönetici listesinde. Geri açınca 4,3'e döner, gerekçe silinir. Gerekçesiz gizleme alan hatası verir | Gizli yorum sorgu düzeyinde süzülür (liste, özet, katalog kartı, `minRating`); `admin` → `review`'un servis arayüzü (`ReviewModerationService`); yalnız ADMIN (`/api/admin/**`) |
 | 3 | Yeni bir kursiyerle kayıt ol (`/register`) ve "Kaydol" | Kayıt; ikinci tıklamada 409 | **Observer**: `EnrollmentCreated` → eğitmene "yeni kayıt" bildirimi; tekillik veritabanı kısıtıyla |
 | 4 | "Derse devam et" → `/learn/...` | PDF dersini aç; videoyu oynat ve ileri sar (Senaryo 1'de yüklenen) | İçerik ucu her istekte kayıt/sahiplik sorar (ADR-004); video için Range (206); medya etiketi için 5 dk'lık içerik token'ı (ADR-012) |
 | 5 | Kayıtsız hesapla aynı ders adresi | "Bu derse erişmek için kursa kaydolun" (403) | Bölüm 6 kritik durumu |
 | 6 | Dersi "Tamamlandı" işaretle | İlerleme çubuğu güncellenir | **Observer**: `LessonCompleted` → `ProgressListener` yüzdeyi commit'ten sonra günceller |
 
-Test: `EnrollmentScenarioIT`, `Bolum6CriticalCasesIT`.
+Test: `EnrollmentScenarioIT`, `Bolum6CriticalCasesIT`, `ReviewModerationIT`.
 
 ## Senaryo 3: Kaldığı yerden devam (kursiyer)
 
