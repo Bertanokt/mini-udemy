@@ -46,7 +46,7 @@ public class NotificationListener {
         notifications.notifyCourseApproved(event.courseId(), event.instructorId());
     }
 
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @org.springframework.context.event.EventListener /* KIRMIZI K1 */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onCourseRejected(CourseRejected event) {
         notifications.notifyCourseRejected(event.courseId(), event.instructorId(), event.reason());
