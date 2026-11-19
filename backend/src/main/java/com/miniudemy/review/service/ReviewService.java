@@ -103,6 +103,18 @@ public class ReviewService {
         return toResponse(review, userDirectory.findSummaries(List.of(userId)));
     }
 
+    /**
+     * Yorum var ve herkese görünüyor mu (#144, şikâyet): yoksa ya da gizliyse 404. İkisi birbirinden ayırt edilmez;
+     * kullanıcının göremediği yorum şikâyet edilemez.
+     */
+    @Transactional(readOnly = true)
+    public void assertVisible(Long reviewId) {
+        boolean visible = repository.findById(reviewId).map(review -> !review.isHidden()).orElse(false);
+        if (!visible) {
+            throw new NotFoundException("Değerlendirme bulunamadı.");
+        }
+    }
+
     private ReviewResponse toResponse(Review review, Map<Long, UserSummary> authors) {
         UserSummary author = authors.getOrDefault(review.getUserId(),
                 new UserSummary(review.getUserId(), "Kullanıcı"));
