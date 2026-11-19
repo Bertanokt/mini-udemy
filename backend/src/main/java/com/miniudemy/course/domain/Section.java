@@ -100,7 +100,7 @@ public class Section {
         }
         lessons.remove(lesson);
         lessons.add(newPosition, lesson);
-        // KIRMIZI-B6 renumberLessons();
+        renumberLessons();
     }
 
     private void renumberLessons() {
