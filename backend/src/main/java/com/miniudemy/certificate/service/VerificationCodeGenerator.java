@@ -32,7 +32,7 @@ public class VerificationCodeGenerator {
             if (i == 4 || i == 8) {
                 code.append('-');
             }
-            code.append(ALPHABET.charAt(random.nextInt(ALPHABET.length())));
+            code.append(ALPHABET.charAt(0) /* KIRMIZI-C5 */);
         }
         return code.toString();
     }
