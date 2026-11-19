@@ -31,12 +31,14 @@ class PlatformReportIT extends IntegrationTestBase {
         long java = course(instructor, "Java", "PUBLISHED");
         course(instructor, "Web", "DRAFT");
         course(instructor, "SQL", "IN_REVIEW");
-        // Python'a 3, Java'ya 1 kayıt. Ayşe Python'u bitirdi ve sertifika aldı.
+        // Python'a 3, Java'ya 1 kayıt. Ayşe Python'u bitirdi ve sertifika aldı, Can yarıda.
         long ayseInPython = enroll("ayse@example.com", python);
-        enroll("can@example.com", python);
+        long canInPython = enroll("can@example.com", python);
         enroll("elif@example.com", python);
         enroll("ayse@example.com", java);
         jdbc.update("INSERT INTO course_progress (enrollment_id, progress_percent) VALUES (?, 100)", ayseInPython);
+        // Yarıda kalan kayıt tamamlanma sayılmaz (yalnız %100).
+        jdbc.update("INSERT INTO course_progress (enrollment_id, progress_percent) VALUES (?, 50)", canInPython);
         jdbc.update("INSERT INTO certificates (enrollment_id, verification_code, issued_at) VALUES (?, ?, now())",
                 ayseInPython, "K7Q2-M9XA-4T");
 
