@@ -60,8 +60,8 @@ public class CourseLifecycleService {
     @Transactional
     public CourseResponse approve(Long courseId) {
         Course course = find(courseId);
+        events.publishEvent(new CourseApproved(course.getId(), course.getInstructorId(), clock.instant())); // KIRMIZI-A6
         course.approve();
-        events.publishEvent(new CourseApproved(course.getId(), course.getInstructorId(), clock.instant()));
         return toResponse(courseRepository.saveAndFlush(course));
     }
 
