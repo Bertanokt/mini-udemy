@@ -64,3 +64,20 @@ export function setUserStatus(id: number, active: boolean): Promise<AdminUserRes
     body: JSON.stringify({ active }),
   });
 }
+
+// Platform raporu (#145, #147): PlatformReportResponse. Sayılar tüm zamanlarındır; from/to her zaman null (İnce kapsam).
+export interface PlatformReportResponse {
+  from: string | null;
+  to: string | null;
+  usersByRole: Record<string, number>;
+  coursesByStatus: Record<string, number>;
+  enrollmentCount: number;
+  completionCount: number;
+  certificateCount: number;
+  topCourses: { courseId: number; title: string; enrollmentCount: number }[];
+  categoryDistribution: { categoryId: number; name: string; courseCount: number }[];
+}
+
+export function getPlatformReport(): Promise<PlatformReportResponse> {
+  return apiFetch<PlatformReportResponse>("/api/admin/reports");
+}
