@@ -80,7 +80,7 @@ public class CourseService {
      */
     @Transactional
     public CourseResponse update(Long courseId, Long instructorId, UpdateCourseRequest request) {
-        Course course = ownership.requireOwnedCourse(courseId, instructorId);
+        Course course = courseRepository.findById(courseId).orElseThrow(); // KIRMIZI-B3
         Category category = categoryRepository.findById(request.categoryId())
                 .orElseThrow(() -> BadRequestException.forField("categoryId", CATEGORY_NOT_FOUND));
         course.update(category, request.title(), request.description(), request.level(), request.learningOutcomes());
@@ -95,7 +95,7 @@ public class CourseService {
     @Transactional
     public void delete(Long courseId, Long instructorId) {
         Course course = ownership.requireOwnedCourse(courseId, instructorId);
-        course.assertDeletable();
+        // KIRMIZI-B4 course.assertDeletable();
         if (enrollmentCounts.countByCourse(courseId) > 0) {
             throw new ConflictException(HAS_STUDENTS);
         }

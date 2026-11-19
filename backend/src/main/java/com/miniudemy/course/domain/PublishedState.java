@@ -19,7 +19,7 @@ final class PublishedState implements CourseState {
 
     @Override
     public CourseStatus unpublish() {
-        return CourseStatus.UNPUBLISHED;
+        return CourseStatus.DRAFT; // KIRMIZI-B2
     }
 
     @Override
