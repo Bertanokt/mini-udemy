@@ -15,7 +15,6 @@ final class DraftState implements CourseState {
 
     @Override
     public void assertEditable() {
-        throw new CourseStateException("KIRMIZI-B1");
     }
 
     @Override

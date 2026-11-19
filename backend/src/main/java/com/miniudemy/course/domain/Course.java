@@ -146,7 +146,7 @@ public class Course {
         }
         sections.remove(section);
         sections.add(newPosition, section);
-        // KIRMIZI-B5 renumberSections();
+        renumberSections();
     }
 
     private void renumberSections() {
