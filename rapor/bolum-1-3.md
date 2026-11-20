@@ -284,4 +284,4 @@ UI taslakları (#88) kapsam dışı bırakıldı; bu bölümde wireframe yerine 
 | Yönetici | Yorumlar, şikâyetler | `/admin/reviews`, `/admin/complaints` | ⟨mobil, masaüstü⟩ |
 | Yönetici | Raporlar | `/admin/reports` | ⟨mobil, masaüstü⟩ |
 
-Ekran geçişleri rol bazında 7.4'teki kullanım kılavuzunda adım adım anlatılır. `/learn/[courseId]` ayrı bir ekran değildir, kursun ilk dersine yönlendirir. Bölüm/ders yönetimi (#34) PR #300'de, merge bekliyor. 20.11 itibarıyla ekranı henüz olmayan işler: tamamlandı düğmesi ve ilerleme çubukları (#46), sertifika görüntüleme ve doğrulama (#130, #131), bildirim zili ve listesi (#136). Liste ⟨24.11 sonrası ekranlara göre⟩ güncellenecek.
+Ekran geçişleri rol bazında 7.4'teki kullanım kılavuzunda adım adım anlatılır. `/learn/[courseId]` ayrı bir ekran değildir, kursun ilk dersine yönlendirir. Bölüm/ders yönetimi (#34) PR #300 ile 20.11'de eklendi. 21.11 itibarıyla ekranı henüz olmayan işler: tamamlandı düğmesi ve ilerleme çubukları (#46), sertifika görüntüleme ve doğrulama (#130, #131), bildirim zili ve listesi (#136). Liste ⟨24.11 sonrası ekranlara göre⟩ güncellenecek.
