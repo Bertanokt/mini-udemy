@@ -88,3 +88,44 @@ export async function apiFetch<T>(
   }
   return (await response.json()) as T;
 }
+
+/** Yüklemenin gönderilen kısmı, 0–100 arası tam sayı. */
+export type UploadProgress = (percent: number) => void;
+
+function sendUpload(path: string, body: FormData, token: string | null, onProgress?: UploadProgress) {
+  return new Promise<{ status: number; text: string }>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `${API_BASE_URL}${path}`);
+    if (token) xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+    if (onProgress) {
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) onProgress(Math.min(100, Math.round((e.loaded / e.total) * 100)));
+      };
+    }
+    xhr.onload = () => resolve({ status: xhr.status, text: xhr.responseText });
+    xhr.onerror = () => reject(new TypeError("Ağ hatası"));
+    xhr.send(body);
+  });
+}
+
+/**
+ * Çok parçalı (multipart) dosya yükleme; `apiFetch`'in ilerleme bildiren karşılığıdır. `fetch` gönderilen bayt
+ * sayısını bildiremediği için `XMLHttpRequest` kullanır. Token, 401'de oturumu kapatma ve `ApiError` davranışı
+ * `apiFetch` ile aynıdır; 401'de istek tekrarlanmaz (yükleme uçları herkese açık değildir).
+ */
+export async function apiUpload<T>(path: string, body: FormData, onProgress?: UploadProgress): Promise<T> {
+  const token = tokenProvider();
+  const response = await sendUpload(path, body, token, onProgress);
+  if (response.status === 401 && token) unauthorizedHandler();
+
+  if (response.status < 200 || response.status >= 300) {
+    let errorBody: ApiErrorBody | undefined;
+    try {
+      errorBody = JSON.parse(response.text) as ApiErrorBody;
+    } catch {
+      errorBody = undefined;
+    }
+    throw new ApiError(response.status, errorBody);
+  }
+  return (response.text ? JSON.parse(response.text) : undefined) as T;
+}

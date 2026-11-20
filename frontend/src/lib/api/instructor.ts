@@ -1,5 +1,6 @@
 import { apiFetch } from "./client";
 import type { CategoryResponse, CourseLevel, CourseStatus, PageMeta, UserSummary } from "./catalog";
+import type { ContentType, LessonResponse, SectionResponse } from "./courses";
 import type { RatingSummary } from "./reviews";
 
 // Tipler docs/api/openapi.yaml'daki CourseResponse ile aynıdır (eğitmen/yönetici görünümü).
@@ -62,6 +63,66 @@ export function uploadCourseCover(id: number, file: File): Promise<CourseRespons
 /** submitCourse: DRAFT/UNPUBLISHED → IN_REVIEW. 400 eksik içerik, 409 geçersiz durum. */
 export function submitCourse(id: number): Promise<CourseResponse> {
   return apiFetch<CourseResponse>(`/api/courses/${id}/submit`, { method: "POST" });
+}
+
+// Bölüm ve ders yönetimi (#24, #25). Hepsi kursun sahibi eğitmene açık; düzenlenebilirlik CourseState'tedir (409).
+// Tipler docs/api/openapi.yaml › SectionRequest, LessonRequest, PositionRequest ile aynıdır.
+
+export interface SectionRequest {
+  title: string;
+}
+
+export interface LessonRequest {
+  title: string;
+  contentType: ContentType;
+  mandatory: boolean;
+  durationSeconds: number;
+}
+
+/** createSection: bölüm sona eklenir. */
+export function createSection(courseId: number, request: SectionRequest): Promise<SectionResponse> {
+  return apiFetch<SectionResponse>(`/api/courses/${courseId}/sections`, { method: "POST", body: JSON.stringify(request) });
+}
+
+/** updateSection: bölümün adını değiştirir. */
+export function updateSection(sectionId: number, request: SectionRequest): Promise<SectionResponse> {
+  return apiFetch<SectionResponse>(`/api/sections/${sectionId}`, { method: "PUT", body: JSON.stringify(request) });
+}
+
+/** deleteSection: bölümü dersleriyle siler; kalanlar boşluksuz sıralanır. */
+export function deleteSection(sectionId: number): Promise<void> {
+  return apiFetch<void>(`/api/sections/${sectionId}`, { method: "DELETE" });
+}
+
+/** moveSection: bölümü verilen sıraya (0'dan) taşır; kursun yeni sıradaki bölümlerini döner. */
+export function moveSection(sectionId: number, position: number): Promise<SectionResponse[]> {
+  return apiFetch<SectionResponse[]>(`/api/sections/${sectionId}/position`, {
+    method: "PUT",
+    body: JSON.stringify({ position }),
+  });
+}
+
+/** createLesson: ders bölümün sonuna eklenir; içerik ayrı uçla yüklenir (uploadLessonContent). */
+export function createLesson(sectionId: number, request: LessonRequest): Promise<LessonResponse> {
+  return apiFetch<LessonResponse>(`/api/sections/${sectionId}/lessons`, { method: "POST", body: JSON.stringify(request) });
+}
+
+/** updateLesson: `contentType` değişirse yüklü dosya dersten ayrılır (`hasContent` false). */
+export function updateLesson(lessonId: number, request: LessonRequest): Promise<LessonResponse> {
+  return apiFetch<LessonResponse>(`/api/lessons/${lessonId}`, { method: "PUT", body: JSON.stringify(request) });
+}
+
+/** deleteLesson: dersi ve içerik dosyasını siler. */
+export function deleteLesson(lessonId: number): Promise<void> {
+  return apiFetch<void>(`/api/lessons/${lessonId}`, { method: "DELETE" });
+}
+
+/** moveLesson: dersi aynı bölümde verilen sıraya (0'dan) taşır; bölümün yeni sıradaki derslerini döner. */
+export function moveLesson(lessonId: number, position: number): Promise<LessonResponse[]> {
+  return apiFetch<LessonResponse[]>(`/api/lessons/${lessonId}/position`, {
+    method: "PUT",
+    body: JSON.stringify({ position }),
+  });
 }
 
 // Tipler docs/api/openapi.yaml'daki CourseStatsResponse, CourseStudentResponse ve CourseStudentPage ile aynıdır.

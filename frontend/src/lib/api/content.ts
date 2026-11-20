@@ -1,4 +1,16 @@
-import { API_BASE_URL, apiFetch } from "./client";
+import { API_BASE_URL, apiFetch, apiUpload, type UploadProgress } from "./client";
+import type { LessonResponse } from "./courses";
+
+/**
+ * Dersin içerik dosyasını yükler (#112, kursun sahibi eğitmen). Kural dersin `contentType`'ının fabrikasındadır
+ * (ADR-011): VIDEO mp4/webm ≤200 MB, PDF ≤20 MB, DOCUMENT pdf/docx/pptx ≤20 MB; tür içerikten denetlenir.
+ * 413 büyük, 415 tür, 409 kurs durumu izin vermiyor (ApiError).
+ */
+export function uploadLessonContent(lessonId: number, file: File, onProgress?: UploadProgress): Promise<LessonResponse> {
+  const body = new FormData();
+  body.append("file", file);
+  return apiUpload<LessonResponse>(`/api/lessons/${lessonId}/content`, body, onProgress);
+}
 
 // Tipler docs/api/openapi.yaml'daki ContentTokenResponse ile aynıdır.
 
