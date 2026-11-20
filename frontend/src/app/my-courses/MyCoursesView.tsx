@@ -6,6 +6,7 @@ import { API_BASE_URL, ApiError } from "@/lib/api/client";
 import { listMyEnrollments, type EnrollmentResponse } from "@/lib/api/enrollments";
 import { formatDuration } from "@/components/course/CourseCard";
 import { learnHref } from "@/lib/learn/navigation";
+import { ResumeLink } from "@/components/progress/ResumeLink";
 import styles from "./my-courses.module.css";
 
 type Result =
@@ -27,7 +28,8 @@ function formatDate(iso: string): string {
 
 /**
  * Kayıtlı kurslar paneli (#37). Sayfa RequireRole ile yalnız STUDENT'a açılır (layout.tsx).
- * Her kurs için kapak, başlık, ilerleme çubuğu ve son izlenen ders bilgisi gösterilir.
+ * Her kurs için kapak, başlık, ilerleme çubuğu ve "Kaldığın yerden devam et" (son dersin adı ve yüzdesiyle, #120)
+ * gösterilir. Devam noktası her kurs için ayrı istekle gelir (`ResumeLink`).
  */
 export function MyCoursesView() {
   const [retry, setRetry] = useState(0);
@@ -124,9 +126,7 @@ function EnrollmentItem({ enrollment: e }: { enrollment: EnrollmentResponse }) {
           %{percent} tamamlandı
           {started && e.lastAccessedAt && ` · Son izleme: ${formatDate(e.lastAccessedAt)}`}
         </p>
-        <Link href={resumeHref(e)} className={styles.button}>
-          {started ? "Kaldığın yerden devam et" : "Kursa git"}
-        </Link>
+        <ResumeLink courseId={course.id} buttonClassName={styles.button} />
       </div>
     </li>
   );

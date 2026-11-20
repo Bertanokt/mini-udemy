@@ -1,3 +1,5 @@
 .bar { height: 8px; border-radius: 999px; background: var(--border); overflow: hidden; }
 .small { height: 4px; }
 .fill { height: 100%; background: var(--accent); transition: width 0.3s ease; }
+.resume { display: flex; flex-direction: column; gap: 6px; }
+.resumeMeta { color: var(--muted); margin: 0; font-size: 0.9rem; }

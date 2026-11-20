@@ -1,6 +1,6 @@
 import { apiFetch } from "./client";
 
-// Tipler docs/api/openapi.yaml'daki CourseProgressResponse ile aynıdır.
+// Tipler docs/api/openapi.yaml'daki CourseProgressResponse ve ResumeResponse ile aynıdır.
 
 export interface SectionProgress {
   sectionId: number;
@@ -25,4 +25,21 @@ export function getMyCourseProgress(courseId: number): Promise<CourseProgressRes
  */
 export function completeLesson(lessonId: number): Promise<CourseProgressResponse> {
   return apiFetch<CourseProgressResponse>(`/api/lessons/${lessonId}/complete`, { method: "POST" });
+}
+
+export interface ResumeResponse {
+  courseId: number;
+  lessonId?: number | null;
+  lessonTitle?: string | null;
+  sectionId?: number | null;
+  progressPercent: number;
+  lastAccessedAt?: string | null;
+}
+
+/**
+ * Kaldığı yerden devam (#119): son açılan ders; hiç açılmamışsa ilk tamamlanmamış ders; kursta ders yoksa
+ * `lessonId` null. Kayıtlı değilse 403 (ApiError).
+ */
+export function getMyResumePoint(courseId: number): Promise<ResumeResponse> {
+  return apiFetch<ResumeResponse>(`/api/me/courses/${courseId}/resume`);
 }
