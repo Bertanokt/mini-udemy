@@ -104,15 +104,17 @@ public class ReviewService {
     }
 
     /**
-     * Yorum var ve herkese görünüyor mu (#144, şikâyet): yoksa ya da gizliyse 404. İkisi birbirinden ayırt edilmez;
-     * kullanıcının göremediği yorum şikâyet edilemez.
+     * Yorum var ve herkese görünüyor mu (#144, şikâyet): yoksa ya da gizliyse 404 "Değerlendirme bulunamadı.". İkisi
+     * birbirinden ayırt edilmez; kullanıcının göremediği yorum şikâyet edilemez. Yorumun kursu yayımlanmamışsa
+     * (ör. yayından kaldırılmışsa) yorum herkese açık listede de çıkmaz; o durumda {@code listCourseReviews} gibi
+     * 404 "Kurs bulunamadı." (#293).
      */
     @Transactional(readOnly = true)
     public void assertVisible(Long reviewId) {
-        boolean visible = repository.findById(reviewId).map(review -> !review.isHidden()).orElse(false);
-        if (!visible) {
-            throw new NotFoundException("Değerlendirme bulunamadı.");
-        }
+        Review review = repository.findById(reviewId)
+                .filter(r -> !r.isHidden())
+                .orElseThrow(() -> new NotFoundException("Değerlendirme bulunamadı."));
+        courseLookup.assertPublished(review.getCourseId());
     }
 
     private ReviewResponse toResponse(Review review, Map<Long, UserSummary> authors) {
