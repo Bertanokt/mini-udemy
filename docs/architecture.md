@@ -208,6 +208,8 @@ flowchart TB
 
 ### Modül bağımlılıkları
 
+UML bileşen diyagramı (#91): [`diagrams/component.puml`](diagrams/component.puml) ([PNG](diagrams/component.png)) modülleri, kullandıkları service sınıflarını ve uyguladıkları arayüzleri; [`diagrams/component-events.puml`](diagrams/component-events.puml) ([PNG](diagrams/component-events.png)) olay akışını gösterir. İkisinin kodla tutarlılığını `ComponentDiagramTest` denetler: bağımlılık okları `ModuleArchitectureTest.ALLOWED`'ın, olay okları `listener` paketlerindeki `@TransactionalEventListener`'ların birebir aynısı olmalı. Tablo ya da bir dinleyici değişirse diyagram aynı PR'da güncellenir. Aşağıdaki Mermaid özeti aynı bilgiyi tek şekilde verir.
+
 Düz ok: service çağrısı. Kesikli ok: domain olayı (yayınlayan → dinleyen). Noktalı çizgi: `course`'un tanımladığı istatistik arayüzünü uygulama.
 
 ### Sertifika verme kuralı (#129)
