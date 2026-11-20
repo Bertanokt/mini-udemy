@@ -8,6 +8,9 @@ import { createContentToken, lessonContentUrl, type ContentTokenResponse } from 
 import { listSections, type LessonResponse, type SectionResponse } from "@/lib/api/courses";
 import { formatDuration } from "@/components/course/CourseCard";
 import { learnHref, locateLesson } from "@/lib/learn/navigation";
+import { useCourseProgress, type ProgressState } from "@/lib/learn/useCourseProgress";
+import { useAuth } from "@/lib/auth/AuthProvider";
+import { ProgressBar, formatPercent } from "@/components/progress/ProgressBar";
 import styles from "../player.module.css";
 
 type Sections =
@@ -26,6 +29,8 @@ function errorMessage(err: unknown, fallback: string): string {
 /**
  * Ders oynatıcı (#45): solda bölüm/ders listesi, ortada içerik, altta önceki/sonraki ders.
  * Liste `GET /api/courses/{id}/sections`'tan gelir; içerik token'lı adresten açılır (ADR-012).
+ * Kursiyer için (#46): kurs ve bölüm ilerleme çubukları, tamamlanan derslerde tik ve "Tamamlandı" düğmesi; ikisi de
+ * `GET /api/me/courses/{id}/progress` ve tamamlama yanıtından gelir. Eğitmen ve yönetici önizlerken görünmez.
  */
 export function LessonPlayerView() {
   const params = useParams<{ courseId: string; lessonId: string }>();
@@ -34,6 +39,12 @@ export function LessonPlayerView() {
   const [retry, setRetry] = useState(0);
   const [loaded, setLoaded] = useState<Sections | null>(null);
   const [listOpen, setListOpen] = useState(false);
+  const { user } = useAuth();
+  const { state: progress, complete } = useCourseProgress(courseId, user?.role === "STUDENT");
+  const done = new Set(progress.kind === "ok" ? progress.progress.completedLessonIds : []);
+  const sectionPercent = new Map(
+    progress.kind === "ok" ? progress.progress.sections.map((s) => [s.sectionId, s.progressPercent] as const) : [],
+  );
   const key = `${params.courseId}#${retry}`;
   const state: Sections | null =
     courseId === null ? { key, kind: "notFound" } : loaded?.key === key ? loaded : null;
@@ -87,6 +98,14 @@ export function LessonPlayerView() {
         >
           {listOpen ? "Ders listesini kapat" : "Ders listesi"}
         </button>
+        {progress.kind === "ok" && (
+          <div className={styles.courseProgress}>
+            <p>
+              Kurs ilerlemesi: <strong>{formatPercent(progress.progress.progressPercent)}</strong>
+            </p>
+            <ProgressBar value={progress.progress.progressPercent} label="Kurs ilerlemesi" />
+          </div>
+        )}
         <nav
           id="lesson-list"
           aria-label="Bölümler ve dersler"
@@ -94,7 +113,17 @@ export function LessonPlayerView() {
         >
           {state.sections.map((s) => (
             <div key={s.id} className={styles.section}>
-              <h2 className={styles.sectionTitle}>{s.title}</h2>
+              <h2 className={styles.sectionTitle}>
+                {s.title}
+                {sectionPercent.has(s.id) && (
+                  <span className={styles.sectionPercent}> {formatPercent(sectionPercent.get(s.id) ?? 0)}</span>
+                )}
+              </h2>
+              {sectionPercent.has(s.id) && (
+                <div className={styles.sectionBar}>
+                  <ProgressBar value={sectionPercent.get(s.id) ?? 0} label={`${s.title} bölüm ilerlemesi`} small />
+                </div>
+              )}
               <ol className={styles.lessons}>
                 {s.lessons.map((l) => (
                   <li key={l.id}>
@@ -104,7 +133,14 @@ export function LessonPlayerView() {
                       className={l.id === lesson.id ? styles.current : undefined}
                       onClick={() => setListOpen(false)}
                     >
-                      <span>{l.title}</span>
+                      <span>
+                        {done.has(l.id) && (
+                          <span className={styles.tick} aria-label="tamamlandı" role="img">
+                            ✓{" "}
+                          </span>
+                        )}
+                        {l.title}
+                      </span>
                       <span className={styles.lessonMeta}>
                         {TYPE_LABEL[l.contentType]}
                         {l.contentType === "VIDEO" && l.durationSeconds > 0 && ` · ${formatDuration(l.durationSeconds)}`}
@@ -120,6 +156,7 @@ export function LessonPlayerView() {
       <section className={styles.main}>
         <h1>{lesson.title}</h1>
         <LessonContent key={lesson.id} courseId={courseId} lesson={lesson} />
+        <CompleteButton key={`complete-${lesson.id}`} lessonId={lesson.id} progress={progress} onComplete={complete} />
         <nav aria-label="Ders gezinmesi" className={styles.pager}>
           {previous ? (
             <Link href={learnHref(courseId, previous.id)} className={styles.button} rel="prev">
@@ -138,6 +175,55 @@ export function LessonPlayerView() {
           <Link href={`/courses/${courseId}`}>Kurs sayfasına dön</Link>
         </p>
       </section>
+    </div>
+  );
+}
+
+/**
+ * "Tamamlandı" düğmesi (#46): yalnız kursa kayıtlı kursiyerde. Tamamlanmış derste pasif; basınca sunucunun döndürdüğü
+ * ilerlemeyle çubuklar ve tikler güncellenir.
+ */
+function CompleteButton({
+  lessonId,
+  progress,
+  onComplete,
+}: {
+  lessonId: number;
+  progress: ProgressState;
+  onComplete: (lessonId: number) => Promise<void>;
+}) {
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  if (progress.kind !== "ok") return null;
+  const completed = progress.progress.completedLessonIds.includes(lessonId);
+
+  async function mark() {
+    setPending(true);
+    setError(null);
+    try {
+      await onComplete(lessonId);
+    } catch (err) {
+      setError(errorMessage(err, "Ders tamamlanamadı. Bağlantınızı kontrol edip tekrar deneyin."));
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <div className={styles.complete}>
+      <button
+        type="button"
+        className={`${styles.button} ${completed ? styles.completed : styles.primary}`}
+        disabled={completed || pending}
+        onClick={() => void mark()}
+      >
+        {completed ? "✓ Tamamlandı" : pending ? "İşaretleniyor…" : "Tamamlandı olarak işaretle"}
+      </button>
+      {error && (
+        <p role="alert" className={styles.error}>
+          {error}
+        </p>
+      )}
     </div>
   );
 }
