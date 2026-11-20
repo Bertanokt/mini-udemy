@@ -13,7 +13,7 @@ import jakarta.persistence.Table;
 
 /**
  * Bir kullanıcıya uygulama içi bildirim (#124, FR-43). Tablo: `notifications`. Alıcı başka modülün kullanıcısı olduğu
- * için yalnız id olarak tutulur. `readAt` boşsa okunmamıştır; okundu işaretleme #125'tedir.
+ * için yalnız id olarak tutulur. `readAt` boşsa okunmamıştır; okundu işaretleme {@link #markRead} (#125).
  */
 @Entity
 @Table(name = "notifications")
@@ -56,6 +56,17 @@ public class Notification {
         this.body = content.body();
         this.link = content.link();
         this.createdAt = createdAt;
+    }
+
+    /** Okunmamışsa okundu işaretler; zaten okunmuşsa ilk okunma zamanı korunur (idempotent, #125). */
+    public void markRead(Instant now) {
+        if (readAt == null) {
+            readAt = now;
+        }
+    }
+
+    public boolean isRead() {
+        return readAt != null;
     }
 
     public Long getId() {
