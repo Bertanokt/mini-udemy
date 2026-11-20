@@ -43,7 +43,7 @@ class ModuleArchitectureTest {
             Map.entry("content", Set.of("course", "enrollment")),
             Map.entry("progress", Set.of("course", "enrollment")),
             Map.entry("quiz", Set.of("course", "enrollment")),
-            Map.entry("certificate", Set.of("course", "enrollment", "progress", "quiz")),
+            Map.entry("certificate", Set.of("auth", "course", "enrollment", "progress", "quiz")),
             Map.entry("review", Set.of("auth", "course", "enrollment")),
             Map.entry("notification", Set.of("auth", "course", "enrollment")),
             Map.entry("admin", Set.of("auth", "course", "enrollment", "progress", "certificate", "review")));

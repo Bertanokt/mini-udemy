@@ -2,6 +2,7 @@ package com.miniudemy.enrollment.service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -15,6 +16,7 @@ import com.miniudemy.course.service.CourseLookupService;
 import com.miniudemy.enrollment.domain.Enrollment;
 import com.miniudemy.enrollment.domain.EnrollmentCreated;
 import com.miniudemy.enrollment.dto.EnrollmentProgressSnapshot;
+import com.miniudemy.enrollment.dto.EnrollmentRef;
 import com.miniudemy.enrollment.dto.EnrollmentResponse;
 import com.miniudemy.enrollment.mapper.EnrollmentMapper;
 import com.miniudemy.enrollment.repository.EnrollmentRepository;
@@ -107,6 +109,18 @@ public class EnrollmentService {
     @Transactional(readOnly = true)
     public List<Long> findEnrollmentIdsByCourse(Long courseId) {
         return repository.findIdsByCourseId(courseId);
+    }
+
+    /** Kursiyerin bütün kayıtları (kayıt, kursiyer, kurs); sertifikalarım listesi için (#130). */
+    @Transactional(readOnly = true)
+    public List<EnrollmentRef> findRefsByStudent(Long studentId) {
+        return repository.findAllByStudentIdOrderByEnrolledAtDescIdDesc(studentId).stream().map(mapper::toRef).toList();
+    }
+
+    /** Kaydın kimliği; kayıt yoksa boş (#130). */
+    @Transactional(readOnly = true)
+    public Optional<EnrollmentRef> findRef(Long enrollmentId) {
+        return repository.findById(enrollmentId).map(mapper::toRef);
     }
 
     /** Kursa kayıtlı kursiyerlerin id'leri (yeni ders bildirimi alıcıları, #124). Kayıt yoksa boş liste. */
