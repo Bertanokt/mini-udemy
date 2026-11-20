@@ -275,11 +275,13 @@ UI taslakları (#88) kapsam dışı bırakıldı; bu bölümde wireframe yerine 
 | Kursiyer | Sınav ve denemeler | `/quizzes/[id]`, `/quizzes/[id]/attempts` | ⟨mobil, masaüstü⟩ |
 | Eğitmen | Eğitmen paneli | `/instructor` | ⟨mobil, masaüstü⟩ |
 | Eğitmen | Kurs formu | `/instructor/courses/new`, `…/[id]/edit` | ⟨mobil, masaüstü⟩ |
+| Eğitmen | Bölüm ve dersler, içerik yükleme ve önizleme | `…/[id]/sections` | ⟨mobil, masaüstü⟩ |
 | Eğitmen | Soru bankası, bölüm sınavı | `…/[id]/questions`, `…/[id]/quizzes` | ⟨mobil, masaüstü⟩ |
 | Eğitmen | Kurs istatistikleri | `…/[id]/analytics` | ⟨mobil, masaüstü⟩ |
+| Yönetici | Yönetici paneli (menü) | `/admin` | ⟨mobil, masaüstü⟩ |
 | Yönetici | Kurs onay / red | `/admin/courses`, `/admin/courses/[id]` | ⟨mobil, masaüstü⟩ |
 | Yönetici | Kullanıcılar, kategoriler | `/admin/users`, `/admin/categories` | ⟨mobil, masaüstü⟩ |
 | Yönetici | Yorumlar, şikâyetler | `/admin/reviews`, `/admin/complaints` | ⟨mobil, masaüstü⟩ |
 | Yönetici | Raporlar | `/admin/reports` | ⟨mobil, masaüstü⟩ |
 
-Ekran geçişleri rol bazında 7.4'teki kullanım kılavuzunda adım adım anlatılır. 20.11 itibarıyla ekranı henüz olmayan işler: bölüm/ders yönetimi ve içerik yükleme (#34), tamamlandı düğmesi ve ilerleme çubukları (#46), sertifika görüntüleme ve doğrulama (#130, #131), bildirim zili ve listesi (#136). Liste ⟨24.11 sonrası ekranlara göre⟩ güncellenecek.
+Ekran geçişleri rol bazında 7.4'teki kullanım kılavuzunda adım adım anlatılır. `/learn/[courseId]` ayrı bir ekran değildir, kursun ilk dersine yönlendirir. Bölüm/ders yönetimi (#34) PR #300'de, merge bekliyor. 20.11 itibarıyla ekranı henüz olmayan işler: tamamlandı düğmesi ve ilerleme çubukları (#46), sertifika görüntüleme ve doğrulama (#130, #131), bildirim zili ve listesi (#136). Liste ⟨24.11 sonrası ekranlara göre⟩ güncellenecek.
