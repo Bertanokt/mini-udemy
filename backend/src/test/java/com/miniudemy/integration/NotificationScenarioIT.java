@@ -87,7 +87,7 @@ class NotificationScenarioIT extends IntegrationTestBase {
                 tuple("QUIZ_COMPLETED", "\"Java'ya giriş\" kursundaki sınavı geçtiniz.",
                         "/quizzes/" + quizId + "/attempts"),
                 tuple("CERTIFICATE_ISSUED", "\"Java'ya giriş\" kursunu tamamladınız; sertifikanız oluşturuldu.",
-                        "/my-courses"));
+                        "/certificates"));
 
         assertThat(notifications(OTHER_STUDENT)).isEmpty();
         assertThat(jdbc.queryForObject("SELECT count(*) FROM notifications WHERE read_at IS NOT NULL", Long.class))
