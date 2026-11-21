@@ -20,3 +20,12 @@ export function toggleOption(current: number[] | undefined, optionId: number, mu
   const list = current ?? [];
   return list.includes(optionId) ? list.filter((o) => o !== optionId) : [...list, optionId];
 }
+
+/**
+ * Sonuçtaki soru satırının başı (#296): "1. Soru metni:" — metin zaten noktalamayla (? . ! : …) bitiyorsa iki nokta
+ * eklenmez ("1. … hangisidir?" olur, "?:" değil).
+ */
+export function questionLabel(index: number, text: string): string {
+  const trimmed = text.trim();
+  return /[?.!:…]$/.test(trimmed) ? `${index}. ${trimmed}` : `${index}. ${trimmed}:`;
+}

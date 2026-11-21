@@ -1,0 +1,84 @@
+@startuml component
+' UML bileşen diyagramı (#91, şablon 4.3): backend modülleri, sağladıkları/kullandıkları arayüzler ve frontend'in
+' API istemci katmanı.
+' Olaylar ayrı görünümde: component-events.puml.
+' Kodla tutarlılığı ComponentDiagramTest denetler: düz oklar (a --> b) ModuleArchitectureTest.ALLOWED'ın birebir aynısı.
+' Ok etiketinde "kullanır" = çağrılan service sınıfları, "uygular" = hedef modülün service paketinde tanımlanan ve
+' kaynak modülün uyguladığı arayüz (bağımlılığın tersine çevrilmesi, architecture.md §4).
+' Render: java -Duser.language=en -Duser.country=US -jar plantuml.jar -tpng -tsvg docs/diagrams/component.puml
+!pragma layout smetana
+skinparam shadowing false
+skinparam defaultFontSize 12
+skinparam componentStyle uml2
+skinparam ArrowColor #555555
+skinparam component {
+  BackgroundColor #F7F7F7
+  BorderColor #444444
+}
+skinparam package {
+  BorderColor #888888
+}
+
+title Mini Udemy - Bileşen diyagramı: modüller ve service arayüzleri
+
+package "Frontend (Next.js, tarayıcıda React)" {
+  component "Sayfalar\nsrc/app/**" as pages
+  component "API istemcisi\nsrc/lib/api/*.ts\n(apiFetch, Bearer JWT)" as apiclient
+}
+
+package "Backend (com.miniudemy, modüler monolit)" {
+  interface "REST / JSON\n/api/**\n(docs/api/openapi.yaml)" as rest
+
+  component "common\nsecurity, exception,\nmapper ayarı, config" as common
+
+  component "auth\nkayıt, giriş, JWT, kullanıcılar" as auth
+  component "course\nkurs, bölüm, ders, State,\nkatalog, eğitmen istatistikleri" as course
+  component "enrollment\nkursa kayıt" as enrollment
+  component "content\niçerik dosyaları,\nFactory Method, depolama" as content
+  component "progress\nders tamamlama, yüzde,\nkaldığı yer" as progress
+  component "quiz\nsoru bankası, sınav,\nStrategy" as quiz
+  component "certificate\nsertifika" as certificate
+  component "review\npuan, yorum, moderasyon" as review
+  component "notification\nuygulama içi bildirim" as notification
+  component "admin\nonay/red, kullanıcı,\nşikâyet, platform raporu" as admin
+}
+
+pages ..> apiclient : çağırır
+apiclient ..> rest : HTTP, CORS
+rest -- common
+
+' --- Service bağımlılıkları (ModuleArchitectureTest.ALLOWED) ---
+course --> auth : kullanır: UserDirectoryService
+enrollment --> course : kullanır: CourseLookupService\nuygular: EnrollmentCounts, CourseRoster
+content --> course : kullanır: CourseLookupService,\nLessonLookupService, ContentLinkService
+content --> enrollment : kullanır: EnrollmentService
+progress --> course : kullanır: CourseStructureService,\nLessonLookupService\nuygular: CourseProgressStats
+progress --> enrollment : kullanır: EnrollmentService\nuygular: EnrollmentProgress
+quiz --> course : kullanır: CourseStructureService,\nCourseOwnershipService\nuygular: CourseQuizStats
+quiz --> enrollment : kullanır: EnrollmentService
+certificate --> auth : kullanır: UserDirectoryService
+certificate --> course : kullanır: CourseStructureService
+certificate --> enrollment : kullanır: EnrollmentService
+certificate --> progress : kullanır: ProgressService
+certificate --> quiz : kullanır: QuizRequirementService
+review --> auth : kullanır: UserDirectoryService
+review --> course : kullanır: CourseLookupService\nuygular: CourseRatings
+review --> enrollment : kullanır: EnrollmentService
+notification --> auth : kullanır: UserDirectoryService
+notification --> course : kullanır: CourseLookupService
+notification --> enrollment : kullanır: EnrollmentService
+admin --> auth : kullanır: UserAccountService,\nUserDirectoryService, UserStatsService
+admin --> course : kullanır: CourseLifecycleService,\nCourseCatalogService, CourseLookupService,\nCoursePlatformStatsService
+admin --> enrollment : kullanır: EnrollmentStatsService
+admin --> progress : kullanır: CourseProgressStatsService
+admin --> certificate : kullanır: CertificateStatsService
+admin --> review : kullanır: ReviewService, ReviewModerationService
+
+legend bottom left
+  Ok: service çağrısı (yalnız service ve dto paketleri; repository ve entity yasak, ArchUnit).
+  "uygular": hedef modülün service paketindeki arayüzü kaynak modül uygular (bağımlılığın tersine çevrilmesi).
+  Olaylar (Observer) ayrı görünümde: component-events.puml.
+  Bütün modüller common'u kullanır (güvenlik, hata tipleri, MapStruct ayarı); common hiçbir modüle bağımlı değildir.
+  Her modülün controller'ı REST uçlarını sağlar; kimlik ve hata gövdesi common'daki güvenlik filtresi ve hata işleyicidedir.
+endlegend
+@enduml

@@ -1,0 +1,46 @@
+@startuml component-events
+' UML bileşen diyagramı, olay görünümü (#91): hangi modülün domain olayını hangi modülün dinleyicisi alır
+' (Observer, ADR-009). Service bağımlılıkları: component.puml.
+' Kodla tutarlılığı ComponentDiagramTest denetler: kesikli oklar (a ..> b : Olay) listener paketlerindeki
+' @TransactionalEventListener'ların birebir aynısı (modül içi olaylar ok değildir).
+' Render: java -Duser.language=en -Duser.country=US -jar plantuml.jar -tpng -tsvg docs/diagrams/component-events.puml
+!pragma layout smetana
+skinparam shadowing false
+skinparam defaultFontSize 12
+skinparam componentStyle uml2
+skinparam ArrowColor #555555
+skinparam component {
+  BackgroundColor #F7F7F7
+  BorderColor #444444
+}
+left to right direction
+
+title Mini Udemy - Bileşen diyagramı: domain olayları (yayıncı ..> dinleyici)
+
+package "Backend (com.miniudemy)" {
+  component "course" as course
+  component "enrollment" as enrollment
+  component "content" as content
+  component "quiz" as quiz
+  component "progress" as progress
+  component "certificate" as certificate
+  component "notification" as notification
+}
+
+course ..> content : ContentFileDetached
+course ..> progress : CourseLessonsChanged
+course ..> notification : CourseApproved, CourseRejected, LessonPublished
+enrollment ..> notification : EnrollmentCreated
+content ..> progress : LessonOpened
+progress ..> certificate : LessonCompleted
+quiz ..> certificate : QuizCompleted
+quiz ..> notification : QuizCompleted
+certificate ..> notification : CertificateIssued
+
+
+legend bottom left
+  Kesikli ok: domain olayı, yayıncı modülden dinleyici modüle.
+  Dinleyici yayıncının işlemi commit edildikten sonra kendi işleminde çalışır (AFTER_COMMIT + REQUIRES_NEW).
+  Yayıncı dinleyiciyi bilmez; olay tipi yayıncının domain paketindedir.
+endlegend
+@enduml
