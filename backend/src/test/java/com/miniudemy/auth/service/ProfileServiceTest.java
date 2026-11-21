@@ -15,12 +15,13 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import com.miniudemy.auth.domain.Role;
 import com.miniudemy.auth.domain.User;
+import com.miniudemy.auth.dto.UpdateProfileRequest;
 import com.miniudemy.auth.dto.UserResponse;
 import com.miniudemy.auth.mapper.UserMapper;
 import com.miniudemy.auth.repository.UserRepository;
 import com.miniudemy.common.exception.ApiException;
 
-/** Kendi profilini görüntüleme (#14). */
+/** Kendi profilini görüntüleme (#14) ve güncelleme (#116). */
 class ProfileServiceTest {
 
     private final UserRepository userRepository = mock(UserRepository.class);
@@ -46,6 +47,48 @@ class ProfileServiceTest {
         assertThatThrownBy(() -> profileService.getMyProfile(99L))
                 .isInstanceOf(ApiException.class)
                 .hasMessage("Kullanıcı bulunamadı.")
+                .extracting(ex -> ((ApiException) ex).getStatus()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    void updateMyProfile_changesOnlyNameAndBio_trimmed_emailAndRoleUnchanged() {
+        User user = new User("ayse.yilmaz@example.com", "$2a$10$ozet", "Ayşe Yılmaz", Role.STUDENT);
+        ReflectionTestUtils.setField(user, "id", 42L);
+        given(userRepository.findById(42L)).willReturn(Optional.of(user));
+        given(userRepository.saveAndFlush(user)).willReturn(user);
+
+        UserResponse updated = profileService.updateMyProfile(42L,
+                new UpdateProfileRequest("  Ayşe Yılmaz Kaya ", " Veri bilimine meraklıyım. ", null, null));
+
+        assertThat(updated.fullName()).isEqualTo("Ayşe Yılmaz Kaya");
+        assertThat(updated.bio()).isEqualTo("Veri bilimine meraklıyım.");
+        assertThat(updated.email()).isEqualTo("ayse.yilmaz@example.com");
+        assertThat(updated.role()).isEqualTo(Role.STUDENT);
+        assertThat(user.getPasswordHash()).isEqualTo("$2a$10$ozet");
+    }
+
+    @Test
+    void updateMyProfile_blankOrNullBio_clearsIt() {
+        User user = new User("ayse.yilmaz@example.com", "$2a$10$ozet", "Ayşe Yılmaz", Role.STUDENT);
+        ReflectionTestUtils.setField(user, "id", 42L);
+        ReflectionTestUtils.setField(user, "bio", "Eski biyografi");
+        given(userRepository.findById(42L)).willReturn(Optional.of(user));
+        given(userRepository.saveAndFlush(user)).willReturn(user);
+
+        assertThat(profileService.updateMyProfile(42L, new UpdateProfileRequest("Ayşe", "   ", null, null)).bio())
+                .isNull();
+        ReflectionTestUtils.setField(user, "bio", "Eski biyografi");
+        assertThat(profileService.updateMyProfile(42L, new UpdateProfileRequest("Ayşe", null, null, null)).bio())
+                .isNull();
+    }
+
+    @Test
+    void updateMyProfile_whenUserMissing_returns404() {
+        given(userRepository.findById(99L)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> profileService.updateMyProfile(99L,
+                        new UpdateProfileRequest("Ayşe", null, null, null)))
+                .isInstanceOf(ApiException.class)
                 .extracting(ex -> ((ApiException) ex).getStatus()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 }
