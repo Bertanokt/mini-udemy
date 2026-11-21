@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ApiError } from "@/lib/api/client";
 import {
@@ -10,7 +10,8 @@ import {
   type AttemptResultResponse,
   type StudentQuizResponse,
 } from "@/lib/api/quizzes";
-import { buildAnswers, toggleOption, unansweredQuestionIds, type Selection } from "@/lib/quiz/answers";
+import { buildAnswers, questionLabel, toggleOption, unansweredQuestionIds, type Selection } from "@/lib/quiz/answers";
+import { learnHref } from "@/lib/learn/navigation";
 import styles from "./take.module.css";
 
 type Loaded =
@@ -31,6 +32,9 @@ function errorMessage(err: unknown, fallback: string): string {
 export function QuizTakeView() {
   const { id: rawId } = useParams<{ id: string }>();
   const id = /^\d+$/.test(rawId) ? Number(rawId) : null;
+  // Oynatıcıdan gelinmişse kurs id'si adreste (?course=); sonuçtaki "Kursa dön" için (#58).
+  const rawCourse = useSearchParams().get("course");
+  const courseId = rawCourse !== null && /^\d+$/.test(rawCourse) ? Number(rawCourse) : null;
   const [retry, setRetry] = useState(0);
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const [selection, setSelection] = useState<Selection>({});
@@ -104,7 +108,20 @@ export function QuizTakeView() {
   }
 
   if (result !== null && quiz !== null) {
-    return <Result quiz={quiz} result={result} quizId={id as number} />;
+    return (
+      <Result
+        quiz={quiz}
+        result={result}
+        quizId={id as number}
+        courseId={courseId}
+        onRetry={() => {
+          setResult(null);
+          setSelection({});
+          setConfirming(false);
+          setSubmitError(null);
+        }}
+      />
+    );
   }
 
   return (
@@ -203,7 +220,23 @@ export function QuizTakeView() {
   );
 }
 
-function Result({ quiz, result, quizId }: { quiz: StudentQuizResponse; result: AttemptResultResponse; quizId: number }) {
+/**
+ * Sonuç (#58): puan, yüzde, eşik, geçti/kaldı ve soru bazında sonuç. Kalınca "Tekrar dene" aynı sınavı boş cevaplarla
+ * yeniden açar; geçince "Kursa dön" oynatıcıya (kurs id'si biliniyorsa) ya da kayıtlı kurslara götürür.
+ */
+function Result({
+  quiz,
+  result,
+  quizId,
+  courseId,
+  onRetry,
+}: {
+  quiz: StudentQuizResponse;
+  result: AttemptResultResponse;
+  quizId: number;
+  courseId: number | null;
+  onRetry: () => void;
+}) {
   const headingRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     headingRef.current?.focus();
@@ -233,7 +266,7 @@ function Result({ quiz, result, quizId }: { quiz: StudentQuizResponse; result: A
           const r = byId.get(q.id);
           return (
             <li key={q.id}>
-              {i + 1}. {q.text}:{" "}
+              {questionLabel(i + 1, q.text)}{" "}
               {r ? (
                 <span className={r.correct ? styles.pass : styles.fail}>
                   {r.correct ? "✓ Doğru" : "✗ Yanlış"} ({fmt(r.earnedPoints)} / {fmt(r.maxPoints)})
@@ -246,8 +279,17 @@ function Result({ quiz, result, quizId }: { quiz: StudentQuizResponse; result: A
         })}
       </ol>
       <div className={styles.actions}>
+        {result.passed ? (
+          <Link href={courseId !== null ? learnHref(courseId) : "/my-courses"} className={`${styles.button} ${styles.primary}`}>
+            Kursa dön
+          </Link>
+        ) : (
+          <button type="button" className={`${styles.button} ${styles.primary}`} onClick={onRetry}>
+            Tekrar dene
+          </button>
+        )}
         <Link href={`/quizzes/${quizId}/attempts`}>Deneme geçmişim</Link>
-        <Link href="/my-courses">Kurslarım</Link>
+        {!result.passed && <Link href={courseId !== null ? learnHref(courseId) : "/my-courses"}>Kursa dön</Link>}
       </div>
     </section>
   );

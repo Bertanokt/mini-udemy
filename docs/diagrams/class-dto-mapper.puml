@@ -113,6 +113,14 @@ package "com.miniudemy.review.{service, mapper, domain}" {
   class Review <<entity>>
 }
 
+package "com.miniudemy.notification.{service, mapper, domain}" {
+  class NotificationService <<service>>
+  interface NotificationMapper <<Mapper>> {
+    + toResponse(notification : Notification) : NotificationResponse
+  }
+  class Notification <<entity>>
+}
+
 ' service → mapper (constructor injection)
 AuthService --> UserMapper
 ProfileService --> UserMapper
@@ -131,6 +139,7 @@ QuizService --> QuestionMapper
 QuestionService --> QuestionMapper
 QuizAttemptService --> QuizAttemptMapper
 ReviewService --> ReviewMapper
+NotificationService --> NotificationMapper
 
 ' mapper → kaynak entity
 UserMapper ..> User
@@ -146,6 +155,7 @@ QuestionMapper ..> Question
 QuestionMapper ..> Option
 QuizAttemptMapper ..> QuizAttempt
 ReviewMapper ..> Review
+NotificationMapper ..> Notification
 
 ' her mapper @Mapper(config = MapStructConfig.class)
 MapStructConfig <.. UserMapper : config
@@ -158,6 +168,7 @@ MapStructConfig <.. QuizMapper : config
 MapStructConfig <.. QuestionMapper : config
 MapStructConfig <.. QuizAttemptMapper : config
 MapStructConfig <.. ReviewMapper : config
+MapStructConfig <.. NotificationMapper : config
 
 note bottom of MapStructConfig
   <b>DTO + Mapper</b>: controller yalnız DTO (record) alır/döner;
@@ -167,7 +178,7 @@ note bottom of MapStructConfig
   bilerek boş bırakılan alan @Mapping(ignore = true).
   Mapper'ı yalnız aynı modülün service'i kullanır
   (ModuleArchitectureTest: başka modülün mapper'ı yasak).
-  admin, content, progress, certificate, notification
+  admin, content, progress, certificate
   modüllerinde mapper sınıfı yok (yalnız package-info).
 end note
 

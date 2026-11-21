@@ -107,7 +107,7 @@ Bir modül başka bir modülle **yalnız iki yoldan** konuşur:
 | `content` | `course`, `enrollment` | – |
 | `progress` | `course`, `enrollment` | `LessonCompleted`, `LessonOpened`, `CourseLessonsChanged` |
 | `quiz` | `course`, `enrollment` | – |
-| `certificate` | `course`, `enrollment`, `progress`, `quiz` | `LessonCompleted`, `QuizCompleted` |
+| `certificate` | `auth`, `course`, `enrollment`, `progress`, `quiz` | `LessonCompleted`, `QuizCompleted` |
 | `review` | `auth`, `course`, `enrollment` | – |
 | `notification` | `auth`, `course`, `enrollment` | `EnrollmentCreated`, `LessonPublished`, `CourseApproved`, `CourseRejected`, `QuizCompleted`, `CertificateIssued` |
 | `admin` | `auth`, `course`, `enrollment`, `progress`, `certificate`, `review` | – |
@@ -208,6 +208,8 @@ flowchart TB
 
 ### Modül bağımlılıkları
 
+UML bileşen diyagramı (#91): [`diagrams/component.puml`](diagrams/component.puml) ([PNG](diagrams/component.png)) modülleri, kullandıkları service sınıflarını ve uyguladıkları arayüzleri; [`diagrams/component-events.puml`](diagrams/component-events.puml) ([PNG](diagrams/component-events.png)) olay akışını gösterir. İkisinin kodla tutarlılığını `ComponentDiagramTest` denetler: bağımlılık okları `ModuleArchitectureTest.ALLOWED`'ın, olay okları `listener` paketlerindeki `@TransactionalEventListener`'ların birebir aynısı olmalı. Tablo ya da bir dinleyici değişirse diyagram aynı PR'da güncellenir. Aşağıdaki Mermaid özeti aynı bilgiyi tek şekilde verir.
+
 Düz ok: service çağrısı. Kesikli ok: domain olayı (yayınlayan → dinleyen). Noktalı çizgi: `course`'un tanımladığı istatistik arayüzünü uygulama.
 
 ### Sertifika verme kuralı (#129)
@@ -217,6 +219,7 @@ Düz ok: service çağrısı. Kesikli ok: domain olayı (yayınlayan → dinleye
 - **Kayıt başına tek sertifika:** `certificates.enrollment_id` tekil. Ekleme `ON CONFLICT DO NOTHING` ile tek komuttur; aynı anda gelen iki olayda (son ders ve son sınav) biri yazar, diğeri hiçbir şey yapmaz ve `CertificateIssued` bir kez yayınlanır.
 - **Doğrulama kodu:** `XXXX-XXXX-XX`, `SecureRandom` ile 31 karakterlik okunaklı alfabeden (0/O, 1/I/L yok) 10 karakter (~49 bit). Kod tekil; çakışırsa yeni kodla en fazla 5 kez denenir.
 - **Kullanılan servisler:** zorunlu dersler `course/service/CourseStructureService`, tamamlanan dersler `progress/service/ProgressService`, zorunlu sınavlar `quiz/service/QuizRequirementService`, kayıt id'si `enrollment/service/EnrollmentService` (tablodaki `course`, `enrollment`, `progress`, `quiz` bağımlılıkları).
+- **Görüntüleme ve doğrulama (#130):** `GET /api/me/certificates` (en yeni önce) ve `/{id}` yalnız STUDENT, başkasının sertifikası 404; `GET /api/certificates/verify/{code}` herkese açık, yalnız kursiyer adı, kurs adı, tarih ve geçerlilik döner (e-posta yok), kod büyük/küçük harften bağımsız, geçersiz kod 404 (`CertificateQueryService`). Kursiyer ve kurs kayıttan (`EnrollmentService.findRef` / `findRefsByStudent`), kurs adı ve eğitmen `CourseLookupService`'ten, kursiyer adı `auth/service/UserDirectoryService`'ten gelir (`certificate → auth`, #130). "Resmî akreditasyon değildir" ibaresi API'de değil, ön yüzde sabit metindir (#131, FR-29).
 - **Koşulu sonradan değişen kurslar:** sertifika verildikten sonra kursa zorunlu ders ya da sınav eklenirse sertifika geri alınmaz; henüz sertifikası olmayan kursiyer bir sonraki ders tamamlamasında ya da geçen sınav denemesinde yeni koşula göre değerlendirilir.
 - **Zorunlu dersi ve zorunlu sınavı olmayan kurs:** koşul boş olduğu için kursiyerin ilk ders tamamlaması (ya da geçen ilk sınavı) sertifika verir.
 
@@ -253,6 +256,7 @@ flowchart LR
   progress --> enrollment
   quiz --> course
   quiz --> enrollment
+  certificate --> auth
   certificate --> course
   certificate --> enrollment
   certificate --> progress

@@ -9,16 +9,23 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.miniudemy.auth.dto.UserSummary;
 import com.miniudemy.auth.service.UserDirectoryService;
+import com.miniudemy.common.exception.NotFoundException;
 import com.miniudemy.course.dto.CourseSummaryResponse;
 import com.miniudemy.course.service.CourseLookupService;
 import com.miniudemy.enrollment.service.EnrollmentService;
 import com.miniudemy.notification.domain.Notification;
 import com.miniudemy.notification.domain.NotificationContent;
+import com.miniudemy.notification.dto.NotificationPage;
+import com.miniudemy.notification.dto.UnreadCountResponse;
+import com.miniudemy.notification.mapper.NotificationMapper;
 import com.miniudemy.notification.repository.NotificationRepository;
 
 /**
@@ -27,6 +34,9 @@ import com.miniudemy.notification.repository.NotificationRepository;
  * bilmez (Observer, ADR-009).
  *
  * <p>Kurs bulunamazsa (olaydan sonra silinmişse) bildirim yazılmaz; ilgili bir alıcı ya da metin kalmamıştır.
+ *
+ * <p>Kullanıcının kendi bildirimlerini listeleme, okunmamış sayısı ve okundu işaretleme de buradadır (#125); çağıranı
+ * `NotificationController`'dır.
  */
 @Service
 public class NotificationService {
@@ -36,18 +46,23 @@ public class NotificationService {
     /** Kursiyerin adı bulunamazsa metinde kullanılır. */
     static final String UNKNOWN_STUDENT = "Bir kursiyer";
 
+    static final String NOT_FOUND = "Bildirim bulunamadı.";
+    private static final Sort NEWEST_FIRST = Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("id"));
+
     private final NotificationRepository notifications;
     private final CourseLookupService courses;
     private final EnrollmentService enrollments;
     private final UserDirectoryService users;
+    private final NotificationMapper mapper;
     private final Clock clock;
 
     public NotificationService(NotificationRepository notifications, CourseLookupService courses,
-            EnrollmentService enrollments, UserDirectoryService users, Clock clock) {
+            EnrollmentService enrollments, UserDirectoryService users, NotificationMapper mapper, Clock clock) {
         this.notifications = notifications;
         this.courses = courses;
         this.enrollments = enrollments;
         this.users = users;
+        this.mapper = mapper;
         this.clock = clock;
     }
 
@@ -95,6 +110,42 @@ public class NotificationService {
     public void notifyCertificateIssued(Long courseId, Long studentId) {
         course(courseId).ifPresent(course -> save(List.of(studentId),
                 NotificationMessages.certificateIssued(course.title())));
+    }
+
+    // --- Kullanıcının kendi bildirimleri (#125). Her sorgu alıcıya göre süzülür; başkasının bildirimi görünmez. ---
+
+    /** Kullanıcının bildirimleri, en yeni önce; {@code unreadOnly} ise yalnız okunmamışlar. */
+    @Transactional(readOnly = true)
+    public NotificationPage list(Long userId, boolean unreadOnly, int page, int size) {
+        PageRequest pageable = PageRequest.of(page, size, NEWEST_FIRST);
+        Page<Notification> result = unreadOnly
+                ? notifications.findByUserIdAndReadAtIsNull(userId, pageable)
+                : notifications.findByUserId(userId, pageable);
+        return new NotificationPage(result.getContent().stream().map(mapper::toResponse).toList(),
+                result.getNumber(), result.getSize(), result.getTotalElements(), result.getTotalPages());
+    }
+
+    /** Kullanıcının okunmamış bildirim sayısı. */
+    @Transactional(readOnly = true)
+    public UnreadCountResponse countUnread(Long userId) {
+        return new UnreadCountResponse(notifications.countByUserIdAndReadAtIsNull(userId));
+    }
+
+    /**
+     * Bildirimi okundu işaretler; zaten okunmuşsa bir şey değişmez. Bildirim yoksa ya da başka kullanıcınınsa 404:
+     * ikisi aynı yanıtı verir, böylece başkasının bildiriminin varlığı sızmaz.
+     */
+    @Transactional
+    public void markRead(Long userId, Long notificationId) {
+        notifications.findByIdAndUserId(notificationId, userId)
+                .orElseThrow(() -> new NotFoundException(NOT_FOUND))
+                .markRead(clock.instant());
+    }
+
+    /** Kullanıcının okunmamış bildirimlerinin hepsini okundu işaretler. */
+    @Transactional
+    public void markAllRead(Long userId) {
+        notifications.markAllRead(userId, clock.instant());
     }
 
     private Optional<CourseSummaryResponse> course(Long courseId) {
