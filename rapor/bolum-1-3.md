@@ -2,7 +2,7 @@
 
 Hocanın Proje Yazım Şablonu'nun 1–3. bölümlerinin içeriği (#102). Word dosyasında birleştirme #69'da yapılır; bu dosya metnin kaynağıdır. Ayrıntılı tablolar repodaki dokümanlarda; burada rapora girecek özetleri var. Bölüm 4 (mimari, desenler, SOLID, API): #103; bölüm 5–8: [`bolum-5-8.md`](bolum-5-8.md) (#104, taslak PR #287; merge edilene kadar bağlantı `main`'de açılmaz).
 
-**Veri tarihi:** 21.11.2026, `main` @ `d1726d3`. ⟨…⟩ ile işaretli yerler test raporu (#99), bug bash (#68), demo provası (#106), diyagram–kod tutarlılık kontrolünün sonu (#97) ve ekran görüntüleri bitince doldurulacak; son güncelleme 01.12.2026'dan önce.
+**Veri tarihi:** 21.11.2026, `main` @ `2c0996e`. ⟨…⟩ ile işaretli yerler test raporu (#99), bug bash (#68), demo provası (#106), diyagram–kod tutarlılık kontrolünün sonu (#97) ve ekran görüntüleri bitince doldurulacak; son güncelleme 01.12.2026'dan önce.
 
 **Şablon numaraları:** 3.2, 3.3.1–3.3.8, 3.4.1, 3.4.5 ve 3.4.7 issue'lardaki şablon atıflarından (#77, #78, #79, #87, #88) alındı. 3.4.2, 3.4.3, 3.4.4 ve 3.4.6'nın sırası tahmindir; Word şablonuyla birleştirirken (#69) kontrol edilecek.
 
@@ -270,7 +270,10 @@ UI taslakları (#88) kapsam dışı bırakıldı; bu bölümde wireframe yerine 
 | Ziyaretçi | Katalog ve arama | `/` | ⟨mobil, masaüstü⟩ |
 | Ziyaretçi | Kurs ayrıntısı | `/courses/[id]` | ⟨mobil, masaüstü⟩ |
 | Ziyaretçi | Kayıt ol, giriş yap | `/register`, `/login` | ⟨mobil, masaüstü⟩ |
+| Ziyaretçi | Parolamı unuttum, yeni parola | `/forgot-password`, `/reset-password` | ⟨mobil, masaüstü⟩ |
 | Ziyaretçi | Sertifika doğrulama (girişsiz) | `/verify/[code]` | ⟨mobil, masaüstü⟩ |
+| Kayıtlı kullanıcı | Profilim (ad soyad, kısa biyografi) | `/profile` | ⟨mobil, masaüstü⟩ |
+| Kayıtlı kullanıcı | Bildirim zili: okunmamış sayısı, liste, okundu işaretleme | üst menü (her sayfada) | ⟨mobil, masaüstü⟩ |
 | Kursiyer | Kayıtlı kurslarım | `/my-courses` | ⟨mobil, masaüstü⟩ |
 | Kursiyer | Kurs oynatıcısı | `/learn/[courseId]/[lessonId]` | ⟨mobil, masaüstü⟩ |
 | Kursiyer | Sınav ve denemeler | `/quizzes/[id]`, `/quizzes/[id]/attempts` | ⟨mobil, masaüstü⟩ |
@@ -286,4 +289,4 @@ UI taslakları (#88) kapsam dışı bırakıldı; bu bölümde wireframe yerine 
 | Yönetici | Yorumlar, şikâyetler | `/admin/reviews`, `/admin/complaints` | ⟨mobil, masaüstü⟩ |
 | Yönetici | Raporlar | `/admin/reports` | ⟨mobil, masaüstü⟩ |
 
-Ekran geçişleri rol bazında 7.4'teki kullanım kılavuzunda adım adım anlatılır. `/learn/[courseId]` ayrı bir ekran değildir, kursun ilk dersine yönlendirir. Bölüm/ders yönetimi (#34) PR #300 ile 20.11'de; tamamlandı düğmesi ve ilerleme çubukları (#46, PR #299), sertifika görüntüleme ve doğrulama (#130, PR #297; #131, PR #309) 21.11'de eklendi. 21.11 itibarıyla ekranı henüz olmayan tek iş bildirim zili ve listesi (#136, PR #323 açık). Liste ⟨24.11 sonrası ekranlara göre⟩ güncellenecek.
+Ekran geçişleri rol bazında 7.4'teki kullanım kılavuzunda adım adım anlatılır. `/learn/[courseId]` ayrı bir ekran değildir, kursun ilk dersine yönlendirir. Bölüm/ders yönetimi (#34) PR #300 ile 20.11'de; tamamlandı düğmesi ve ilerleme çubukları (#46, PR #299), sertifika görüntüleme ve doğrulama (#130, PR #297; #131, PR #309), profil ve parola yenileme (#117, PR #324) ve bildirim zili (#136, PR #323) 21.11'de eklendi. 21.11 itibarıyla ekranı olmayan iş kalmadı. Liste ⟨24.11 sonrası ekranlara göre⟩ güncellenecek.
