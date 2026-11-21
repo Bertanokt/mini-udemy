@@ -52,6 +52,8 @@ export function RegisterForm() {
     setSubmitting(true);
     try {
       await register(form);
+      // Form state'te kalmasın: Next.js önceki sayfayı gizli tutar, parola DOM'da kalırdı (#306).
+      setForm({ fullName: "", email: "", password: "", role: "STUDENT" });
       router.replace("/login?kayit=tamam");
     } catch (e) {
       setSubmitting(false);
