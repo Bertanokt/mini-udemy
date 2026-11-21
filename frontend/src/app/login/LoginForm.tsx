@@ -45,6 +45,8 @@ export function LoginForm() {
     loggingIn.current = true;
     try {
       const user = await login({ email, password });
+      // Parola state'te kalmasın: Next.js önceki sayfayı gizli tutar, alanın değeri DOM'da kalırdı (#306).
+      setPassword("");
       router.replace(next ?? homeForRole(user.role));
     } catch (e) {
       loggingIn.current = false;

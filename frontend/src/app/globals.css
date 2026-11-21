@@ -159,10 +159,6 @@ a {
   margin-bottom: 8px;
 }
 
-.status-up {
-  color: var(--ok);
-}
-
 .status-down {
   color: var(--err);
 }
@@ -1521,5 +1517,18 @@ a.qb-btn {
 @media (max-width: 600px) {
   .sl-content {
     padding-left: 0;
+  }
+}
+
+/* Yazdırma (#131): site başlığı ve yalnız ekranda gereken öğeler basılmaz. */
+@media print {
+  .site-header,
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
   }
 }
