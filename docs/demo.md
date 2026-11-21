@@ -102,6 +102,18 @@ Test: `QuizCertificateScenarioIT`, `CertificateScenarioIT`, `NotificationScenari
 
 Test: `InstructorAnalyticsIT`, `InstructorAnalyticsScenarioIT`, `PlatformReportIT`.
 
+## Ek gösterimler (isteğe bağlı, beş senaryonun dışında)
+
+Soru gelirse ya da süre kalırsa:
+
+| # | Adım | Gösterilen | Mimari nokta |
+|---|---|---|---|
+| E1 | Herhangi bir hesapla başlıktaki ada tıkla → "Profilim" (`/profile`): ad soyad ve kısa biyografi → "Kaydet" | "Profiliniz güncellendi."; başlıktaki ad hemen değişir. E-posta ve hesap türü yalnız gösterilir | `PUT /api/me`; istekte `email` ya da `role` gelirse 400 ve alan hatası (sözleşmedeki gibi, #116) |
+| E2 | Çıkış → giriş sayfasında "Parolamı unuttum" (`/forgot-password`) → e-posta. Bağlantıyı backend logundan al: `docker compose logs backend \| grep "Parola yenileme bağlantısı"` → `/reset-password?token=…` → yeni parola → yeni parolayla giriş. Aynı bağlantıyı ikinci kez aç | Kayıtlı olsun olmasın aynı mesaj; bağlantı 30 dk geçerli. Yeni parolayla giriş olur, eski parola 401. İkinci kullanımda "Bağlantı geçersiz ya da süresi dolmuş" ve "Yeni bağlantı iste" | Varlık sızmaz (her e-postaya 202). Token veritabanında yalnız SHA-256 özetiyle, tek kullanımlık (koşullu güncelleme) (#115). E-posta gönderilmez: bağlantı yalnız `dev` profilinde log'a yazılır |
+| E3 | Tarayıcıyı 360 px genişliğe daralt (geliştirici araçları → cihaz görünümü): katalog, oynatıcı, zil | Yatay kaydırma yok; düğmeler ve bağlantılar ≥ 44 px; "Menü" açılınca zil "Bildirimler" yazısıyla menüde | NFR-07 (mobil); ölçümler #321'de |
+
+Test: `ProfileApiIT`, `PasswordResetIT` (E1, E2); E3 manuel (#71, bug bash #68).
+
 ---
 
 ## Mimari noktaların özeti (sunumda tek slayt)
