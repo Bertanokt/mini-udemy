@@ -91,9 +91,10 @@ export function Header() {
               )}
               {/* Bildirim zili ve okunmamış sayısı #136'da buraya gelecek. */}
               <span className="nav-notifications" data-slot="notifications" />
-              <span className="nav-user" title={user.email}>
+              {/* Ad, profil sayfasına gider (#117). */}
+              <Link href="/profile" className="nav-user" title={`${user.email} · Profilim`} onClick={close}>
                 {user.fullName}
-              </span>
+              </Link>
               <button type="button" className="nav-logout" onClick={onLogout}>
                 Çıkış
               </button>
