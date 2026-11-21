@@ -25,7 +25,7 @@ public interface CertificateMapper {
     @Mapping(target = "issuedAt", source = "certificate.issuedAt")
     CertificateResponse toResponse(Certificate certificate, CourseSummaryResponse course, String studentName);
 
-    @Mapping(target = "valid", constant = "true")
+    @Mapping(target = "valid", constant = "false") /* KIRMIZI K2 */
     @Mapping(target = "courseTitle", source = "course.title")
     @Mapping(target = "studentName", source = "studentName")
     @Mapping(target = "issuedAt", source = "certificate.issuedAt")
