@@ -1,5 +1,6 @@
 package com.miniudemy.common.exception;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.aMapWithSize;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
@@ -23,6 +24,8 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
@@ -55,6 +58,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @AutoConfigureMockMvc(addFilters = false)
 @Import(GlobalExceptionHandlerTest.TestEndpoints.class)
 @ActiveProfiles("test")
+@org.junit.jupiter.api.extension.ExtendWith(OutputCaptureExtension.class)
 class GlobalExceptionHandlerTest {
 
     private static final String SECRET = "SELECT * FROM users -- iç ayrıntı";
@@ -168,6 +172,29 @@ class GlobalExceptionHandlerTest {
                 .andExpect(content().string(not(containsString("at com.miniudemy"))));
     }
 
+    // ---------------------------------------------------------------- istemcinin kestiği bağlantı (#259)
+
+    @Test
+    void clientAbortedWhileStreaming_isNotAnError_noErrorLog_noBody(CapturedOutput output) throws Exception {
+        mockMvc.perform(get("/test-errors/broken-pipe"))
+                .andExpect(content().string(""));
+        // DEBUG satırı olabilir (test profili DEBUG); ERROR ve stack trace olmamalı.
+        assertThat(output).doesNotContain(" ERROR ").doesNotContain("Beklenmeyen hata").doesNotContain("\tat ");
+    }
+
+    @Test
+    void clientAbortedUpload_wrappedInMultipartException_isNotAnError(CapturedOutput output) throws Exception {
+        mockMvc.perform(get("/test-errors/aborted-upload"))
+                .andExpect(content().string(""));
+        assertThat(output).doesNotContain(" ERROR ").doesNotContain("Beklenmeyen hata").doesNotContain("\tat ");
+    }
+
+    @Test
+    void otherMultipartFailure_isStill500WithErrorLog(CapturedOutput output) throws Exception {
+        expectError(get("/test-errors/bad-multipart"), 500, GlobalExceptionHandler.UNEXPECTED_MESSAGE);
+        assertThat(output).contains(" ERROR ").contains("Beklenmeyen hata");
+    }
+
     // ---------------------------------------------------------------- Spring'in kendi hataları da aynı gövdeyle
 
     @Test
@@ -262,6 +289,28 @@ class GlobalExceptionHandlerTest {
     @RestController
     @RequestMapping("/test-errors")
     static class TestEndpoints {
+
+        /** Video akışında tarayıcının kestiği Range isteği (#259). */
+        @GetMapping("/broken-pipe")
+        String brokenPipe() throws java.io.IOException {
+            throw new org.springframework.web.context.request.async.AsyncRequestNotUsableException(
+                    "ServletOutputStream failed to write: java.io.IOException: Broken pipe",
+                    new java.io.IOException("Broken pipe"));
+        }
+
+        /** Sayfadan çıkınca kesilen yükleme (#259, #319): Tomcat'in istisnası multipart hatasının içinde. */
+        @GetMapping("/aborted-upload")
+        String abortedUpload() {
+            throw new org.springframework.web.multipart.MultipartException("Failed to parse multipart servlet request",
+                    new IllegalStateException("Processing of multipart/form-data request failed",
+                            new org.apache.catalina.connector.ClientAbortException(new java.io.EOFException())));
+        }
+
+        /** İstemci kesmeden bozuk gelen multipart: beklenmeyen hata olarak kalır. */
+        @GetMapping("/bad-multipart")
+        String badMultipart() {
+            throw new org.springframework.web.multipart.MultipartException("Stream ended unexpectedly");
+        }
 
         @PostMapping("/validation")
         String validation(@Valid @RequestBody SampleRequest request) {
