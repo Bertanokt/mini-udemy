@@ -6,7 +6,11 @@ import { API_BASE_URL, ApiError } from "@/lib/api/client";
 import { listMyEnrollments, type EnrollmentResponse } from "@/lib/api/enrollments";
 import { formatDuration } from "@/components/course/CourseCard";
 import { learnHref } from "@/lib/learn/navigation";
+import { ResumeLink } from "@/components/progress/ResumeLink";
 import styles from "./my-courses.module.css";
+import { Loading } from "@/components/common/Loading";
+import { ErrorMessage } from "@/components/common/ErrorMessage";
+import { EmptyState } from "@/components/common/EmptyState";
 
 type Result =
   | { kind: "ok"; items: EnrollmentResponse[] }
@@ -27,7 +31,8 @@ function formatDate(iso: string): string {
 
 /**
  * Kayıtlı kurslar paneli (#37). Sayfa RequireRole ile yalnız STUDENT'a açılır (layout.tsx).
- * Her kurs için kapak, başlık, ilerleme çubuğu ve son izlenen ders bilgisi gösterilir.
+ * Her kurs için kapak, başlık, ilerleme çubuğu ve "Kaldığın yerden devam et" (son dersin adı ve yüzdesiyle, #120)
+ * gösterilir. Devam noktası her kurs için ayrı istekle gelir (`ResumeLink`).
  */
 export function MyCoursesView() {
   const [retry, setRetry] = useState(0);
@@ -56,22 +61,13 @@ export function MyCoursesView() {
   return (
     <section>
       <h1>Kayıtlı kurslarım</h1>
-      {result === null && <p className={styles.status}>Kurslarınız yükleniyor…</p>}
-      {result?.kind === "error" && (
-        <div role="alert">
-          <p className={styles.error}>{result.message}</p>
-          <button type="button" className={styles.button} onClick={() => setRetry((r) => r + 1)}>
-            Tekrar dene
-          </button>
-        </div>
-      )}
+      <p>
+        <Link className="touch-link" href="/certificates">Sertifikalarım</Link>
+      </p>
+      {result === null && <Loading text="Kurslarınız yükleniyor…" />}
+      {result?.kind === "error" && <ErrorMessage message={result.message} onRetry={() => setRetry((r) => r + 1)} />}
       {result?.kind === "ok" && result.items.length === 0 && (
-        <div className={styles.empty}>
-          <p>Henüz bir kursa kayıt olmadınız.</p>
-          <Link href="/" className={styles.button}>
-            Kurslara göz at
-          </Link>
-        </div>
+        <EmptyState message="Henüz bir kursa kayıt olmadınız." action={{ label: "Kurslara göz at", href: "/" }} />
       )}
       {result?.kind === "ok" && result.items.length > 0 && (
         <ul className={styles.list}>
@@ -101,7 +97,7 @@ function EnrollmentItem({ enrollment: e }: { enrollment: EnrollmentResponse }) {
       </div>
       <div className={styles.body}>
         <h2 className={styles.title}>
-          <Link href={resumeHref(e)}>{course.title}</Link>
+          <Link className="touch-link" href={resumeHref(e)}>{course.title}</Link>
         </h2>
         <p className={styles.meta}>
           {course.instructor.fullName} · {course.lessonCount} ders · {formatDuration(course.totalDurationSeconds)}
@@ -121,9 +117,7 @@ function EnrollmentItem({ enrollment: e }: { enrollment: EnrollmentResponse }) {
           %{percent} tamamlandı
           {started && e.lastAccessedAt && ` · Son izleme: ${formatDate(e.lastAccessedAt)}`}
         </p>
-        <Link href={resumeHref(e)} className={styles.button}>
-          {started ? "Kaldığın yerden devam et" : "Kursa git"}
-        </Link>
+        <ResumeLink courseId={course.id} buttonClassName={styles.button} />
       </div>
     </li>
   );

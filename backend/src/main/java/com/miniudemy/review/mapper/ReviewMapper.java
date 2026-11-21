@@ -17,4 +17,9 @@ public interface ReviewMapper {
     @Mapping(target = "author", source = "author")
     @Mapping(target = "moderationReason", ignore = true)
     ReviewResponse toResponse(Review review, UserSummary author);
+
+    /** Yönetici yanıtı (#142): gizli yorumlar ve moderasyon gerekçesi dahil. */
+    @Mapping(target = "id", source = "review.id")
+    @Mapping(target = "author", source = "author")
+    ReviewResponse toAdminResponse(Review review, UserSummary author);
 }

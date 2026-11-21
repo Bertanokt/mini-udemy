@@ -3,6 +3,7 @@ package com.miniudemy.common.exception;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.apache.catalina.connector.ClientAbortException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
@@ -159,6 +161,11 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUnexpected(Exception ex) {
+        if (isClientAbort(ex)) {
+            // Bağlantı kapandı: yazılacak yanıt yok. null, Spring'e isteğin işlendiğini söyler; gövde yazılmaz.
+            log.debug("İstemci bağlantıyı kesti: {}", ex.toString());
+            return null;
+        }
         if (ex instanceof org.springframework.web.ErrorResponse springError
                 && !springError.getStatusCode().is5xxServerError()) {
             HttpStatusCode status = springError.getStatusCode();
@@ -171,6 +178,21 @@ public class GlobalExceptionHandler {
         }
         log.error("Beklenmeyen hata", ex);
         return respond(HttpStatus.INTERNAL_SERVER_ERROR, UNEXPECTED_MESSAGE, Map.of());
+    }
+
+    /**
+     * İstemcinin kestiği bağlantı mı (#259)? Tarayıcı video ileri sarılınca süren Range isteğini, kullanıcı sayfadan
+     * çıkınca da süren yüklemeyi keser; bu bir sunucu hatası değildir. Yanıt yazılırken kesilirse Spring
+     * {@code AsyncRequestNotUsableException}, yükleme okunurken kesilirse Tomcat {@code ClientAbortException}
+     * fırlatır; ikincisi çoğu zaman {@code MultipartException}'ın içindedir, bu yüzden nedenler zinciri taranır.
+     */
+    static boolean isClientAbort(Throwable ex) {
+        for (Throwable t = ex; t != null; t = t.getCause() == t ? null : t.getCause()) {
+            if (t instanceof AsyncRequestNotUsableException || t instanceof ClientAbortException) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Spring istisnalarında yanıta konacak genel mesaj; 5xx için {@link #UNEXPECTED_MESSAGE} kullanılır. */

@@ -1714,7 +1714,9 @@ paths:
       summary: Kurs ya da yorum şikâyet et
       description: >
         **Rol:** giriş yapmış her kullanıcı. `courseId` ya da `reviewId`'den tam biri dolu
-        olmalıdır; ikisi birden ya da hiçbiri 400. Şikâyet `OPEN` durumunda oluşur.
+        olmalıdır; ikisi birden ya da hiçbiri 400. Şikâyet `OPEN` durumunda oluşur. Kullanıcı
+        göremediği şeyi şikâyet edemez: kurs yoksa ya da yayımlanmamışsa, yorum yoksa, gizlenmişse
+        ya da yorumun kursu yayımlanmamışsa (ör. yayından kaldırılmışsa) 404. Şikâyet sahibine bildirim gönderilmez.
       operationId: createComplaint
       x-roles: [STUDENT, INSTRUCTOR, ADMIN]
       security:
@@ -2192,7 +2194,9 @@ paths:
     get:
       tags: [Admin]
       summary: Yorumları moderasyon için listele
-      description: "**Rol:** ADMIN. Gizli yorumlar da döner; `hidden` ile süzülebilir."
+      description: >
+        **Rol:** ADMIN. Gizli yorumlar da döner (moderasyon gerekçesiyle); `courseId` ve `hidden` ile
+        süzülebilir. Sıra: en yeni önce.
       operationId: adminListReviews
       x-roles: [ADMIN]
       security:
@@ -2216,6 +2220,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReviewPage"
+        "400":
+          $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -2228,7 +2234,8 @@ paths:
       summary: Yorumu gizle / geri aç
       description: >
         **Rol:** ADMIN. Gizlerken gerekçe zorunludur ve saklanır. Gizli yorum herkese açık
-        listede görünmez, ortalamaya katılmaz.
+        listede görünmez, ortalamaya katılmaz. Zaten gizli yorumda gerekçe güncellenir; geri açınca
+        (`hidden: false`) gerekçe silinir (moderasyon geçmişi tutulmaz). Boş gerekçe 400 (`errors.reason`).
       operationId: adminSetReviewVisibility
       x-roles: [ADMIN]
       security:
@@ -2289,6 +2296,8 @@ paths:
       summary: Şikâyetin durumunu değiştir
       description: >
         **Rol:** ADMIN. `REVIEWED` ya da `REJECTED`; çözen yönetici ve zaman kaydedilir.
+        Sonuçlanmış şikâyetin sonucu değiştirilebilir (her seferinde çözen ve zaman güncellenir);
+        `OPEN`'a geri çekilemez, `status: OPEN` 400 ve `errors.status` döner.
         Yorumu gizlemek ya da kursu yayından kaldırmak için ilgili yönetici uçları kullanılır.
       operationId: adminSetComplaintStatus
       x-roles: [ADMIN]
@@ -3313,7 +3322,7 @@ components:
         reason:
           type: string
           maxLength: 1000
-          description: "`hidden: true` iken zorunlu."
+          description: "`hidden: true` iken zorunlu (boş olamaz); `hidden: false` iken yok sayılır."
     CreateComplaintRequest:
       type: object
       required: [reason]

@@ -1,6 +1,8 @@
 import { apiFetch } from "./client";
 import type { Role } from "./auth";
-import type { CategoryResponse, PageMeta } from "./catalog";
+import type { CategoryResponse, CourseStatus, CourseSummaryPage, PageMeta, UserSummary } from "./catalog";
+import type { CourseResponse } from "./instructor";
+import type { ReviewResponse } from "./reviews";
 
 // Tipler docs/api/openapi.yaml'daki şemalarla aynıdır (CategoryRequest). Liste herkese açık uç olduğundan
 // `listCategories` catalog.ts'te.
@@ -80,4 +82,103 @@ export interface PlatformReportResponse {
 
 export function getPlatformReport(): Promise<PlatformReportResponse> {
   return apiFetch<PlatformReportResponse>("/api/admin/reports");
+}
+
+// Kurs onayı (#62): adminListCourses, adminApproveCourse, adminRejectCourse, adminUnpublishCourse. Liste
+// CourseSummaryPage, işlemler CourseResponse döner. Durum geçişini backend'deki CourseState verir; uygun olmayan
+// durumda 409. Gerekçe ReasonRequest'tir (5–1000 karakter).
+export interface AdminCourseQuery {
+  status?: CourseStatus;
+  page?: number;
+  size?: number;
+}
+
+export function listAdminCourses(query: AdminCourseQuery): Promise<CourseSummaryPage> {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(query)) {
+    if (value !== undefined && value !== "") params.set(key, String(value));
+  }
+  const qs = params.toString();
+  return apiFetch<CourseSummaryPage>(`/api/admin/courses${qs ? `?${qs}` : ""}`);
+}
+
+/** IN_REVIEW → PUBLISHED. */
+export function approveCourse(id: number): Promise<CourseResponse> {
+  return apiFetch<CourseResponse>(`/api/admin/courses/${id}/approve`, { method: "POST" });
+}
+
+/** IN_REVIEW → DRAFT; gerekçe kursta saklanır. */
+export function rejectCourse(id: number, reason: string): Promise<CourseResponse> {
+  return apiFetch<CourseResponse>(`/api/admin/courses/${id}/reject`, {
+    method: "POST",
+    body: JSON.stringify({ reason }),
+  });
+}
+
+/** PUBLISHED → UNPUBLISHED; gerekçe kursta saklanır. */
+export function unpublishCourse(id: number, reason: string): Promise<CourseResponse> {
+  return apiFetch<CourseResponse>(`/api/admin/courses/${id}/unpublish`, {
+    method: "POST",
+    body: JSON.stringify({ reason }),
+  });
+}
+
+// Yorum moderasyonu (#142, #146): adminListReviews (ReviewPage), adminSetReviewVisibility (ReviewVisibilityRequest).
+// Gizli yorum herkese açık listede görünmez ve ortalamaya katılmaz; gerekçe yalnız bu uçların yanıtında döner.
+// Gizlerken gerekçe zorunludur (en fazla 1000 karakter); geri açınca sunucu gerekçeyi siler.
+export interface ReviewPage extends PageMeta {
+  content: ReviewResponse[];
+}
+
+export interface AdminReviewQuery {
+  courseId?: number;
+  hidden?: boolean;
+  page?: number;
+  size?: number;
+}
+
+export function listAdminReviews(query: AdminReviewQuery): Promise<ReviewPage> {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(query)) {
+    if (value !== undefined && value !== "") params.set(key, String(value));
+  }
+  const qs = params.toString();
+  return apiFetch<ReviewPage>(`/api/admin/reviews${qs ? `?${qs}` : ""}`);
+}
+
+export function setReviewVisibility(id: number, hidden: boolean, reason?: string): Promise<ReviewResponse> {
+  return apiFetch<ReviewResponse>(`/api/admin/reviews/${id}/visibility`, {
+    method: "PUT",
+    body: JSON.stringify(hidden ? { hidden, reason } : { hidden }),
+  });
+}
+
+// Şikâyet incelemesi (#144, #146): ComplaintResponse, ComplaintPage, ComplaintStatusRequest. Şikâyet ya bir kursa
+// (courseId) ya bir yoruma (reviewId) aittir. Yönetici yalnız REVIEWED ya da REJECTED seçebilir.
+export type ComplaintStatus = "OPEN" | "REVIEWED" | "REJECTED";
+
+export interface ComplaintResponse {
+  id: number;
+  reporter: UserSummary;
+  courseId: number | null;
+  reviewId: number | null;
+  reason: string;
+  status: ComplaintStatus;
+  createdAt: string;
+  resolvedAt: string | null;
+}
+
+export interface ComplaintPage extends PageMeta {
+  content: ComplaintResponse[];
+}
+
+export function listComplaints(page: number, size: number): Promise<ComplaintPage> {
+  return apiFetch<ComplaintPage>(`/api/admin/complaints?page=${page}&size=${size}`);
+}
+
+export function setComplaintStatus(id: number, status: Exclude<ComplaintStatus, "OPEN">): Promise<ComplaintResponse> {
+  return apiFetch<ComplaintResponse>(`/api/admin/complaints/${id}/status`, {
+    method: "PUT",
+    body: JSON.stringify({ status }),
+  });
 }

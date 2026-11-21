@@ -39,6 +39,10 @@ app:
     # Yalnız dev ve test profilleri kendi "dev-only" / "test-only" anahtarlarıyla bunu geçersiz kılar.
     secret: ${JWT_SECRET}
     expiration: 1h
+  password-reset:
+    # Parola yenileme bağlantısının süresi ve ön yüzün adresi (#115). Bağlantı: <link-base>/reset-password?token=...
+    ttl: 30m
+    link-base: ${FRONTEND_URL:http://localhost:3000}
   storage:
     # Yüklenen dosyaların dizini (#111, ADR-004). Docker'da uploads volume'u (/data/uploads); yerelde ./data/uploads.
     root: ${STORAGE_ROOT:./data/uploads}

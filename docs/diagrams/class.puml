@@ -1,0 +1,571 @@
+@startuml class
+' UML sınıf diyagramı — genel bakış: 10 modülün domain ve service katmanı (#51).
+' Modüller ModuleArchitectureTest.ALLOWED ile aynı. Domain sınıfları alanları ve iş metotlarıyla (getter ve
+' yapıcılar gösterilmez); service paketleri yalnız sınıf adlarıyla. Desenlerin ayrıntısı ayrı diyagramlarda:
+'   class-state.puml (ADR-010), class-observer.puml (ADR-009), class-strategy.puml (ADR-008),
+'   class-factory.puml (ADR-011), class-dto-mapper.puml (ADR-006).
+' Sınıf, alan ve metot adları koddakiyle birebir; tutarlılık tablosu PR #51'de.
+' Render (Graphviz gerekmez, smetana yerleşimi; PNG ve SVG ayrı komutlarla):
+'   java -DPLANTUML_LIMIT_SIZE=16384 -Duser.language=en -Duser.country=US -jar plantuml.jar -tpng docs/diagrams/class.puml
+'   java -DPLANTUML_LIMIT_SIZE=16384 -Duser.language=en -Duser.country=US -jar plantuml.jar -tsvg docs/diagrams/class.puml
+
+!pragma layout smetana
+!include class-style.iuml
+' Soldan sağa yerleşim: smetana modülleri yukarıdan aşağı dizdiğinde diyagram ~11000 px genişliyordu.
+left to right direction
+
+title Mini Udemy - Sınıf diyagramı: genel bakış (domain + service, 10 modül)
+
+legend top left
+  <b>Gösterim</b>
+  düz ok / kompozisyon: JPA ilişkisi (@ManyToOne, @OneToMany, @ElementCollection)
+  kesikli ok "alan": modül sınırında id ile referans (entity'ye erişilmez, ADR-001)
+  kesikli üçgen: modülün tanımladığı arayüzü başka modül uygular
+  <<State>> / <<Strategy>> / <<Creator>> / <<event>> / <<listener>>: desen rolü,
+  ayrıntı class-state / class-strategy / class-factory / class-observer diyagramlarında
+  DTO + Mapper: class-dto-mapper. Getter'lar ve yapıcılar gösterilmez.
+endlegend
+
+' ================= auth =================
+package "com.miniudemy.auth" as auth {
+  package "auth.domain" {
+    class User <<entity>> {
+      - id : Long
+      - email : String
+      - passwordHash : String
+      - fullName : String
+      - bio : String
+      - role : Role
+      - active : boolean = true
+      - createdAt : Instant
+      - updatedAt : Instant
+      + setActive(active : boolean) : void
+      + updateProfile(fullName : String, bio : String) : void
+      + changePasswordHash(passwordHash : String) : void
+    }
+    class PasswordResetToken <<entity>> {
+      - id : Long
+      - userId : Long
+      - tokenHash : String
+      - expiresAt : Instant
+      - usedAt : Instant
+      - createdAt : Instant
+      + isUsableAt(now : Instant) : boolean
+    }
+    enum Role {
+      STUDENT
+      INSTRUCTOR
+      ADMIN
+    }
+  }
+  package "auth.service" {
+    class AccountLookupService
+    class AuthService
+    class ProfileService
+    class PasswordResetService
+    interface PasswordResetNotifier {
+      + sendResetLink(email : String, resetLink : String, expiresAt : Instant) : void
+    }
+    class LoggingPasswordResetNotifier <<dev>>
+    class DisabledPasswordResetNotifier <<!dev>>
+    class UserAccountService
+    class UserDirectoryService
+    class UserStatsService
+  }
+}
+
+' ================= course =================
+package "com.miniudemy.course" as course {
+  package "course.domain" {
+    class Category <<entity>> {
+      - id : Long
+      - name : String
+      - createdAt : Instant
+      + rename(name : String) : void
+    }
+    class Course <<entity>> <<Context>> {
+      - id : Long
+      - instructorId : Long
+      - category : Category
+      - coverFileId : Long
+      - title : String
+      - description : String
+      - level : CourseLevel
+      - learningOutcomes : List<String>
+      - status : CourseStatus = CourseStatus.DRAFT
+      - rejectionReason : String
+      - unpublishReason : String
+      - createdAt : Instant
+      - updatedAt : Instant
+      - sections : List<Section>
+      + addSection(section : Section) : void
+      + appendSection(title : String) : Section
+      + removeSection(section : Section) : void
+      + moveSection(section : Section, newPosition : int) : void
+      + getTotalDurationSeconds() : int
+      + replaceCover(fileId : Long) : Long
+      + update(category : Category, title : String, description : String, level : CourseLevel, learningOutcomes : List<String>) : void
+      + attachedFileIds() : List<Long>
+      + isPublished() : boolean
+      + assertEditable() : void
+      + assertLessonAddable() : void
+      + assertContentUploadable(lesson : Lesson) : void
+      + assertDeletable() : void
+      + submit() : void
+      + approve() : void
+      + reject(reason : String) : void
+      + unpublish(reason : String) : void
+    }
+    class Section <<entity>> {
+      - id : Long
+      - course : Course
+      - title : String
+      - position : int
+      - createdAt : Instant
+      - lessons : List<Lesson>
+      + addLesson(lesson : Lesson) : void
+      + rename(title : String) : void
+      + removeLesson(lesson : Lesson) : void
+      + moveLesson(lesson : Lesson, newPosition : int) : void
+      + getTotalDurationSeconds() : int
+    }
+    class Lesson <<entity>> {
+      - id : Long
+      - section : Section
+      - contentFileId : Long
+      - title : String
+      - contentType : LessonContentType
+      - mandatory : boolean = true
+      - durationSeconds : int
+      - position : int
+      - createdAt : Instant
+      - updatedAt : Instant
+      + update(title : String, contentType : LessonContentType, mandatory : boolean, durationSeconds : int) : void
+      + replaceContent(fileId : Long) : Long
+    }
+    enum CourseStatus
+    enum CourseLevel {
+      BEGINNER
+      INTERMEDIATE
+      ADVANCED
+    }
+    enum LessonContentType {
+      VIDEO
+      PDF
+      DOCUMENT
+    }
+    interface CourseState <<sealed>> <<State>>
+    class DraftState <<ConcreteState>>
+    class InReviewState <<ConcreteState>>
+    class PublishedState <<ConcreteState>>
+    class UnpublishedState <<ConcreteState>>
+    class CourseStateException
+    class CourseApproved <<event>>
+    class CourseRejected <<event>>
+    class LessonPublished <<event>>
+    class CourseLessonsChanged <<event>>
+    class ContentFileDetached <<event>>
+  }
+  package "course.service" {
+    class CategoryService
+    class ContentLinkService
+    class CourseAnalyticsService
+    class CourseCatalogService
+    class CourseLifecycleService
+    class CourseLookupService
+    class CourseOwnershipService
+    class CoursePlatformStatsService
+    class CourseService
+    class CourseStructureService
+    class CourseVisibility
+    class LessonLookupService
+    class LessonService
+    class SectionService
+    enum CatalogSort
+    class CourseRating <<record>>
+    interface CourseRoster
+    interface EnrollmentCounts
+    interface CourseProgressStats
+    interface CourseQuizStats
+    interface CourseRatings
+  }
+}
+
+' ================= enrollment =================
+package "com.miniudemy.enrollment" as enrollment {
+  package "enrollment.domain" {
+    class Enrollment <<entity>> {
+      - id : Long
+      - studentId : Long
+      - courseId : Long
+      - enrolledAt : Instant
+    }
+    class EnrollmentCreated <<event>>
+  }
+  package "enrollment.service" {
+    class EnrollmentService
+    class EnrollmentRosterService
+    class EnrollmentStatsService
+    interface EnrollmentProgress
+  }
+}
+
+' ================= content =================
+package "com.miniudemy.content" as content {
+  package "content.domain" {
+    class StoredFile <<entity>> {
+      - id : Long
+      - uploaderId : Long
+      - storageKey : String
+      - originalName : String
+      - mimeType : String
+      - sizeBytes : long
+      - createdAt : Instant
+    }
+    abstract class LessonContent <<sealed>> <<Product>>
+    class VideoContent <<ConcreteProduct>>
+    class PdfContent <<ConcreteProduct>>
+    class DocumentContent <<ConcreteProduct>>
+    class FilePolicy <<record>>
+    enum FileFormat
+    enum DeliveryMode
+    class CoverImage
+    class LessonOpened <<event>>
+  }
+  package "content.service" {
+    class ContentUploadService
+    class ContentDeliveryService
+    class LessonContentFactories
+    abstract class LessonContentFactory <<Creator>>
+    class VideoContentFactory <<ConcreteCreator>>
+    class PdfContentFactory <<ConcreteCreator>>
+    class DocumentContentFactory <<ConcreteCreator>>
+    interface StorageService
+    class LocalDiskStorageService
+    class FileFormatDetector
+    class StorageProperties <<record>>
+  }
+  package "content.listener" {
+    class StoredFileCleanupListener <<listener>>
+  }
+}
+
+' ================= progress =================
+package "com.miniudemy.progress" as progress {
+  package "progress.domain" {
+    class CourseProgress <<entity>> {
+      - id : Long
+      - enrollmentId : Long
+      - progressPercent : BigDecimal
+      - updatedAt : Instant
+      - lastLessonId : Long
+      - lastAccessedAt : Instant
+    }
+    class LessonProgress <<entity>> {
+      - id : Long
+      - enrollmentId : Long
+      - lessonId : Long
+      - completedAt : Instant
+    }
+    class LessonCompleted <<event>>
+  }
+  package "progress.service" {
+    class ProgressService
+    class LessonCompletionService
+    class CourseProgressStatsService
+    class EnrollmentProgressService
+  }
+  package "progress.listener" {
+    class ProgressListener <<listener>>
+  }
+}
+
+' ================= quiz =================
+package "com.miniudemy.quiz" as quiz {
+  package "quiz.domain" {
+    class Quiz <<entity>> {
+      - id : Long
+      - sectionId : Long
+      - title : String
+      - scoringType : ScoringType
+      - passThreshold : int
+      - required : boolean
+      - createdAt : Instant
+      - questions : List<QuizQuestion>
+      + updateSettings(title : String, passThreshold : int, required : boolean) : void
+      + changeScoringType(scoringType : ScoringType) : void
+      + replaceQuestions(questionIds : List<Long>) : void
+      + getQuestionIds() : List<Long>
+    }
+    class QuizQuestion <<embeddable>> {
+      - questionId : Long
+      - position : int
+    }
+    class Question <<entity>> {
+      - id : Long
+      - courseId : Long
+      - text : String
+      - points : int
+      - createdAt : Instant
+      - options : List<Option>
+      + update(text : String, points : int) : void
+      + replaceOptions(newOptions : List<Option>) : void
+    }
+    class Option <<entity>> {
+      - id : Long
+      - text : String
+      - correct : boolean
+    }
+    class QuizAttempt <<entity>> {
+      - id : Long
+      - quizId : Long
+      - studentId : Long
+      - score : BigDecimal
+      - maxScore : BigDecimal
+      - passed : boolean
+      - submittedAt : Instant
+      - answers : List<AttemptAnswer>
+      + getPercent() : BigDecimal
+    }
+    class AttemptAnswer <<embeddable>> {
+      - questionId : Long
+      - optionId : Long
+    }
+    class GradedQuestion <<record>> {
+      questionId : Long
+      earnedPoints : BigDecimal
+      maxPoints : int
+      + isCorrect() : boolean
+    }
+    enum ScoringType {
+      SINGLE_ANSWER
+      MULTI_ALL_OR_NOTHING
+      MULTI_PARTIAL
+    }
+    class QuizCompleted <<event>>
+  }
+  package "quiz.service" {
+    class QuizService
+    class QuestionService
+    class QuizAttemptService
+    class QuizRequirementService
+    class QuizStatsService
+    class ScoringStrategyResolver
+    interface ScoringStrategy <<Strategy>>
+    class SingleAnswerScoring <<ConcreteStrategy>>
+    class MultiAnswerAllOrNothing <<ConcreteStrategy>>
+    class MultiAnswerPartialScoring <<ConcreteStrategy>>
+    class ScoringInput <<record>>
+    class QuestionScore <<record>>
+  }
+}
+
+' ================= certificate =================
+package "com.miniudemy.certificate" as certificate {
+  package "certificate.domain" {
+    class Certificate <<entity>> {
+      - id : Long
+      - enrollmentId : Long
+      - verificationCode : String
+      - issuedAt : Instant
+    }
+    class CertificateIssued <<event>>
+  }
+  package "certificate.service" {
+    class CertificateIssuingService
+    class CertificateStatsService
+    class VerificationCodeGenerator
+  }
+  package "certificate.listener" {
+    class CertificateListener <<listener>>
+  }
+}
+
+' ================= review =================
+package "com.miniudemy.review" as review {
+  package "review.domain" {
+    class Review <<entity>> {
+      - id : Long
+      - userId : Long
+      - courseId : Long
+      - rating : int
+      - comment : String
+      - hidden : boolean
+      - moderationReason : String
+      - createdAt : Instant
+      - updatedAt : Instant
+      + edit(rating : int, comment : String) : void
+      + hide(reason : String) : void
+      + unhide() : void
+    }
+  }
+  package "review.service" {
+    class ReviewService
+    class ReviewModerationService
+    class ReviewStatsService
+    class RatingMath
+  }
+}
+
+' ================= notification =================
+package "com.miniudemy.notification" as notification {
+  package "notification.domain" {
+    class Notification <<entity>> {
+      - id : Long
+      - userId : Long
+      - type : NotificationType
+      - title : String
+      - body : String
+      - link : String
+      - readAt : Instant
+      - createdAt : Instant
+      + markRead(now : Instant)
+      + isRead() : boolean
+    }
+    class NotificationContent <<record>> {
+      type : NotificationType
+      title : String
+      body : String
+      link : String
+    }
+    enum NotificationType {
+      ENROLLMENT_CREATED
+      LESSON_PUBLISHED
+      COURSE_APPROVED
+      COURSE_REJECTED
+      QUIZ_COMPLETED
+      CERTIFICATE_ISSUED
+    }
+  }
+  package "notification.service" {
+    class NotificationService
+    class NotificationMessages
+  }
+  package "notification.listener" {
+    class NotificationListener <<listener>>
+  }
+}
+
+' ================= admin =================
+package "com.miniudemy.admin" as admin {
+  package "admin.domain" {
+    class Complaint <<entity>> {
+      - id : Long
+      - reporterId : Long
+      - courseId : Long
+      - reviewId : Long
+      - resolvedById : Long
+      - reason : String
+      - status : ComplaintStatus
+      - createdAt : Instant
+      - resolvedAt : Instant
+      + resolve(result : ComplaintStatus, adminId : Long) : void
+      + isAboutCourse() : boolean
+    }
+    enum ComplaintStatus {
+      OPEN
+      REVIEWED
+      REJECTED
+    }
+  }
+  package "admin.service" {
+    class AdminCourseService
+    class AdminReviewService
+    class AdminUserService
+    class PlatformReportService
+    class ComplaintService
+  }
+}
+
+' ================= common =================
+package "com.miniudemy.common.exception" as commonex {
+  abstract class ApiException
+  class BadRequestException
+  class ConflictException
+}
+
+' ---- JPA ilişkileri (modül içi) ----
+User --> "1" Role : role
+PasswordResetToken ..> User : userId
+PasswordResetService --> PasswordResetNotifier
+LoggingPasswordResetNotifier ..|> PasswordResetNotifier
+DisabledPasswordResetNotifier ..|> PasswordResetNotifier
+Course "*" --> "1" Category : category
+Course *-- "*" Section : sections
+Section *-- "*" Lesson : lessons
+Course --> "1" CourseLevel : level
+Course --> "1" CourseStatus : status
+Lesson --> "1" LessonContentType : contentType
+Quiz *-- "*" QuizQuestion : questions
+Quiz --> "1" ScoringType : scoringType
+Question *-- "*" Option : options
+QuizAttempt *-- "*" AttemptAnswer : answers
+Notification --> "1" NotificationType : type
+NotificationContent --> NotificationType
+Complaint --> "1" ComplaintStatus : status
+
+' ---- State (ayrıntı: class-state.puml) ----
+CourseStatus --> "1" CourseState : state
+CourseState <|.. DraftState
+CourseState <|.. InReviewState
+CourseState <|.. PublishedState
+CourseState <|.. UnpublishedState
+ConflictException <|-- CourseStateException
+ApiException <|-- ConflictException
+ApiException <|-- BadRequestException
+CourseState ..> CourseStateException : <<throw>>
+Course ..> BadRequestException : <<throw>>
+Complaint ..> BadRequestException : <<throw>>
+
+' ---- Factory Method (ayrıntı: class-factory.puml) ----
+LessonContentFactory <|-- VideoContentFactory
+LessonContentFactory <|-- PdfContentFactory
+LessonContentFactory <|-- DocumentContentFactory
+LessonContent <|-- VideoContent
+LessonContent <|-- PdfContent
+LessonContent <|-- DocumentContent
+LessonContentFactories o--> LessonContentFactory
+LessonContentFactory ..> LessonContent : <<create>>
+StorageService <|.. LocalDiskStorageService
+
+' ---- Strategy (ayrıntı: class-strategy.puml) ----
+ScoringStrategy <|.. SingleAnswerScoring
+ScoringStrategy <|.. MultiAnswerAllOrNothing
+ScoringStrategy <|.. MultiAnswerPartialScoring
+ScoringStrategyResolver o--> ScoringStrategy
+QuizAttemptService --> ScoringStrategyResolver
+
+' ---- Modül sınırında id referansları ----
+Course ..> User : instructorId
+Course ..> StoredFile : coverFileId
+Lesson ..> StoredFile : contentFileId
+StoredFile ..> User : uploaderId
+Enrollment ..> User : studentId
+Enrollment ..> Course : courseId
+CourseProgress ..> Enrollment : enrollmentId
+CourseProgress ..> Lesson : lastLessonId
+LessonProgress ..> Enrollment : enrollmentId
+LessonProgress ..> Lesson : lessonId
+Quiz ..> Section : sectionId
+Question ..> Course : courseId
+QuizQuestion ..> Question : questionId
+QuizAttempt ..> Quiz : quizId
+QuizAttempt ..> User : studentId
+Certificate ..> Enrollment : enrollmentId
+Review ..> User : userId
+Review ..> Course : courseId
+Notification ..> User : userId
+Complaint ..> User : reporterId
+Complaint ..> User : resolvedById
+Complaint ..> Course : courseId
+Complaint ..> Review : reviewId
+
+' ---- Modül arayüzü başka modülde uygulanır (bağımlılık tersine çevrilir) ----
+CourseRoster <|.. EnrollmentRosterService
+EnrollmentCounts <|.. EnrollmentStatsService
+CourseProgressStats <|.. CourseProgressStatsService
+CourseQuizStats <|.. QuizStatsService
+CourseRatings <|.. ReviewStatsService
+EnrollmentProgress <|.. EnrollmentProgressService
+
+@enduml

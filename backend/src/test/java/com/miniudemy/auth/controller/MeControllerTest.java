@@ -1,7 +1,11 @@
 package com.miniudemy.auth.controller;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.never;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -14,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -106,6 +111,50 @@ class MeControllerTest {
     @Test
     void getMe_whenUserDeletedAfterTokenWasIssued_returns401() throws Exception {
         mockMvc.perform(get("/api/me").header(HttpHeaders.AUTHORIZATION, bearer(99L, "STUDENT")))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // --- PUT /api/me (#116) ---
+
+    @Test
+    void putMe_updatesNameAndBio_returns200WithUpdatedProfile() throws Exception {
+        given(userRepository.saveAndFlush(ayse)).willReturn(ayse);
+
+        mockMvc.perform(put("/api/me").header(HttpHeaders.AUTHORIZATION, bearer(42L, "STUDENT"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"fullName\":\"Ayşe Yılmaz Kaya\",\"bio\":\"Veri bilimi.\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(42))
+                .andExpect(jsonPath("$.fullName").value("Ayşe Yılmaz Kaya"))
+                .andExpect(jsonPath("$.bio").value("Veri bilimi."))
+                .andExpect(jsonPath("$.email").value("ayse.yilmaz@example.com"))
+                .andExpect(jsonPath("$.role").value("STUDENT"));
+    }
+
+    @Test
+    void putMe_withEmailOrRole_returns400WithFieldErrors_andChangesNothing() throws Exception {
+        mockMvc.perform(put("/api/me").header(HttpHeaders.AUTHORIZATION, bearer(42L, "STUDENT"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"fullName\":\"Ayşe\",\"email\":\"yeni@example.com\",\"role\":\"ADMIN\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.email").value("E-posta bu ekrandan değiştirilemez."))
+                .andExpect(jsonPath("$.errors.role").value("Rol bu ekrandan değiştirilemez."));
+        then(userRepository).should(never()).saveAndFlush(any());
+    }
+
+    @Test
+    void putMe_withInvalidFields_returns400WithFieldErrors() throws Exception {
+        mockMvc.perform(put("/api/me").header(HttpHeaders.AUTHORIZATION, bearer(42L, "STUDENT"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"fullName\":\" \",\"bio\":\"" + "x".repeat(501) + "\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.fullName").exists())
+                .andExpect(jsonPath("$.errors.bio").value("Biyografi en fazla 500 karakter olabilir."));
+    }
+
+    @Test
+    void putMe_withoutToken_returns401() throws Exception {
+        mockMvc.perform(put("/api/me").contentType(MediaType.APPLICATION_JSON).content("{\"fullName\":\"Ayşe\"}"))
                 .andExpect(status().isUnauthorized());
     }
 

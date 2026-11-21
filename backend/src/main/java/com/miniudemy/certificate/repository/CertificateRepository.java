@@ -1,6 +1,8 @@
 package com.miniudemy.certificate.repository;
 
 import java.time.Instant;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,6 +16,11 @@ import com.miniudemy.certificate.domain.Certificate;
 public interface CertificateRepository extends JpaRepository<Certificate, Long> {
 
     boolean existsByEnrollmentId(Long enrollmentId);
+
+    /** Verilen kayıtların sertifikaları, en yeni önce (#130). */
+    List<Certificate> findByEnrollmentIdInOrderByIssuedAtDescIdDesc(Collection<Long> enrollmentIds);
+
+    Optional<Certificate> findByVerificationCode(String verificationCode);
 
     Optional<Certificate> findByEnrollmentId(Long enrollmentId);
 

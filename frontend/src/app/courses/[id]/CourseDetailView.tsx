@@ -11,8 +11,9 @@ import { useAuth } from "@/lib/auth/AuthProvider";
 import { loginHref } from "@/lib/auth/routes";
 import { formatDuration } from "@/components/course/CourseCard";
 import { CourseReviews, type ReviewerState } from "@/components/review/CourseReviews";
-import { learnHref } from "@/lib/learn/navigation";
+import { ResumeLink } from "@/components/progress/ResumeLink";
 import styles from "./course-detail.module.css";
+import { Loading } from "@/components/common/Loading";
 
 type CourseResult =
   | { kind: "ok"; course: CourseDetailResponse }
@@ -26,7 +27,7 @@ type EnrollmentState = { userId: number; enrolled: boolean | null; key: number }
 /**
  * Kurs detay sayfası (#36): kurs bilgisi, kazanımlar, bölüm/ders listesi ve kayıt düğmesi.
  * Kayıtlılık `GET /api/me/enrollments`'tan anlaşılır (yalnız giriş yapmış STUDENT için).
- * "Derse devam et" ders oynatıcıda kursun ilk dersini açar (`/learn/{id}`, #45).
+ * Kayıtlı kursiyerde "Kaldığın yerden devam et": son izlenen ders, adı ve yüzde (#120, `ResumeLink`).
  */
 export function CourseDetailView() {
   const { id: rawId } = useParams<{ id: string }>();
@@ -110,7 +111,7 @@ export function CourseDetailView() {
   }
 
   if (result === null) {
-    return <p className={styles.status}>Kurs yükleniyor…</p>;
+    return <Loading text="Kurs yükleniyor…" />;
   }
   if (result.kind === "notFound") {
     return (
@@ -163,11 +164,7 @@ export function CourseDetailView() {
   } else if (!isStudent) {
     action = null;
   } else if (enrolled) {
-    action = (
-      <Link href={learnHref(course.id)} className={styles.button}>
-        Derse devam et
-      </Link>
-    );
+    action = <ResumeLink courseId={course.id} buttonClassName={styles.button} />;
   } else if (!enrollmentKnown) {
     action = <p className={styles.status}>Kayıt durumu kontrol ediliyor…</p>;
   } else if (enrollment.enrolled === null) {

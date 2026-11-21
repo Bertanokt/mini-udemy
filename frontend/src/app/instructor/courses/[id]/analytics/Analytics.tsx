@@ -11,6 +11,9 @@ import {
   type CourseStudent,
   type CourseStudentPage,
 } from "@/lib/api/instructor";
+import { Loading } from "@/components/common/Loading";
+import { ErrorMessage } from "@/components/common/ErrorMessage";
+import { EmptyState } from "@/components/common/EmptyState";
 
 const PAGE_SIZE = 20;
 
@@ -186,25 +189,14 @@ export function Analytics() {
         {back}
       </div>
 
-      {fatal && (
-        <div className="qb-state" role="alert">
-          <p className="auth-error">{fatal.message}</p>
-        </div>
-      )}
+      {fatal && <ErrorMessage message={fatal.message} />}
 
       {!fatal && (
         <>
           <section aria-labelledby="an-stats-h">
             <h2 id="an-stats-h">Özet</h2>
-            {!statsResult && <p className="auth-status">İstatistikler yükleniyor…</p>}
-            {statsFail && (
-              <div className="qb-state" role="alert">
-                <p className="auth-error">{statsFail.message}</p>
-                <button type="button" className="qb-btn" onClick={retry}>
-                  Tekrar dene
-                </button>
-              </div>
-            )}
+            {!statsResult && <Loading text="İstatistikler yükleniyor…" />}
+            {statsFail && <ErrorMessage message={statsFail.message} onRetry={retry} />}
             {statsOk && (
               <>
                 <dl className="an-cards">
@@ -229,7 +221,7 @@ export function Analytics() {
                   </div>
                 </dl>
 
-                {statsOk.enrollmentCount === 0 && <p className="qb-state">Bu kursa henüz kayıt olan yok.</p>}
+                {statsOk.enrollmentCount === 0 && <EmptyState message="Bu kursa henüz kayıt olan yok." />}
 
                 <div className="an-charts">
                   <figure className="an-chart">
@@ -323,16 +315,9 @@ export function Analytics() {
 
           <section aria-labelledby="an-students-h">
             <h2 id="an-students-h">Kursiyerler</h2>
-            {!studentsResult && <p className="auth-status">Kursiyerler yükleniyor…</p>}
-            {studentsFail && (
-              <div className="qb-state" role="alert">
-                <p className="auth-error">{studentsFail.message}</p>
-                <button type="button" className="qb-btn" onClick={retry}>
-                  Tekrar dene
-                </button>
-              </div>
-            )}
-            {pageData && pageData.content.length === 0 && <p className="qb-state">Henüz kayıtlı kursiyer yok.</p>}
+            {!studentsResult && <Loading text="Kursiyerler yükleniyor…" />}
+            {studentsFail && <ErrorMessage message={studentsFail.message} onRetry={retry} />}
+            {pageData && pageData.content.length === 0 && <EmptyState message="Henüz kayıtlı kursiyer yok." />}
             {pageData && pageData.content.length > 0 && (
               <>
                 <div className="an-scroll">

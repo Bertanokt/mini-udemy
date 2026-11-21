@@ -6,6 +6,9 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { API_BASE_URL, ApiError } from "@/lib/api/client";
 import { LEVEL_LABELS, type CourseStatus } from "@/lib/api/catalog";
 import { STATUS_LABELS, listMyCourses, submitCourse, type CourseResponse } from "@/lib/api/instructor";
+import { Loading } from "@/components/common/Loading";
+import { ErrorMessage } from "@/components/common/ErrorMessage";
+import { EmptyState } from "@/components/common/EmptyState";
 
 const STATUSES = Object.keys(STATUS_LABELS) as CourseStatus[];
 // Renk dışı ipucu: her durumun kendi simgesi var.
@@ -94,6 +97,9 @@ export function MyCourses() {
     <section className="qb ic">
       <div className="qb-head">
         <h1>Kurslarım</h1>
+        <Link className="qb-btn qb-primary" href="/instructor/courses/new">
+          Yeni kurs
+        </Link>
       </div>
 
       <label className="ic-filter">
@@ -114,26 +120,15 @@ export function MyCourses() {
         </p>
       )}
 
-      {!result && <p className="auth-status">Kurslar yükleniyor…</p>}
+      {!result && <Loading text="Kurslar yükleniyor…" />}
 
-      {result?.kind === "error" && (
-        <div className="qb-state" role="alert">
-          <p className="auth-error">{result.message}</p>
-          <button type="button" className="qb-btn" onClick={() => setRetry((n) => n + 1)}>
-            Tekrar dene
-          </button>
-        </div>
-      )}
+      {result?.kind === "error" && <ErrorMessage message={result.message} onRetry={() => setRetry((n) => n + 1)} />}
 
       {result?.kind === "ok" && courses.length === 0 && (
-        <div className="qb-state">
-          <p>{status ? `“${STATUS_LABELS[status]}” durumunda kursun yok.` : "Henüz kursun yok."}</p>
-          {status && (
-            <button type="button" className="qb-btn" onClick={() => setFilter("")}>
-              Süzgeci temizle
-            </button>
-          )}
-        </div>
+        <EmptyState
+          message={status ? `“${STATUS_LABELS[status]}” durumunda kursun yok.` : "Henüz kursun yok."}
+          action={status ? { label: "Süzgeci temizle", onClick: () => setFilter("") } : undefined}
+        />
       )}
 
       {result?.kind === "ok" && courses.length > 0 && (
@@ -187,6 +182,16 @@ export function MyCourses() {
                         {c.status === "DRAFT" ? "Onaya gönder" : "Yeniden incelemeye gönder"}
                       </button>
                     )}
+                    <Link
+                      className="qb-btn"
+                      href={`/instructor/courses/${c.id}/edit`}
+                      aria-label={`${c.title} kursunu ${c.status === "DRAFT" || c.status === "UNPUBLISHED" ? "düzenle" : "görüntüle"}`}
+                    >
+                      {c.status === "DRAFT" || c.status === "UNPUBLISHED" ? "Düzenle" : "Bilgiler"}
+                    </Link>
+                    <Link className="qb-btn" href={`/instructor/courses/${c.id}/sections`}>
+                      Bölüm ve dersler
+                    </Link>
                     <Link className="qb-btn" href={`/instructor/courses/${c.id}/questions`}>
                       Soru bankası
                     </Link>

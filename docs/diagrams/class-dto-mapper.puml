@@ -1,0 +1,185 @@
+@startuml class-dto-mapper
+' UML sınıf diyagramı: DTO + Mapper (MapStruct) — entity API'ye çıkmaz (#51; ADR-006).
+' Sınıf ve metot adları koddakiyle birebir; DTO'lar metot imzalarındaki tiplerdir (record), ayrı kutu çizilmez.
+' Tutarlılık tablosu PR #51'de.
+' Render (Graphviz gerekmez, smetana yerleşimi; PNG ve SVG ayrı komutlarla):
+'   java -Duser.language=en -Duser.country=US -jar plantuml.jar -tpng docs/diagrams/class-dto-mapper.puml
+'   java -Duser.language=en -Duser.country=US -jar plantuml.jar -tsvg docs/diagrams/class-dto-mapper.puml
+
+!pragma layout smetana
+!include class-style.iuml
+left to right direction
+
+title Mini Udemy - Sınıf diyagramı: DTO + Mapper (MapStruct) — [[../adr/0006-dto-mapper-mapstruct.md ADR-006]]
+
+package "com.miniudemy.common.mapper" {
+  interface MapStructConfig <<@MapperConfig>> {
+    componentModel = "spring"
+    unmappedTargetPolicy = ReportingPolicy.ERROR
+  }
+}
+
+package "com.miniudemy.auth.{service, mapper, domain}" {
+  class AuthService <<service>>
+  class ProfileService <<service>>
+  class UserAccountService <<service>>
+  interface UserMapper <<Mapper>> {
+    + toResponse(user : User) : UserResponse
+  }
+  interface AdminUserMapper <<Mapper>> {
+    + toResponse(user : User) : AdminUserResponse
+  }
+  class User <<entity>>
+}
+
+package "com.miniudemy.course.{service, mapper, domain}" {
+  class CategoryService <<service>>
+  class CourseService <<service>>
+  class CourseCatalogService <<service>>
+  class CourseLifecycleService <<service>>
+  class SectionService <<service>>
+  class LessonService <<service>>
+  class ContentLinkService <<service>>
+  class CourseAnalyticsService <<service>>
+  interface CategoryMapper <<Mapper>> {
+    + toResponse(category : Category) : CategoryResponse
+  }
+  interface CourseMapper <<Mapper>> {
+    + toSummary(course : Course, instructor : UserSummary, stats : CourseStats) : CourseSummaryResponse
+    + toDetail(course : Course, instructor : UserSummary, stats : CourseStats, sections : List<SectionResponse>) : CourseDetailResponse
+    + toResponse(course : Course, instructor : UserSummary) : CourseResponse
+    + toSectionResponse(section : Section) : SectionResponse
+    + toLessonResponse(lesson : Lesson) : LessonResponse
+    + coverUrl(course : Course) : String {default}
+  }
+  interface CourseAnalyticsMapper <<Mapper>> {
+    + toStats(courseId : Long, enrollmentCount : long, averageProgressPercent : double, completionRate : double, quizzes : List<QuizStats>, rating : RatingStats) : CourseStatsResponse
+    + toQuizStats(stats : QuizAttemptStats, passRate : double) : QuizStats
+    + toRatingStats(averageRating : Double, reviewCount : long, distribution : Map<String, Long>) : RatingStats
+    + toStudent(entry : RosterEntry, student : UserSummary, quizResults : List<QuizBestResult>) : CourseStudentResponse
+    + toQuizResult(result : QuizBestResult) : QuizResult
+  }
+  class Category <<entity>>
+  class Course <<entity>>
+  class Section <<entity>>
+  class Lesson <<entity>>
+}
+
+package "com.miniudemy.enrollment.{service, mapper, domain}" {
+  class EnrollmentService <<service>>
+  interface EnrollmentMapper <<Mapper>> {
+    + toResponse(enrollment : Enrollment, course : CourseSummaryResponse, progressPercent : double, lastLessonId : Long, lastAccessedAt : Instant) : EnrollmentResponse
+  }
+  class Enrollment <<entity>>
+}
+
+package "com.miniudemy.quiz.{service, mapper, domain}" {
+  class QuizService <<service>>
+  class QuestionService <<service>>
+  class QuizAttemptService <<service>>
+  interface QuizMapper <<Mapper>> {
+    + toInstructorResponse(quiz : Quiz, questions : List<QuestionResponse>) : InstructorQuizResponse
+    + toSummary(quiz : Quiz) : QuizSummaryResponse
+    + toSummaries(quizzes : List<Quiz>) : List<QuizSummaryResponse>
+    + toStudentResponse(quiz : Quiz, questions : List<StudentQuestionResponse>) : StudentQuizResponse
+  }
+  interface QuestionMapper <<Mapper>> {
+    + toResponse(question : Question) : QuestionResponse
+    + toResponses(questions : List<Question>) : List<QuestionResponse>
+    + toResponse(option : Option) : OptionResponse
+    + toStudentResponse(question : Question) : StudentQuestionResponse
+    + toStudentResponses(questions : List<Question>) : List<StudentQuestionResponse>
+    + toStudentResponse(option : Option) : StudentOptionResponse
+    + toEntity(request : OptionRequest) : Option {default}
+    + toEntities(requests : List<OptionRequest>) : List<Option>
+  }
+  interface QuizAttemptMapper <<Mapper>> {
+    + toSummary(attempt : QuizAttempt) : AttemptSummaryResponse
+    + toSummaries(attempts : List<QuizAttempt>) : List<AttemptSummaryResponse>
+    + toResult(attempt : QuizAttempt, graded : List<GradedQuestion>) : AttemptResultResponse
+    + toQuestionResult(graded : GradedQuestion) : QuestionResultResponse
+  }
+  class Quiz <<entity>>
+  class Question <<entity>>
+  class Option <<entity>>
+  class QuizAttempt <<entity>>
+}
+
+package "com.miniudemy.review.{service, mapper, domain}" {
+  class ReviewService <<service>>
+  interface ReviewMapper <<Mapper>> {
+    + toResponse(review : Review, author : UserSummary) : ReviewResponse
+  }
+  class Review <<entity>>
+}
+
+package "com.miniudemy.notification.{service, mapper, domain}" {
+  class NotificationService <<service>>
+  interface NotificationMapper <<Mapper>> {
+    + toResponse(notification : Notification) : NotificationResponse
+  }
+  class Notification <<entity>>
+}
+
+' service → mapper (constructor injection)
+AuthService --> UserMapper
+ProfileService --> UserMapper
+UserAccountService --> AdminUserMapper
+CategoryService --> CategoryMapper
+CourseService --> CourseMapper
+CourseCatalogService --> CourseMapper
+CourseLifecycleService --> CourseMapper
+SectionService --> CourseMapper
+LessonService --> CourseMapper
+ContentLinkService --> CourseMapper
+CourseAnalyticsService --> CourseAnalyticsMapper
+EnrollmentService --> EnrollmentMapper
+QuizService --> QuizMapper
+QuizService --> QuestionMapper
+QuestionService --> QuestionMapper
+QuizAttemptService --> QuizAttemptMapper
+ReviewService --> ReviewMapper
+NotificationService --> NotificationMapper
+
+' mapper → kaynak entity
+UserMapper ..> User
+AdminUserMapper ..> User
+CategoryMapper ..> Category
+CourseMapper ..> Course
+CourseMapper ..> Section
+CourseMapper ..> Lesson
+CourseMapper ..> CategoryMapper : uses
+EnrollmentMapper ..> Enrollment
+QuizMapper ..> Quiz
+QuestionMapper ..> Question
+QuestionMapper ..> Option
+QuizAttemptMapper ..> QuizAttempt
+ReviewMapper ..> Review
+NotificationMapper ..> Notification
+
+' her mapper @Mapper(config = MapStructConfig.class)
+MapStructConfig <.. UserMapper : config
+MapStructConfig <.. AdminUserMapper : config
+MapStructConfig <.. CategoryMapper : config
+MapStructConfig <.. CourseMapper : config
+MapStructConfig <.. CourseAnalyticsMapper : config
+MapStructConfig <.. EnrollmentMapper : config
+MapStructConfig <.. QuizMapper : config
+MapStructConfig <.. QuestionMapper : config
+MapStructConfig <.. QuizAttemptMapper : config
+MapStructConfig <.. ReviewMapper : config
+MapStructConfig <.. NotificationMapper : config
+
+note bottom of MapStructConfig
+  <b>DTO + Mapper</b>: controller yalnız DTO (record) alır/döner;
+  entity → DTO dönüşümü yalnız mapper'da, MapStruct
+  uygulamayı derlemede üretir. Eşlenmemiş hedef alan
+  derleme hatasıdır (unmappedTargetPolicy = ERROR);
+  bilerek boş bırakılan alan @Mapping(ignore = true).
+  Mapper'ı yalnız aynı modülün service'i kullanır
+  (ModuleArchitectureTest: başka modülün mapper'ı yasak).
+  admin, content, progress, certificate
+  modüllerinde mapper sınıfı yok (yalnız package-info).
+end note
+
+@enduml
