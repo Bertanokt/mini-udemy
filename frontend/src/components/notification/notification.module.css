@@ -1,0 +1,208 @@
+/* Bildirim zili ve paneli (#136). Geniş ekranda zilin altında açılır; 600 px altında açılan menünün içinde tam
+   genişlikte durur. */
+.bell {
+  position: relative;
+}
+
+.trigger {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 44px;
+  min-height: 44px;
+  justify-content: center;
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.trigger:hover,
+.trigger[aria-expanded="true"] {
+  border-color: var(--border);
+}
+
+/* Geniş ekranda yalnız ikon; metin dar ekrandaki menüde görünür. */
+.triggerText {
+  display: none;
+}
+
+.badge {
+  position: absolute;
+  top: 2px;
+  right: 0;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 10px;
+  background: var(--err);
+  color: var(--bg);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
+}
+
+.panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 20;
+  width: min(380px, calc(100vw - 32px));
+  max-height: 70vh;
+  overflow-y: auto;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.15);
+  padding: 12px;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.panelTitle {
+  font-size: 1rem;
+  margin: 0;
+}
+
+.readAll,
+.more {
+  font: inherit;
+  font-size: 0.875rem;
+  color: var(--accent);
+  background: none;
+  border: none;
+  padding: 6px 4px;
+  cursor: pointer;
+}
+
+.readAll:disabled,
+.more:disabled {
+  color: var(--muted);
+  cursor: default;
+}
+
+.more {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.actionError {
+  color: var(--err);
+  font-size: 0.875rem;
+  margin: 4px 0 8px;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.list li + li {
+  border-top: 1px solid var(--border);
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 8px;
+  font: inherit;
+  color: var(--muted);
+  text-align: left;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.item:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.item:disabled {
+  cursor: progress;
+}
+
+.unread {
+  color: var(--fg);
+}
+
+.unread .itemTitle {
+  font-weight: 700;
+}
+
+.itemTitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.itemBody {
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+.itemTime {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  .bell {
+    border-bottom: 1px solid var(--border);
+  }
+
+  .trigger {
+    justify-content: flex-start;
+    width: 100%;
+    padding: 12px 0;
+  }
+
+  .triggerText {
+    display: inline;
+  }
+
+  .badge {
+    position: static;
+  }
+
+  .panel {
+    position: static;
+    width: auto;
+    max-height: 60vh;
+    box-shadow: none;
+    margin-bottom: 12px;
+  }
+}

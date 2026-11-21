@@ -83,8 +83,10 @@ export async function apiFetch<T>(
     throw new ApiError(response.status, body);
   }
 
-  if (response.status === 204) {
-    return undefined as T;
+  // 204 ve gövdesiz 202 (ör. parola yenileme isteği, #115) JSON taşımaz.
+  if (response.status === 204 || response.status === 202) {
+    const text = await response.text();
+    return (text ? JSON.parse(text) : undefined) as T;
   }
   return (await response.json()) as T;
 }
