@@ -65,7 +65,7 @@
 .button {
   align-self: flex-start;
   font: inherit;
-  color: #fff;
+  color: var(--accent-fg);
   background: var(--accent);
   border: 1px solid var(--accent);
   border-radius: 6px;
@@ -84,5 +84,14 @@
 @media (max-width: 600px) {
   .item {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Dokunma hedefi (#71): bağlantı olarak kullanılan düğmeler de dar ekranda 44 px. */
+@media (max-width: 768px), (pointer: coarse) {
+  .button {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
   }
 }

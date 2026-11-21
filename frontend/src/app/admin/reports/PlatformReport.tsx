@@ -65,7 +65,7 @@ export function PlatformReport() {
   return (
     <section className="placeholder-page">
       <p>
-        <Link href="/admin">← Yönetici paneli</Link>
+        <Link className="touch-link" href="/admin">← Yönetici paneli</Link>
       </p>
       <h1>Platform raporu</h1>
       <p className="an-note">Sayılar tüm zamanlarındır. Tamamlanma: kursu %100 bitirmiş kayıt.</p>
@@ -139,7 +139,7 @@ function ReportBody({ report }: { report: PlatformReportResponse }) {
                   <tr key={c.courseId}>
                     <td>{i + 1}</td>
                     <td>
-                      <Link href={`/courses/${c.courseId}`}>{c.title}</Link>
+                      <Link className="touch-link" href={`/courses/${c.courseId}`}>{c.title}</Link>
                     </td>
                     <td>{formatCount(c.enrollmentCount)}</td>
                   </tr>

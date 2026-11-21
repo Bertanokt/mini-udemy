@@ -74,7 +74,7 @@ export function VerifyView() {
         </article>
       )}
       <p>
-        <Link href="/">Kurslara göz at</Link>
+        <Link className="touch-link" href="/">Kurslara göz at</Link>
       </p>
     </section>
   );

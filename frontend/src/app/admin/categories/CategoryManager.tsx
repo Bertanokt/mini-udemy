@@ -154,7 +154,7 @@ export function CategoryManager() {
     <section className="qb cat">
       <div className="qb-head">
         <h1>Kategori yönetimi</h1>
-        <Link href="/admin">Yönetici paneli</Link>
+        <Link className="touch-link" href="/admin">Yönetici paneli</Link>
       </div>
 
       {notice && (

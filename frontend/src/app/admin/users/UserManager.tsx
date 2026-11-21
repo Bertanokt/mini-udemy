@@ -144,7 +144,7 @@ export function UserManager() {
     <section className="qb usr">
       <div className="qb-head">
         <h1>Kullanıcı yönetimi</h1>
-        <Link href="/admin">Yönetici paneli</Link>
+        <Link className="touch-link" href="/admin">Yönetici paneli</Link>
       </div>
 
       {notice && (

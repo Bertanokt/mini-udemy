@@ -212,7 +212,7 @@ export function QuizTakeView() {
               <button type="submit" className={`${styles.button} ${styles.primary}`} disabled={submitting}>
                 {submitting ? "Gönderiliyor…" : "Sınavı gönder"}
               </button>
-              <Link href={`/quizzes/${id}/attempts`}>Önceki denemelerim</Link>
+              <Link className="touch-link" href={`/quizzes/${id}/attempts`}>Önceki denemelerim</Link>
             </div>
           )}
         </form>
@@ -289,7 +289,7 @@ function Result({
             Tekrar dene
           </button>
         )}
-        <Link href={`/quizzes/${quizId}/attempts`}>Deneme geçmişim</Link>
+        <Link className="touch-link" href={`/quizzes/${quizId}/attempts`}>Deneme geçmişim</Link>
         {!result.passed && <Link href={courseId !== null ? learnHref(courseId) : "/my-courses"}>Kursa dön</Link>}
       </div>
     </section>

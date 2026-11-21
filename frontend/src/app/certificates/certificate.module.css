@@ -5,7 +5,7 @@
 .item h2 { font-size: 1.1rem; margin: 0 0 4px; }
 .meta { color: var(--muted); margin: 0; }
 .button { display: inline-block; padding: 8px 16px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: inherit; cursor: pointer; font: inherit; text-decoration: none; }
-.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
 .actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
 
 /* Sertifika: ekranda kart, yazdırmada sayfanın tamamı. */
@@ -31,4 +31,13 @@
   .actions { display: none; }
   .certificate { border-color: #000; color: #000; max-width: none; margin: 0; padding: 48px; }
   .kicker, .notice { color: #333; }
+}
+
+/* Dokunma hedefi (#71): bağlantı olarak kullanılan düğmeler de dar ekranda 44 px. */
+@media (max-width: 768px), (pointer: coarse) {
+  .button {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
 }

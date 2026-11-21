@@ -11,7 +11,7 @@
 .warning p { margin: 0 0 8px; }
 .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .button { padding: 8px 16px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: inherit; cursor: pointer; font: inherit; }
-.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
 .button:disabled { opacity: 0.6; cursor: not-allowed; }
 .summary { display: flex; flex-wrap: wrap; gap: 8px 24px; border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 16px; }
 .summary p { margin: 0; }
@@ -19,3 +19,12 @@
 .fail { color: var(--err); font-weight: 600; }
 .results { list-style: none; padding: 0; margin: 0 0 16px; }
 .results li { padding: 8px 0; border-bottom: 1px solid var(--border); }
+
+/* Dokunma hedefi (#71): bağlantı olarak kullanılan düğmeler de dar ekranda 44 px. */
+@media (max-width: 768px), (pointer: coarse) {
+  .button {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+}
