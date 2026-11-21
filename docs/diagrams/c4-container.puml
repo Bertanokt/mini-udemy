@@ -30,7 +30,10 @@ note right of files
   Dosyalara yalnız backend erişir: volume yalnız backend
   container'ına bağlı ve dışarıya açılmıyor (ADR-004).
   Tarayıcı dosyayı backend'in yetki kontrollü ucundan alır:
-  GET /api/lessons/{id}/content (#113, planlanan);
-  yükleme ucu #112 (planlanan).
+  GET /api/lessons/{id}/content (#113; video için Range/206).
+  <video> ve bağlantılar başlık gönderemediği için 5 dk'lık,
+  derse özel içerik token'ı: POST .../content-token (ADR-012).
+  Yükleme: POST /api/lessons/{id}/content ve
+  POST /api/courses/{id}/cover (#112).
 end note
 @enduml

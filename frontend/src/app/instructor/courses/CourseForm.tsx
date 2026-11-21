@@ -464,6 +464,11 @@ export function CourseForm({ courseId }: { courseId: number | null }) {
               {submitting ? "Kaydediliyor…" : courseId === null ? "Kursu oluştur" : "Kaydet"}
             </button>
           )}
+          {courseId !== null && (
+            <Link className="qb-btn" href={`/instructor/courses/${courseId}/sections`}>
+              Bölüm ve dersler
+            </Link>
+          )}
           <Link className="qb-btn" href="/instructor">
             {readOnly ? "Kurslarıma dön" : "Vazgeç"}
           </Link>

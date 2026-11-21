@@ -54,6 +54,6 @@ public final class NotificationMessages {
     public static NotificationContent certificateIssued(String courseTitle) {
         return new NotificationContent(NotificationType.CERTIFICATE_ISSUED, "Sertifikanız hazır",
                 "\"" + courseTitle + "\" kursunu tamamladınız; sertifikanız oluşturuldu.",
-                "/my-courses");
+                "/certificates");
     }
 }

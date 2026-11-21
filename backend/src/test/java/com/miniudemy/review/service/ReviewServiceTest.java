@@ -225,6 +225,16 @@ class ReviewServiceTest {
         given(repository.findById(9L)).willReturn(Optional.of(review(9L, 42L, 5L, 2, "Kötü")));
 
         service.assertVisible(9L);
+
+        verify(courseLookup).assertPublished(5L);
+    }
+
+    @Test
+    void assertVisible_visibleReviewOfUnpublishedCourse_throwsNotFound() {
+        given(repository.findById(9L)).willReturn(Optional.of(review(9L, 42L, 5L, 2, "Kötü")));
+        willThrow(new NotFoundException("Kurs bulunamadı.")).given(courseLookup).assertPublished(5L);
+
+        assertThatThrownBy(() -> service.assertVisible(9L)).isInstanceOf(NotFoundException.class);
     }
 
     @Test

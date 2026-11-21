@@ -1382,3 +1382,157 @@ a.qb-btn {
 .cmp-rejected {
   color: var(--muted);
 }
+
+/* Bölüm ve ders yönetimi (#34); qb-*, qz-*, cf-* sınıflarını kullanır */
+.sl .qb-list {
+  padding: 0;
+}
+
+.sl-inline {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.sl-inline label {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.sl-lesson {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.sl-lesson-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sl-lesson .course-tags {
+  margin: 6px 0 0;
+}
+
+.sl-ok {
+  color: var(--ok);
+}
+
+.sl-missing {
+  color: var(--err);
+}
+
+.sl-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding-left: 2rem;
+}
+
+.sl-file {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.sl-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 0.875rem;
+}
+
+.sl-progress progress {
+  width: 240px;
+  max-width: 100%;
+}
+
+.sl-video {
+  width: 480px;
+  max-width: 100%;
+  border-radius: 6px;
+  background: #000;
+}
+
+.sl-lesson-form {
+  margin: 8px 0 0;
+}
+
+.sl-form-title {
+  font-size: 1rem;
+  margin: 0;
+}
+
+.sl-duration {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  border: none;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+
+.sl-duration legend {
+  font-size: 0.875rem;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.qb-form .sl-duration label {
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+}
+
+.sl-duration input {
+  width: 5rem;
+}
+
+.qb-form .sl-check {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  color: inherit;
+}
+
+.sl-warn {
+  color: var(--err);
+  font-size: 0.875rem;
+}
+
+.sl-new {
+  margin-top: 24px;
+}
+
+@media (max-width: 600px) {
+  .sl-content {
+    padding-left: 0;
+  }
+}
+
+/* Yazdırma (#131): site başlığı ve yalnız ekranda gereken öğeler basılmaz. */
+@media print {
+  .site-header,
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+  }
+}
