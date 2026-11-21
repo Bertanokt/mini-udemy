@@ -1715,8 +1715,8 @@ paths:
       description: >
         **Rol:** giriş yapmış her kullanıcı. `courseId` ya da `reviewId`'den tam biri dolu
         olmalıdır; ikisi birden ya da hiçbiri 400. Şikâyet `OPEN` durumunda oluşur. Kullanıcı
-        göremediği şeyi şikâyet edemez: kurs yoksa ya da yayımlanmamışsa, yorum yoksa ya da
-        gizlenmişse 404. Şikâyet sahibine bildirim gönderilmez.
+        göremediği şeyi şikâyet edemez: kurs yoksa ya da yayımlanmamışsa, yorum yoksa, gizlenmişse
+        ya da yorumun kursu yayımlanmamışsa (ör. yayından kaldırılmışsa) 404. Şikâyet sahibine bildirim gönderilmez.
       operationId: createComplaint
       x-roles: [STUDENT, INSTRUCTOR, ADMIN]
       security:

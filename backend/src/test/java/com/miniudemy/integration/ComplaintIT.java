@@ -18,7 +18,7 @@ import com.fasterxml.jackson.databind.JsonNode;
  *
  * <p>Kapsanan: kursiyer yayımlanmış bir kursu, eğitmen bir yorumu gerekçeyle şikâyet eder → yönetici listeler (en yeni
  * önce, durum süzgeci) → durumu İncelendi / Reddedildi yapar, çözen yönetici ve zaman saklanır. Hata yolları: gerekçe
- * kısa, hedef iki ya da sıfır, kurs yayımlanmamış, yorum gizli; kursiyer yönetici uçlarına erişemez. Tablodaki CHECK
+ * kısa, hedef iki ya da sıfır, kurs yayımlanmamış, yorum gizli, yorumun kursu yayından kaldırılmış (#293); kursiyer yönetici uçlarına erişemez. Tablodaki CHECK
  * kısıtı (tek hedef) migration'la birlikte sınanır.
  */
 class ComplaintIT extends IntegrationTestBase {
@@ -113,6 +113,25 @@ class ComplaintIT extends IntegrationTestBase {
 
         assertThat(post("/api/complaints", null, Map.of("courseId", publishedId, "reason", "Kurs içeriği yanıltıcı."))
                 .getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM complaints", Long.class)).isZero();
+    }
+
+    @Test
+    void complaint_aboutReviewOfUnpublishedCourse_returnsNotFound() {
+        String instructor = registerAndLogin("Mehmet Kaya", "mehmet@example.com", "INSTRUCTOR");
+        String admin = createAdminAndLogin("admin@example.com");
+        long courseId = publishedCourse(instructor, admin);
+        String student = registerAndLogin("Ayşe Yılmaz", "ayse@example.com", "STUDENT");
+        long reviewId = review(student, courseId);
+
+        // Yorum gizli değil, ama kursu yayından kaldırılınca herkese açık listede çıkmaz; şikâyet de edilemez.
+        assertThat(post("/api/admin/courses/" + courseId + "/unpublish", admin,
+                Map.of("reason", "Telif şikâyeti alındı.")).getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        ResponseEntity<JsonNode> complaint = post("/api/complaints", instructor,
+                Map.of("reviewId", reviewId, "reason", "Yorum hakaret içeriyor."));
+        assertThat(complaint.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(complaint.getBody().get("message").asText()).isEqualTo("Kurs bulunamadı.");
         assertThat(jdbc.queryForObject("SELECT count(*) FROM complaints", Long.class)).isZero();
     }
 
