@@ -19,6 +19,16 @@
 .button { display: inline-block; padding: 8px 16px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: inherit; cursor: pointer; font: inherit; text-decoration: none; }
 .primary { background: var(--accent); border-color: var(--accent); color: #fff; }
 
+/* İlerleme (#46) */
+.courseProgress { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+.courseProgress p { margin: 0 0 6px; }
+.sectionPercent { color: var(--muted); font-weight: 400; font-size: 0.875rem; }
+.sectionBar { padding: 0 16px 6px; }
+.tick { color: var(--ok); font-weight: 700; }
+.complete { margin: 16px 0 0; }
+.completed { color: var(--ok); border-color: var(--ok); opacity: 1; cursor: default; }
+.button:disabled { cursor: default; }
+
 /* Dar ekranda ders listesi düğmeyle açılan bir panel olur (#45). */
 @media (max-width: 768px) {
   .layout { grid-template-columns: 1fr; }
