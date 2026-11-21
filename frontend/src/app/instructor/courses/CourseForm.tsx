@@ -23,6 +23,7 @@ import {
   type CourseDraft,
   type CourseErrors,
 } from "@/lib/course/courseValidation";
+import { Loading } from "@/components/common/Loading";
 
 const LEVELS = Object.keys(LEVEL_LABELS) as CourseLevel[];
 
@@ -240,7 +241,7 @@ export function CourseForm({ courseId }: { courseId: number | null }) {
 
   const heading = courseId === null ? "Yeni kurs" : readOnly ? "Kurs bilgileri" : "Kursu düzenle";
 
-  if (load.state === "loading") return <p className="auth-status">Kurs bilgileri yükleniyor…</p>;
+  if (load.state === "loading") return <Loading text="Kurs bilgileri yükleniyor…" />;
   if (load.state === "error") {
     return (
       <section className="qb">

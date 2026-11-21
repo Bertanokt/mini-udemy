@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { LearnStart } from "./LearnStart";
+import { Loading } from "@/components/common/Loading";
 
 export const metadata: Metadata = {
   title: "Ders · Mini Udemy",
@@ -11,7 +12,7 @@ export const instant = false;
 
 export default function LearnStartPage() {
   return (
-    <Suspense fallback={<p className="auth-status">Ders yükleniyor…</p>}>
+    <Suspense fallback={<Loading text="Ders yükleniyor…" />}>
       <LearnStart />
     </Suspense>
   );

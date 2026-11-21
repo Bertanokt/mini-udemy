@@ -11,6 +11,9 @@ import {
   type ComplaintStatus,
 } from "@/lib/api/admin";
 import { ApiError } from "@/lib/api/client";
+import { Loading } from "@/components/common/Loading";
+import { ErrorMessage } from "@/components/common/ErrorMessage";
+import { EmptyState } from "@/components/common/EmptyState";
 
 const PAGE_SIZE = 20;
 
@@ -112,7 +115,7 @@ export function ComplaintList() {
     <section className="qb usr">
       <div className="qb-head">
         <h1>Şikâyetler</h1>
-        <Link href="/admin">Yönetici paneli</Link>
+        <Link className="touch-link" href="/admin">Yönetici paneli</Link>
       </div>
 
       {notice && (
@@ -126,19 +129,12 @@ export function ComplaintList() {
         </p>
       )}
 
-      {result === null && <p className="auth-status">Şikâyetler yükleniyor…</p>}
+      {result === null && <Loading text="Şikâyetler yükleniyor…" />}
 
-      {result?.kind === "error" && (
-        <div className="qb-state" role="alert">
-          <p className="auth-error">{result.message}</p>
-          <button type="button" className="qb-btn" onClick={() => setRetry((n) => n + 1)}>
-            Tekrar dene
-          </button>
-        </div>
-      )}
+      {result?.kind === "error" && <ErrorMessage message={result.message} onRetry={() => setRetry((n) => n + 1)} />}
 
       {result?.kind === "ok" && result.data.content.length === 0 && (
-        <p className="qb-state">Henüz şikâyet yok.</p>
+        <EmptyState message="Henüz şikâyet yok." />
       )}
 
       {result?.kind === "ok" && result.data.content.length > 0 && (
@@ -165,7 +161,7 @@ export function ComplaintList() {
                     <tr key={c.id}>
                       <td data-label="Hedef">
                         {c.courseId !== null ? (
-                          <Link href={`/admin/courses/${c.courseId}`}>Kurs #{c.courseId}</Link>
+                          <Link className="touch-link" href={`/admin/courses/${c.courseId}`}>Kurs #{c.courseId}</Link>
                         ) : (
                           `Yorum #${c.reviewId}`
                         )}

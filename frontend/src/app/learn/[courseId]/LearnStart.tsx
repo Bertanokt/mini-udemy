@@ -7,6 +7,7 @@ import { ApiError } from "@/lib/api/client";
 import { listSections } from "@/lib/api/courses";
 import { learnHref, orderedLessons } from "@/lib/learn/navigation";
 import styles from "./player.module.css";
+import { Loading } from "@/components/common/Loading";
 
 type Outcome = { key: string; kind: "empty" | "notFound" | "error" };
 
@@ -39,7 +40,7 @@ export function LearnStart() {
     };
   }, [courseId, key, router]);
 
-  if (shown === null) return <p className={styles.status}>Ders yükleniyor…</p>;
+  if (shown === null) return <Loading text="Ders yükleniyor…" />;
   if (shown.kind === "error") {
     return (
       <div role="alert">

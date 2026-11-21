@@ -11,7 +11,7 @@ Bu doküman Mini Udemy'nin fonksiyonel olmayan gereksinimlerini (NFR) tanımlar 
 
 | ID | Gereksinim | Ölçüt | Doğrulama | Kaynak |
 |---|---|---|---|---|
-| NFR-01 | Liste döndüren uç noktalar sayfalıdır; tüm kayıtlar tek yanıtta dönmez. | Katalog, yorum ve kullanıcı listeleri `page`/`size` parametresi alır; `size` en fazla 50'dir, daha büyük değer 50'ye indirilir ya da 400 ile reddedilir. | Test | §5, FR-13, FR-16, FR-39 |
+| NFR-01 | Liste döndüren uç noktalar sayfalıdır; tüm kayıtlar tek yanıtta dönmez. | Katalog, yorum ve kullanıcı listeleri `page`/`size` parametresi alır; `size` en fazla 100'dür (varsayılan 20), daha büyük değer 400 ile reddedilir. | Test | §5, FR-13, FR-16, FR-39 |
 | NFR-02 | Video ve dokümanlar bellek tüketmeden sunulur. | Dosyalar akış (stream) olarak gönderilir; video için HTTP `Range` isteği desteklenir (206 Partial Content). | Test | §5, FR-12 |
 
 ## 3.3.2 Güvenlik

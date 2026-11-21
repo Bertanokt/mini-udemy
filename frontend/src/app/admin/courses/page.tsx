@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { CourseReviewList } from "./CourseReviewList";
+import { Loading } from "@/components/common/Loading";
 
 export const metadata: Metadata = {
   title: "Kurs onayı · Mini Udemy",
@@ -13,7 +14,7 @@ export const instant = false;
 export default function AdminCoursesPage() {
   return (
     // Durum filtresi ve sayfa URL'den okunduğu için istemcide çizilir.
-    <Suspense fallback={<p className="auth-status">Kurslar yükleniyor…</p>}>
+    <Suspense fallback={<Loading text="Kurslar yükleniyor…" />}>
       <CourseReviewList />
     </Suspense>
   );

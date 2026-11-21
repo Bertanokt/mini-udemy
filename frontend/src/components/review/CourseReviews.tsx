@@ -13,6 +13,9 @@ import {
 } from "@/lib/api/reviews";
 import { loginHref } from "@/lib/auth/routes";
 import styles from "./reviews.module.css";
+import { Loading } from "@/components/common/Loading";
+import { ErrorMessage } from "@/components/common/ErrorMessage";
+import { EmptyState } from "@/components/common/EmptyState";
 
 const MAX_COMMENT = 2000;
 
@@ -317,21 +320,14 @@ export function CourseReviews({
 
   let listArea: React.ReactNode;
   if (!current) {
-    listArea = <p className={styles.status}>Değerlendirmeler yükleniyor…</p>;
+    listArea = <Loading text="Değerlendirmeler yükleniyor…" />;
   } else if (current.kind === "error") {
-    listArea = (
-      <div role="alert">
-        <p className={styles.error}>{current.message}</p>
-        <button type="button" className={styles.button} onClick={() => setReload((n) => n + 1)}>
-          Tekrar dene
-        </button>
-      </div>
-    );
+    listArea = <ErrorMessage message={current.message} onRetry={() => setReload((n) => n + 1)} />;
   } else {
     listArea = (
       <>
         {current.summary.reviewCount === 0 && current.reviews.length === 0 ? (
-          <p className={styles.status}>Bu kurs için henüz değerlendirme yok.</p>
+          <EmptyState message="Bu kurs için henüz değerlendirme yok." />
         ) : (
           <>
             <Summary summary={current.summary} />

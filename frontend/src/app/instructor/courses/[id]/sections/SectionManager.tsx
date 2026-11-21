@@ -18,6 +18,9 @@ import { isEditableStatus } from "@/lib/course/courseValidation";
 import { SECTION_TITLE_MAX, validateSectionTitle } from "@/lib/course/lessonValidation";
 import { LessonForm, LessonRow } from "./LessonEditor";
 import { apiMessage, fieldErrors, isConflict, type Permissions } from "./shared";
+import { Loading } from "@/components/common/Loading";
+import { ErrorMessage } from "@/components/common/ErrorMessage";
+import { EmptyState } from "@/components/common/EmptyState";
 
 interface CourseInfo {
   title: string;
@@ -187,22 +190,18 @@ export function SectionManager() {
       </p>
     );
   }
-  if (load.state === "loading") return <p className="auth-status">Bölümler yükleniyor…</p>;
+  if (load.state === "loading") return <Loading text="Bölümler yükleniyor…" />;
   if (load.state === "error" || !course) {
     return (
       <section className="qb">
         <h1>Bölüm ve dersler</h1>
-        <div className="qb-state" role="alert">
-          <p className="auth-error">{load.state === "error" ? load.message : "Kurs bulunamadı."}</p>
-          <div className="qb-actions">
-            <button type="button" className="qb-btn" onClick={() => setReload((n) => n + 1)}>
-              Tekrar dene
-            </button>
-            <Link className="qb-btn" href="/instructor">
-              Kurslarıma dön
-            </Link>
-          </div>
-        </div>
+        <ErrorMessage
+          message={load.state === "error" ? load.message : "Kurs bulunamadı."}
+          onRetry={() => setReload((n) => n + 1)}
+        />
+        <Link className="qb-btn" href="/instructor">
+          Kurslarıma dön
+        </Link>
       </section>
     );
   }
@@ -252,9 +251,7 @@ export function SectionManager() {
       )}
 
       {sections.length === 0 && (
-        <div className="qb-state">
-          <p>Henüz bölüm yok. Kursu onaya göndermek için en az bir bölüm, bir ders ve içeriği yüklenmiş bir ders gerekir.</p>
-        </div>
+        <EmptyState message="Henüz bölüm yok. Kursu onaya göndermek için en az bir bölüm, bir ders ve içeriği yüklenmiş bir ders gerekir." />
       )}
 
       <ol className="qb-list">

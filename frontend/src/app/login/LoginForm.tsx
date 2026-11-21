@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { homeForRole, safeNextPath } from "@/lib/auth/routes";
+import { Loading } from "@/components/common/Loading";
 
 type FieldErrors = Partial<Record<"email" | "password", string>>;
 
@@ -64,7 +65,7 @@ export function LoginForm() {
 
   // Giriş sürerken (submitting) form ekranda kalır; aksi hâlde oturum biliniyorsa form gösterilmez.
   if (status !== "anonymous" && !submitting) {
-    return <p className="auth-status">Oturum kontrol ediliyor…</p>;
+    return <Loading text="Oturum kontrol ediliyor…" />;
   }
 
   return (
@@ -108,6 +109,11 @@ export function LoginForm() {
       <button type="submit" disabled={submitting}>
         {submitting ? "Giriş yapılıyor…" : "Giriş yap"}
       </button>
+      <p className="auth-switch">
+        <Link className="touch-link" href="/forgot-password">
+          Parolamı unuttum
+        </Link>
+      </p>
       <p className="auth-switch">
         Hesabın yok mu? <Link href="/register">Kayıt ol</Link>
       </p>
