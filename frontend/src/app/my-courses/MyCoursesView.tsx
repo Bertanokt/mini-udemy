@@ -56,6 +56,9 @@ export function MyCoursesView() {
   return (
     <section>
       <h1>Kayıtlı kurslarım</h1>
+      <p>
+        <Link href="/certificates">Sertifikalarım</Link>
+      </p>
       {result === null && <p className={styles.status}>Kurslarınız yükleniyor…</p>}
       {result?.kind === "error" && (
         <div role="alert">
