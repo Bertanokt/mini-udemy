@@ -1,7 +1,7 @@
 # Proje planı: Gantt, görev dağılımı, risk analizi
 
 Proje raporu şablonunun 6. bölümü (#82). Planlanan takvim `CONTRIBUTING.md` › Sprint'teki milestone'lardan, görev sayıları GitHub'daki issue'lardan alındı.
-**Veri tarihi:** 16.11.2026 14:10 (İstanbul saati); risk tablosu ve freeze kararı (bölüm 6) 17.11.2026'da, Gantt'ın gerçekleşen kısmı ve bölüm 8 19.11.2026'da güncellendi (#104). Rapordaki özeti: [`../rapor/bolum-5-8.md`](../rapor/bolum-5-8.md) › 6.
+**Veri tarihi:** 16.11.2026 14:10 (İstanbul saati); risk tablosu ve freeze kararı (bölüm 6) 17.11.2026'da, Gantt'ın gerçekleşen kısmı ve bölüm 8 21.11.2026'da güncellendi (#104). Rapordaki özeti: [`../rapor/bolum-5-8.md`](../rapor/bolum-5-8.md) › 6.
 
 ## 1. Takvim özeti
 
@@ -41,13 +41,13 @@ gantt
     IP-6 Raporlama (ilerleme, test raporu, Word)  :ip6, 2026-10-28, 2026-12-02
     IP-7 Demo (seed data, senaryo, prova)         :ip7, 2026-11-18, 2026-12-02
 
-    section Gerçekleşen (19.11 itibarıyla; PR ile kapanan issue'ların ilk–son merge tarihi)
+    section Gerçekleşen (21.11 itibarıyla; PR ile kapanan issue'ların ilk–son merge tarihi)
     Repo iskeleti ve backlog (PR'sız commit'ler)  :done, g0, 2026-10-15, 2026-10-24
     H1 işleri (25 issue)                          :done, g1, 2026-11-11, 2026-11-19
-    H2 işleri (27 issue)                          :done, g2, 2026-11-14, 2026-11-20
-    H3 işleri (23 issue)                          :done, g3, 2026-11-14, 2026-11-20
-    H4 işleri (19 issue)                          :done, g4, 2026-11-15, 2026-11-20
-    H5 işleri (8 issue, devam ediyor)             :active, g5, 2026-11-17, 2026-11-25
+    H2 işleri (29 issue)                          :done, g2, 2026-11-14, 2026-11-21
+    H3 işleri (28 issue)                          :done, g3, 2026-11-14, 2026-11-22
+    H4 işleri (25 issue)                          :done, g4, 2026-11-15, 2026-11-22
+    H5 işleri (11 issue, devam ediyor)            :active, g5, 2026-11-17, 2026-11-25
 ```
 
 ## 3. Faz dağılımı
@@ -143,18 +143,19 @@ Projede ücretli yazılım lisansı kullanılmıyor; **ürünün lisans maliyeti
 
 Geliştirme aracı olarak kullanılan Claude Code ücretli bir abonelik gerektirir; ürünün çalışması için gerekli değildir ve ürünün lisans maliyetine dahil değildir.
 
-## 8. Planlanan ve gerçekleşen (19.11.2026)
+## 8. Planlanan ve gerçekleşen (21.11.2026)
 
-Kapanan: GitHub'da "completed" kapanan issue; "not planned" kapatılanlar sayılmaz. Parantez içinde 16.11 değeri.
+Kapanan: GitHub'da "completed" kapanan issue; "not planned" kapatılanlar (6) sayılmaz. Parantez içinde 16.11 değeri.
 
-| Milestone | Planlanan bitiş | Issue | Kapanan | Not |
+| Milestone | Planlanan bitiş | Issue | Kapanan | Açık (21.11) |
 |---|---|---|---|---|
-| Hafta 1 | 27.10 | 26 | 26 (19) | Tamamı kapandı; ilk PR'lar 11.11'de |
-| Hafta 2 | 03.11 | 32 | 30 (5) | Açık: #33 kurs formu, #34 ders düzenleme ekranı |
-| Hafta 3 | 10.11 | 33 | 25 (4) | Açık P1: #46, #62 (yönetici onay ekranı), #91 (bileşen diyagramı), #120, #125 (bildirim API'si); P2: #115–#117 |
-| Hafta 4 | 17.11 | 32 | 22 (1) | Freeze 17.11. Açık P1: #130, #131 (sertifika), #136, #58, #66, #137, #138; P2: #142, #144, #146 |
-| Hafta 5 | 24.11 | 18 | 8 (0) | Devam ediyor |
+| Hafta 1 | 27.10 | 26 | 26 (19) | – |
+| Hafta 2 | 03.11 | 32 | 32 (5) | – |
+| Hafta 3 | 10.11 | 33 | 30 (4) | #115–#117 parola yenileme ve profil (P2) |
+| Hafta 4 | 17.11 | 32 | 29 (1) | #136 bildirim zili, #138 Senaryo 4–5 testi (PR #312), #66 OpenAPI eşitleme |
+| Hafta 5 | 24.11 | 18 | 11 (0) | #68 bug bash, #72 README, #97 (PR #316), #99, #101, #71, #257 |
 | Sunum | 01.12 | 7 | 0 (0) | Başlamadı |
-| **Toplam** | | **148** | **111 (29)** | Milestone'suz 1 issue hariç |
+| Milestone'suz | – | 7 | 4 | Açık: #305 puan filtresi, #317 önizlemede token yenileme, #259 kesilen video isteğinde ERROR logu |
+| **Toplam** | | **155** | **132 (29)** | |
 
-Merge edilen PR: 125 (Bertan 44, Eray 39, Veronika 29, Sedat 13); hepsi 11.11–19.11 arasında, en yoğun gün 17.11 (32 PR). Ayrıntılar haftalık raporlarda: [`progress/`](progress/).
+Merge edilen PR: 143 (Bertan 53, Eray 39, Veronika 31, Sedat 20); hepsi 11.11–21.11 arasında, en yoğun gün 17.11 (32 PR). Ayrıntılar haftalık raporlarda: [`progress/`](progress/).

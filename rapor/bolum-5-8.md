@@ -2,7 +2,7 @@
 
 Hocanın Proje Yazım Şablonu'nun 5–8. bölümlerinin içeriği (#104). Word dosyasında birleştirme #69'da yapılır; bu dosya metnin kaynağıdır. Ayrıntılı tablolar repodaki dokümanlarda; burada rapora girecek özetleri var.
 
-**Veri tarihi:** 19.11.2026. ⟨…⟩ ile işaretli yerler bug bash (#68), test raporu (#99) ve demo provası (#106) bitince doldurulacak; son güncelleme 01.12.2026'dan önce.
+**Veri tarihi:** 21.11.2026 (ilk taslak 19.11). ⟨…⟩ ile işaretli yerler bug bash (#68), test raporu (#99) ve demo provası (#106) bitince doldurulacak; son güncelleme 01.12.2026'dan önce.
 
 ---
 
@@ -52,11 +52,11 @@ Kaynak: [`docs/plan.md`](../docs/plan.md) (#82). Bu bölüm o dokümanın gerçe
 
 ### 6.1 Takvim ve fazlar
 
-| Faz | Planlanan | Gerçekleşen (19.11.2026) |
+| Faz | Planlanan | Gerçekleşen (21.11.2026) |
 |---|---|---|
 | Analiz ve tasarım (Hafta 1) | 21–27.10 | Gereksinimler, use-case'ler, ER, OpenAPI ve mimari kurallar repo iskeletiyle birlikte 15–24.10'da hazırlandı; PR'larla `main`'e girişi 11–14.11 |
-| Geliştirme (Hafta 2–4) | 28.10–17.11 | Kodun tamamı 11–19.11 arasında geldi (125 PR). Feature freeze 17.11'de uygulandı; P2 işler "İnce" kapsamla sürdü |
-| Test ve kararlılık (Hafta 5) | 18–24.11 | Senaryo testleri, Bölüm 6 testleri, erişim matrisi, seed verisi ve izlenebilirlik matrisi 17–19.11'de; bug bash ve test raporu ⟨24.11⟩ |
+| Geliştirme (Hafta 2–4) | 28.10–17.11 | Kod 11–21.11 arasında geldi (143 PR; en yoğun gün 17.11, 32 PR). Feature freeze 17.11'de uygulandı; P2 işler "İnce" kapsamla sürdü, eksik ekranlar 20–21.11'de tamamlandı |
+| Test ve kararlılık (Hafta 5) | 18–24.11 | Senaryo testleri, Bölüm 6 testleri, erişim matrisi, seed verisi ve izlenebilirlik matrisi 17–19.11'de; beş senaryonun temiz kurulumda ekranda yürünmesi 21.11'de (#70); bug bash ve test raporu ⟨24.11⟩ |
 | Sunum hazırlığı | 25.11–01.12 | ⟨Word raporu, slaytlar, demo provası⟩ |
 
 ### 6.2 Gantt şeması
@@ -65,7 +65,7 @@ Planlanan milestone'lar ve gerçekleşen çalışma (PR ile kapanan issue'ların
 
 ```mermaid
 gantt
-    title Mini Udemy — planlanan ve gerçekleşen (19.11.2026)
+    title Mini Udemy — planlanan ve gerçekleşen (21.11.2026)
     dateFormat  YYYY-MM-DD
     axisFormat  %d.%m
 
@@ -82,25 +82,26 @@ gantt
     section Gerçekleşen
     Repo iskeleti ve backlog                      :done, g0, 2026-10-15, 2026-10-24
     H1 işleri (25 issue)                          :done, g1, 2026-11-11, 2026-11-19
-    H2 işleri (27 issue)                          :done, g2, 2026-11-14, 2026-11-20
-    H3 işleri (23 issue)                          :done, g3, 2026-11-14, 2026-11-20
-    H4 işleri (19 issue)                          :done, g4, 2026-11-15, 2026-11-20
-    H5 işleri (8 issue, devam ediyor)             :active, g5, 2026-11-17, 2026-11-25
+    H2 işleri (29 issue)                          :done, g2, 2026-11-14, 2026-11-21
+    H3 işleri (28 issue)                          :done, g3, 2026-11-14, 2026-11-22
+    H4 işleri (25 issue)                          :done, g4, 2026-11-15, 2026-11-22
+    H5 işleri (11 issue, devam ediyor)            :active, g5, 2026-11-17, 2026-11-25
 ```
 
-**Yorum.** Plan bir haftalık sprint'lerle sıralı ilerlemeyi öngörüyordu; gerçekte ilk PR 11.11'de geldi ve Hafta 1–4'ün işleri 11–19.11 arasında paralel yapıldı. Takvim kayması (risk R1) gerçekleşti. Feature freeze tarihi korundu, ama kapsam 17.11'de yeniden belirlendi (6.5).
+**Yorum.** Plan bir haftalık sprint'lerle sıralı ilerlemeyi öngörüyordu; gerçekte ilk PR 11.11'de geldi ve Hafta 1–4'ün işleri 11–21.11 arasında paralel yapıldı. Takvim kayması (risk R1) gerçekleşti. Feature freeze tarihi korundu, ama kapsam 17.11'de yeniden belirlendi (6.5).
 
 ### 6.3 Planlanan ve gerçekleşen iş
 
-| Milestone | Issue | Kapanan (19.11) | Kapanan (16.11) |
+| Milestone | Issue | Kapanan (21.11) | Kapanan (16.11) |
 |---|---|---|---|
 | Hafta 1 | 26 | 26 | 19 |
-| Hafta 2 | 32 | 30 | 5 |
-| Hafta 3 | 33 | 25 | 4 |
-| Hafta 4 | 32 | 22 | 1 |
-| Hafta 5 | 18 | 8 | 0 |
+| Hafta 2 | 32 | 32 | 5 |
+| Hafta 3 | 33 | 30 | 4 |
+| Hafta 4 | 32 | 29 | 1 |
+| Hafta 5 | 18 | 11 | 0 |
 | Sunum | 7 | 0 | 0 |
-| **Toplam** | **148** | **111 (%75)** | **29** |
+| Milestone'suz (demo yürüyüşünde açılanlar) | 7 | 4 | – |
+| **Toplam** | **155** | **132 (%85)** | **29** |
 
 "Not planned" kapatılan 6 issue (kapsamdan çıkarılanlar) sayılmaz. Açık işlerin listesi `docs/plan.md` › 8'de.
 
@@ -110,15 +111,15 @@ Roller `CONTRIBUTING.md` › Roller tablosundan; her issue'nun tek rol etiketi v
 
 | Üye | Rol | Kapanan issue (atanan) | Merge edilen PR | `main`'deki commit |
 |---|---|---|---|---|
-| Bertan | Yazılım Mimarı | 31 / 35 | 44 | 51 |
-| Eray | Veri ve Entegrasyon | 40 / 45 | 39 | 39 |
-| Veronika | Kalite ve Süreç | 25 / 29 | 29 | 29 |
-| Sedat | Alan Tasarımcısı | 13 / 14 | 13 | 13 |
-| Atanmamış | – | 2 / 26 | – | – |
+| Bertan | Yazılım Mimarı | 42 / 43 | 53 | 60 |
+| Eray | Veri ve Entegrasyon | 40 / 42 | 39 | 39 |
+| Veronika | Kalite ve Süreç | 27 / 30 | 31 | 31 |
+| Sedat | Alan Tasarımcısı | 21 / 24 | 20 | 20 |
+| Atanmamış | – | 2 / 16 | – | – |
 
 **Git geçmişiyle tutarlılık.** `main` "Squash and merge" ile birleştirildiği için her PR tek commit'tir; PR ve commit sayıları bu yüzden birebir aynı. Tek fark Bertan'ın 7 commit'i: repo iskeleti ve backlog, PR kuralı konmadan önce (15–24.10) doğrudan `main`'e yazıldı. Komut: `git log --format='%an' main | sort | uniq -c`. ⟨Sayılar 01.12'de son kez alınacak.⟩
 
-Rol dışı iş devri: `rol:alan`'daki #8 ve #9'u Sedat müsait olmadığı için Bertan yaptı; alan rolünün kalan işleri 17.11 kararıyla diğer üyelere dağıtıldı (risk R3, R10).
+Rol dışı iş devri: `rol:alan`'daki #8 ve #9'u Sedat müsait olmadığı için Bertan yaptı; alan rolünün kalan işleri 17.11 kararıyla diğer üyelere dağıtıldı (risk R3, R10). 21.11'de demo yürüyüşünde açılan sınav ekranı işleri (#304, #58, #296) Eray'dan Bertan'a devredildi.
 
 ### 6.5 Risk analizi (özet)
 
@@ -128,11 +129,11 @@ Tam tablo `docs/plan.md` › 6'da. Gerçekleşen ve sonucu belli olan riskler:
 |---|---|---|
 | R1 | Takvim kayması | **Gerçekleşti.** İlk PR 11.11'de. 17.11'de feature freeze kararı: §3'te adı geçen hiçbir iş kesilmedi, P2'ler "İnce" kapsama alındı, 3 iş kesildi (#73, #88, #185). |
 | R2 | Kritik yol bağımlılığı (auth zinciri) | Giderildi: auth zinciri 13–17.11'de kapandı. |
-| R3, R10 | Üyenin müsait olmaması, alan rolünde iş yükü | Gerçekleşti; işler devredildi. Sedat 15.11'de döndü ve toplam 13 issue kapattı. |
-| R5 | Testlerin yetişmemesi | Önlendi: `main`'de 1103 test, servis katmanında satır coverage'ı %98,4 (hedef %70). |
-| R6 | Review'sız merge, doküman–kod tutarsızlığı | İlk 4 PR onaysız birleşti; sonra her PR hızlı kontrolden geçti. İzlenebilirlik matrisi (#98) ve diyagram–kod kontrolü (#97) yapıldı. |
+| R3, R10 | Üyenin müsait olmaması, alan rolünde iş yükü | Gerçekleşti; işler devredildi. Sedat 15.11'de döndü ve toplam 21 issue kapattı. |
+| R5 | Testlerin yetişmemesi | Önlendi: `main`'de 1154 test, servis katmanında satır coverage'ı %98,4 (hedef %70). |
+| R6 | Review'sız merge, doküman–kod tutarsızlığı | İki kez gerçekleşti: ilk 4 PR onaysız birleşti; 21.11'de 11 PR hızlı kontrol beklenmeden merge edildi ve merge sonrası kontrol edildi (3'ünde doküman ve kanıt eksiği bulundu). İzlenebilirlik matrisi (#98) ve diyagram–kod kontrolü (#97, 9 diyagramın 9'u; bileşen diyagramı CI'da `ComponentDiagramTest` ile) yapıldı. |
 | R7 | Giriş denemelerinde sınır yok | Kabul edildi (yerel demo, kapsam dışı); bölüm 8.3'te gelecek çalışma. |
-| R8 | Demo günü ortamın çalışmaması | ⟨Demo provası (#106) sonucu⟩ |
+| R8 | Demo günü ortamın çalışmaması | 21.11'de temiz kurulumda (`docker compose down -v` + `up --build`) beş senaryo ekranda yüründü (#70); eksik çıkan ekranlar aynı gün tamamlandı. İlk build ~22 dk sürdüğü için sunum günü image'lar önceden build edilecek. ⟨Demo provası (#106) sonucu⟩ |
 
 ### 6.6 Bütçe
 
@@ -156,7 +157,7 @@ Proje, bir haftalık sprint'lerle yürütülen hafif bir Scrum uyarlamasıyla ya
 
 ### 7.2 Kullanılan teknolojiler ve kütüphaneler
 
-Sürümler `backend/pom.xml` ve `frontend/package.json`'dan (19.11.2026). Kütüphanelerin ve dış kaynakların tam listesi #100'de.
+Sürümler `backend/pom.xml` ve `frontend/package.json`'dan (19.11.2026). Kütüphanelerin, araçların ve dış kaynakların lisanslarıyla tam listesi: [`docs/dependencies.md`](../docs/dependencies.md) (#100; sürümler araçla ölçüldü). Rapora bu tablo, ayrıntılı liste Ek olarak girer.
 
 | Katman | Teknoloji | Sürüm | Kullanım | Lisans |
 |---|---|---|---|---|
@@ -208,27 +209,30 @@ Frontend http://localhost:3000, backend http://localhost:8080. Veritabanı boşs
 | `mehmet.kaya@miniudemy.dev` | Eğitmen | "Sıfırdan Python" (yayında), "SQL ve Veritabanları" (incelemede), "Python 2 (eski)" (yayından kaldırılmış) |
 | `zeynep.ak@miniudemy.dev` | Eğitmen | "Java ile Nesne Yönelimli Programlama" (yayında), "Web Geliştirmeye Giriş" (reddedildi, gerekçeli) |
 | `ayse.yilmaz@miniudemy.dev` | Kursiyer | Python %100, sertifikalı (`K7Q2-M9XA-4T`) |
-| `can.demir@miniudemy.dev` | Kursiyer | Python %66,67; kaldığı yer "Fonksiyon Tanımlama" |
+| `can.demir@miniudemy.dev` | Kursiyer | Python %67; kaldığı yer "Fonksiyon Tanımlama" |
 | `elif.sahin@miniudemy.dev` | Kursiyer | Python %50; giriş sınavından kaldı |
 | `deniz.arslan@miniudemy.dev` | Kursiyer | Python'a kayıtlı, hiç başlamadı |
 
 **Kursiyer olarak**
 
-1. Ana sayfada (`/`) kursları arayın; kategori, seviye ve puana göre süzün. Yalnız yayımlanmış kurslar görünür.
+1. Ana sayfada (`/`) kursları arayın; kategori ve seviyeye göre süzün. Yalnız yayımlanmış kurslar görünür.
 2. Bir kursa tıklayın: açıklama, kazanımlar, bölüm/ders listesi, toplam süre ve değerlendirmeler görünür.
-3. Giriş yapmadıysanız "Kayıt ol" sizi giriş sayfasına götürür; yeni hesap için `/register`. Giriş yaptıysanız "Kursa kayıt ol".
-4. "Kurslarım"da (`/my-courses`) her kursun ilerlemesi görünür; "Kaldığın yerden devam et" son açtığınız derse götürür (deneyin: `can.demir@…`).
-5. Ders sayfasında (`/learn/...`) PDF okunur, video oynatılır ve ileri sarılır; "Önceki / Sonraki" ile dersler arasında gezilir. Kayıtsız bir hesap aynı adreste "Bu derse erişmek için kursa kaydolun." uyarısını görür.
-6. Sınava girin (`/quizzes/{id}`), cevapları gönderin; önceki denemeler `/quizzes/{id}/attempts`'te.
-7. Kurs sayfasında 1–5 puan ve yorum verin (kurs başına bir kez).
+3. Giriş yapmadıysanız "Kayıt ol" sizi giriş sayfasına götürür; yeni hesap için `/register`. Giriş yaptıysanız "Kursa kayıt ol"; düğme "Derse başla"ya döner.
+4. "Kurslarım"da (`/my-courses`) her kursta "Son ders: … · %… tamamlandı" yazar; "Kaldığın yerden devam et" son açtığınız derse götürür (deneyin: `can.demir@…` → "Fonksiyon Tanımlama"). Aynı düğme kurs sayfasında da var.
+5. Ders sayfasında (`/learn/...`) PDF okunur, video oynatılır ve ileri sarılır; "Önceki / Sonraki" ile dersler arasında gezilir. Dersi bitirince "Tamamlandı olarak işaretle": sol listede ders tiklenir, bölüm ve kurs ilerleme çubukları güncellenir. Kayıtsız bir hesap aynı adreste "Bu derse erişmek için kursa kaydolun." uyarısını görür.
+6. Sınavlar ders listesinde bölümün altında ("📝 … · Zorunlu"). Cevapları gönderin: puan, yüzde, geçti/kaldı ve soru bazında sonuç. Kalınca "Tekrar dene", geçince "Kursa dön"; önceki denemeler "Deneme geçmişim"de (deneyin: `elif.sahin@…`).
+7. Zorunlu dersler ve sınavlar bitince sertifika kendiliğinden oluşur: "Kurslarım" → "Sertifikalarım" (`/certificates`) → sertifika → "Yazdır". Sertifikada doğrulama kodu ve "resmî akreditasyon değildir" ibaresi var (deneyin: `ayse.yilmaz@…`).
+8. Sertifikayı gören herkes giriş yapmadan doğrulayabilir: `/verify/K7Q2-M9XA-4T` → "✓ Geçerli sertifika" (ad, kurs, tarih).
+9. Kurs sayfasında 1–5 puan ve yorum verin (kurs başına bir kez).
 
 **Eğitmen olarak** (`mehmet.kaya@…`)
 
-1. Eğitmen panelinde (`/instructor`) kurslarınız durumlarıyla görünür; reddedilen kursta yöneticinin gerekçesi yazar.
+1. Eğitmen panelinde (`/instructor`) kurslarınız durumlarıyla görünür; reddedilen ya da yayından kaldırılan kursta gerekçe yazar.
 2. "Yeni kurs" (`/instructor/courses/new`): başlık, açıklama, kategori, seviye, öğrenme hedefleri (eklenir, silinir, sırası değiştirilir) ve kapak (jpg/png/webp, en fazla 2 MB; seçince önizlenir) → "Kursu oluştur". Kurs Taslak olarak oluşur. Taslak ya da yayından kaldırılmış kursun bilgileri "Düzenle" ile değiştirilir; incelemedeki ve yayındaki kursta form salt okunurdur.
-3. Taslak kursu "Onaya gönder"; yayındaki kursu gerekçeyle "Yayından kaldır".
-4. Soru bankası (`/instructor/courses/{id}/questions`) ve bölüm sınavları (`/instructor/courses/{id}/quizzes`).
-5. Analitik (`/instructor/courses/{id}/analytics`): kayıt sayısı, ortalama ilerleme, tamamlanma oranı, sınav başarısı, puan dağılımı ve kursiyer listesi.
+3. "Bölüm ve dersler" (`/instructor/courses/{id}/sections`): bölüm ve ders ekle, düzenle, sil, ↑/↓ ile sırala; derse içerik yükle (video mp4/webm ≤ 200 MB, PDF ve doküman ≤ 20 MB; ilerleme çubuğuyla) ve "Önizle". Yanlış tür 415, büyük dosya 413 mesajı dersin altında.
+4. Taslak kursu "Onaya gönder"; yayındaki kursu gerekçeyle "Yayından kaldır".
+5. Soru bankası (`/instructor/courses/{id}/questions`) ve bölüm sınavları (`/instructor/courses/{id}/quizzes`).
+6. Analitik (`/instructor/courses/{id}/analytics`): kayıt sayısı, ortalama ilerleme, tamamlanma oranı, sınav başarısı, puan dağılımı ve kursiyer listesi.
 
 **Yönetici olarak** (`admin@…`)
 
@@ -239,7 +243,7 @@ Frontend http://localhost:3000, backend http://localhost:8080. Veritabanı boşs
 5. Şikâyetler (`/admin/complaints`): kurs ve yorum şikâyetleri en yeni önce; her satır "İncelendi" ya da "Reddet" ile sonuçlandırılır. Kurs şikâyeti kurs inceleme ekranına bağlantı verir; gerekirse yorum moderasyonu ya da yayından kaldırma oradan yapılır.
 6. Diğer sayfalar: kullanıcılar (rol ve pasifleştirme, `/admin/users`), kategoriler (`/admin/categories`), platform raporu (`/admin/reports`).
 
-**Ekranı henüz olmayan işlemler** (19.11.2026; API ile yapılır, adımlar [`docs/demo.md`](../docs/demo.md)'de): bölüm/ders düzenleme ve içerik yükleme (#34), dersi "tamamlandı" işaretleme düğmesi (#46), sertifika sayfası ve doğrulama (#130, #131), bildirim listesi (#136), kullanıcının şikâyet oluşturması (`POST /api/complaints`; düğmesi yok). ⟨01.12'de ekranı gelenler adımlara eklenecek, ekran görüntüleri #72'den.⟩
+**Ekranı henüz olmayan işlemler** (21.11.2026; API ile yapılır, adımlar [`docs/demo.md`](../docs/demo.md)'de): bildirim listesi (zil, #136; API: `GET /api/me/notifications`), katalogda puan filtresi (#305; API: `minRating`), kullanıcının şikâyet oluşturması (`POST /api/complaints`; düğmesi yok). ⟨01.12'de ekranı gelenler adımlara eklenecek, ekran görüntüleri #72'den.⟩
 
 ### 7.5 Test planı ve test raporu özeti
 
@@ -247,23 +251,23 @@ Plan: [`docs/test-plan.md`](../docs/test-plan.md) (#92). Rapor: `docs/test-repor
 
 **Test seviyeleri.**
 
-| Seviye | Araç | Sayı (19.11) |
+| Seviye | Araç | Sayı (21.11) |
 |---|---|---|
-| Birim | JUnit 5, Mockito, AssertJ | 928 |
+| Birim | JUnit 5, Mockito, AssertJ | 964 |
 | Mimari | ArchUnit | 13 |
-| Entegrasyon | Spring Boot Test + Testcontainers (gerçek PostgreSQL 17, gerçek HTTP) | 162 |
-| **Toplam** | | **1103**, hepsi CI'da yeşil |
+| Entegrasyon | Spring Boot Test + Testcontainers (gerçek PostgreSQL 17, gerçek HTTP) | 177 |
+| **Toplam** | | **1154**, hepsi CI'da yeşil |
 | Manuel | Tarayıcı, kontrol listesi (bug bash #68) | ⟨sonuç⟩ |
 
 **Kapsam.**
 
 - Servis katmanında satır coverage'ı **%98,4**, dal coverage'ı **%93,9** (hedef %70); genel %96,1 (JaCoCo).
-- Otomatik testi olan gereksinim: FR 40/44, NFR 16/19. Testi olmayan 4 FR'nin hepsi henüz kodu yazılmamış işlere bağlı (#115, #125, #130, #131).
+- Otomatik testi olan gereksinim: FR 42/44, NFR 16/19. Testi olmayan 2 FR: FR-03 parola yenileme (#115, yapılmadı) ve FR-29 akreditasyon ibaresi (ön yüzde sabit metin; ön yüz test aracı olmadığı için bug bash'te elle kontrol).
 - Proje tanımı Bölüm 6'nın dört kritik durumu (kayıtsız erişim, mükerrer kayıt, yetkisiz düzenleme, yanlış ilerleme hesabı) uçtan uca testli (`Bolum6CriticalCasesIT`).
-- Erişim matrisi testi (`AccessMatrixIT`, 102 kontrol): OpenAPI'deki her ucun rol bilgisinin koddaki yetki kuralıyla aynı olduğu denetlenir; gövdesiz uçlarda girişsiz istek 401, yanlış rol 403 alır.
+- Erişim matrisi testi (`AccessMatrixIT`, 115 kontrol): OpenAPI'deki her ucun rol bilgisinin koddaki yetki kuralıyla aynı olduğu denetlenir; gövdesiz uçlarda girişsiz istek 401, yanlış rol 403 alır.
 - Beş demo senaryosunun her biri bir entegrasyon testiyle doğrulandı.
 
-**Kırmızı kontrol bulguları.** Kod bilerek bozulduğunda yeşil kalan 4 test açığı bulundu ve kapatıldı: platform raporunda tamamlanma sayısı (#145), sınav puanlamada strateji seçimi (#56), ilerlemede %0 ve %100 sınırları (#44), bildirim dinleyicisinin commit sonrası çalışması (#137).
+**Kırmızı kontrol bulguları.** Kod bilerek bozulduğunda yeşil kalan 4 test açığı bulundu ve kapatıldı: platform raporunda tamamlanma sayısı (#145), sınav puanlamada strateji seçimi (#56), ilerlemede %0 ve %100 sınırları (#44), bildirim dinleyicisinin commit sonrası çalışması (#137). Senaryo 4 testi (#138) sertifika görüntüleme, girişsiz doğrulama ve bildirimlerle uçtan uca genişletildi; iki bozma (bildirim olayı yok, doğrulama `valid=false`) testi kırmızıya düşürdü.
 
 **Bug bash.** ⟨#68 sonuçları: bulunan hata sayısı, P1'lerin durumu.⟩
 
@@ -276,7 +280,7 @@ Plan: [`docs/test-plan.md`](../docs/test-plan.md) (#92). Rapor: `docs/test-repor
 | Yedekleme | Veritabanı `pg_dump` ile, yüklenen dosyalar depolama klasörünün kopyalanmasıyla. Gerçek kullanımda günlük yedek ve geri yükleme denemesi. |
 | İzleme | Spring Boot Actuator sağlık ucu (`/actuator/health`); hatalar sunucu loguna yazılır, kullanıcıya iç ayrıntı gösterilmez. |
 | Hata yönetimi | Hata GitHub'da `bug` etiketli issue olarak açılır, önceliği verilir, `fix/#<no>-...` dalında testle birlikte düzeltilir. |
-| Kalite güvencesi | Her değişiklik CI'dan (1103 test, ArchUnit kuralları, frontend lint + build) ve hızlı kontrolden geçer. |
+| Kalite güvencesi | Her değişiklik CI'dan (1154 test, ArchUnit kuralları, frontend lint + build) ve hızlı kontrolden geçer. |
 | Dokümantasyon | OpenAPI, diyagramlar ve ADR'ler kodla aynı PR'da güncellenir. |
 | Güvenlik | Üretimde JWT anahtarı yalnız ortam değişkeninden (`JWT_SECRET`) okunur; tanımlı değilse ya da 32 bayttan kısaysa uygulama açılmaz. Repodaki anahtarlar yalnız geliştirme ve test profillerinde. Bağımlılık güvenlik uyarıları (GitHub) takip edilir. |
 
@@ -286,20 +290,20 @@ Plan: [`docs/test-plan.md`](../docs/test-plan.md) (#92). Rapor: `docs/test-repor
 
 ### 8.1 Hedeflere ulaşma
 
-| Hedef | Durum (19.11.2026) |
+| Hedef | Durum (21.11.2026) |
 |---|---|
-| Üç rollü (kursiyer, eğitmen, yönetici) çevrim içi eğitim platformu | Backend'in 10 modülü çalışıyor; 44 FR'nin 40'ının otomatik testi var. Frontend'de 23 ekran. ⟨01.12 durumu⟩ |
-| Beş demo senaryosu (kurs yayımlama, kayıt ve öğrenme, kaldığı yerden devam, sınav ve sertifika, eğitmen analitiği) | Beşi de uçtan uca testli. Bazı adımların ekranı yok, API ile gösteriliyor (7.4). |
+| Üç rollü (kursiyer, eğitmen, yönetici) çevrim içi eğitim platformu | Backend'in 10 modülü çalışıyor; 44 FR'nin 42'sinin otomatik testi var. Frontend'de 27 sayfa. ⟨01.12 durumu⟩ |
+| Beş demo senaryosu (kurs yayımlama, kayıt ve öğrenme, kaldığı yerden devam, sınav ve sertifika, eğitmen analitiği) | Beşi de uçtan uca testli ve 21.11'de temiz kurulumda ekranda yüründü (#70). Ekranı olmayan yalnız bildirim zili (#136) ve puan filtresi (#305); API ile gösteriliyor (7.4). |
 | Tasarım desenleri: State, Strategy, Factory Method, Observer, DTO + Mapper | Beşi de kodda; sınıf diyagramlarında (#51) ve SOLID dokümanında (#95) gösterildi. |
 | Modüler monolit, modül sınırları | 10 modül; sınırlar ArchUnit testleriyle CI'da denetleniyor, ihlal yok. |
 | Test hedefleri (test planı › 7) | Servis coverage'ı %98,4 (hedef %70); Bölüm 6 testleri ve erişim matrisi yeşil. ⟨Bug bash ve demo provası sonucu⟩ |
-| Tek komutla kurulum (NFR-16) | `docker compose up --build`; seed verisi otomatik. ⟨Temiz makinede deneme, #70/#106⟩ |
+| Tek komutla kurulum (NFR-16) | `docker compose up --build`; seed verisi otomatik. Temiz kurulumda denendi (21.11, #70); ilk build ~22 dk, önbellekle 18 sn. ⟨Demo provası, #106⟩ |
 
 ### 8.2 Kısıtlar
 
 - **Geç başlangıç:** Kod PR'ları 11.11'de başladı; dört haftalık geliştirme işi yaklaşık bir haftaya sığdırıldı. Bu yüzden 17.11'de kapsam yeniden belirlendi ve P2 işler "İnce" yapıldı.
 - **Ekip kapasitesi:** Bir üye iki hafta müsait değildi; işleri devredildi.
-- **Ekranı eksik akışlar:** Bazı işlemler (7.4) yalnız API ile yapılabiliyor.
+- **Ekranı eksik akışlar:** Bildirim listesi, puan filtresi ve şikâyet oluşturma (7.4) yalnız API ile yapılabiliyor.
 - **Frontend'de otomatik test yok:** Arayüz yalnız lint, derleme ve elle test ile denetlendi.
 - **Güvenlik sınırları:** Giriş denemelerine sınır konmadı (R7); dosyalar yerel diskte tutuluyor.
 - **Performans:** Kurs süresinin hesabında bilinen bir N+1 sorgu sınırı var (#185, kapsamdan çıkarıldı); yük testi yapılmadı.
@@ -311,12 +315,13 @@ Plan: [`docs/test-plan.md`](../docs/test-plan.md) (#92). Rapor: `docs/test-repor
 - Giriş ve parola yenileme isteklerine deneme sınırı (R7) ve e-posta ile bildirim.
 - Dosyaların bulut depolamaya (S3 uyumlu) taşınması; video için akış biçimi (HLS) ve farklı çözünürlükler.
 - Frontend için uçtan uca otomatik testler (ör. Playwright) ve erişilebilirlik denetimi.
-- ⟨01.12'de hâlâ açık kalan P2 işler: #115–#117 parola yenileme ve profil; kullanıcı ekranında "Şikâyet et" düğmesi (şikâyet şimdilik API ile oluşturuluyor)⟩
+- ⟨01.12'de hâlâ açık kalan işler: #115–#117 parola yenileme ve profil; bildirim zili (#136); puan filtresi (#305); kullanıcı ekranında "Şikâyet et" düğmesi⟩
 
 ### 8.4 Tartışma
 
 ⟨Sunumdan önce ekipçe yazılacak. Önerilen başlıklar:⟩
 
 - Sıkı PR kuralları (kanıt tablosu, hızlı kontrol, doküman–kod uyumu) geç başlayan bir projede hızı düşürdü mü, yoksa hataları erken yakalayarak kazandırdı mı? Örnek: ilk PR'larda sözleşme ile ER arasındaki alan uzunluğu farkı review'da yakalandı.
+- Hızlı kontrolün merge'den önce yapılması: 21.11'de 11 PR kontrolsüz merge edildi; sonradan bakıldığında 3'ünde doküman ve kanıt eksiği vardı. Hız ile güvence arasındaki denge.
 - Kırmızı kontrol, "yeşil" testlerin bir kısmının hatayı yakalamadığını gösterdi (4 açık). Coverage yüksek olsa bile testin doğru şeyi denetlediği ayrıca kanıtlanmalı.
 - Yapay zekâ desteği (Claude Code) iş üretimini hızlandırdı; buna karşı "her teknik iddia kodla karşılaştırılır" kuralı ve katkı notları, üyelerin kendi kodunu anlayıp anlatabilmesi için gerekli oldu.
