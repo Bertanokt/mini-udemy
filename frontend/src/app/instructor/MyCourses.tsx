@@ -197,6 +197,9 @@ export function MyCourses() {
                     >
                       {c.status === "DRAFT" || c.status === "UNPUBLISHED" ? "Düzenle" : "Bilgiler"}
                     </Link>
+                    <Link className="qb-btn" href={`/instructor/courses/${c.id}/sections`}>
+                      Bölüm ve dersler
+                    </Link>
                     <Link className="qb-btn" href={`/instructor/courses/${c.id}/questions`}>
                       Soru bankası
                     </Link>

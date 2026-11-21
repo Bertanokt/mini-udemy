@@ -1,9 +1,11 @@
 package com.miniudemy.notification.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -15,13 +17,19 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.miniudemy.auth.dto.UserSummary;
 import com.miniudemy.auth.service.UserDirectoryService;
+import com.miniudemy.common.exception.NotFoundException;
 import com.miniudemy.course.domain.CourseLevel;
 import com.miniudemy.course.domain.CourseStatus;
 import com.miniudemy.course.dto.CategoryResponse;
@@ -30,9 +38,14 @@ import com.miniudemy.course.service.CourseLookupService;
 import com.miniudemy.enrollment.service.EnrollmentService;
 import com.miniudemy.notification.domain.Notification;
 import com.miniudemy.notification.domain.NotificationType;
+import com.miniudemy.notification.dto.NotificationPage;
+import com.miniudemy.notification.mapper.NotificationMapperImpl;
 import com.miniudemy.notification.repository.NotificationRepository;
 
-/** Olaydan bildirime (#124, FR-43): doğru alıcı, doğru tür ve metin, alıcı başına tek kayıt. */
+/**
+ * Olaydan bildirime (#124, FR-43): doğru alıcı, doğru tür ve metin, alıcı başına tek kayıt. Kullanıcının kendi
+ * bildirimleri (#125): sayfalı liste en yeni önce, okunmamış sayısı, okundu işaretleme; başkasının bildirimi 404.
+ */
 class NotificationServiceTest {
 
     private static final Instant NOW = Instant.parse("2026-11-19T12:00:00Z");
@@ -45,7 +58,7 @@ class NotificationServiceTest {
     private final EnrollmentService enrollments = mock(EnrollmentService.class);
     private final UserDirectoryService users = mock(UserDirectoryService.class);
     private final NotificationService service = new NotificationService(repository, courses, enrollments, users,
-            Clock.fixed(NOW, ZoneOffset.UTC));
+            new NotificationMapperImpl(), Clock.fixed(NOW, ZoneOffset.UTC));
 
     private final List<Notification> saved = new ArrayList<>();
 
@@ -180,5 +193,93 @@ class NotificationServiceTest {
         assertThat(saved).isEmpty();
         verify(repository, never()).saveAll(any());
         verify(enrollments, never()).findStudentIdsByCourse(anyLong());
+    }
+
+    // --- kullanıcının kendi bildirimleri (#125) ---
+
+    @Test
+    void list_returnsOwnNotificationsNewestFirst_asPage() {
+        Notification read = stored(5L, STUDENT, NOW.minusSeconds(60));
+        read.markRead(NOW);
+        Notification unread = stored(4L, STUDENT, NOW.minusSeconds(120));
+        PageRequest expected = PageRequest.of(1, 2,
+                Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("id")));
+        given(repository.findByUserId(STUDENT, expected))
+                .willReturn(new PageImpl<>(List.of(read, unread), expected, 5));
+
+        NotificationPage page = service.list(STUDENT, false, 1, 2);
+
+        assertThat(page.content()).extracting(r -> r.id(), r -> r.read(), r -> r.type(), r -> r.link())
+                .containsExactly(tuple(5L, true, NotificationType.COURSE_APPROVED, "/courses/3"),
+                        tuple(4L, false, NotificationType.COURSE_APPROVED, "/courses/3"));
+        assertThat(page.content().get(0).title()).isEqualTo("Kursunuz onaylandı");
+        assertThat(page.content().get(0).createdAt()).isEqualTo(NOW.minusSeconds(60));
+        assertThat(List.of(page.page(), page.size(), page.totalPages())).containsExactly(1, 2, 3);
+        assertThat(page.totalElements()).isEqualTo(5);
+        verify(repository, never()).findByUserIdAndReadAtIsNull(anyLong(), any());
+    }
+
+    @Test
+    void list_unreadOnly_queriesOnlyUnread() {
+        Notification unread = stored(4L, STUDENT, NOW);
+        given(repository.findByUserIdAndReadAtIsNull(eq(STUDENT), any()))
+                .willReturn(new PageImpl<>(List.of(unread), PageRequest.of(0, 20), 1));
+
+        NotificationPage page = service.list(STUDENT, true, 0, 20);
+
+        assertThat(page.content()).singleElement().satisfies(r -> assertThat(r.read()).isFalse());
+        verify(repository, never()).findByUserId(anyLong(), any());
+    }
+
+    @Test
+    void countUnread_returnsTheUsersUnreadCount() {
+        given(repository.countByUserIdAndReadAtIsNull(STUDENT)).willReturn(3L);
+
+        assertThat(service.countUnread(STUDENT).count()).isEqualTo(3);
+    }
+
+    @Test
+    void markRead_ownUnreadNotification_setsReadAtToNow() {
+        Notification notification = stored(4L, STUDENT, NOW.minusSeconds(60));
+        given(repository.findByIdAndUserId(4L, STUDENT)).willReturn(Optional.of(notification));
+
+        service.markRead(STUDENT, 4L);
+
+        assertThat(notification.getReadAt()).isEqualTo(NOW);
+    }
+
+    @Test
+    void markRead_alreadyRead_keepsTheFirstReadTime() {
+        Notification notification = stored(4L, STUDENT, NOW.minusSeconds(600));
+        Instant firstRead = NOW.minusSeconds(300);
+        notification.markRead(firstRead);
+        given(repository.findByIdAndUserId(4L, STUDENT)).willReturn(Optional.of(notification));
+
+        service.markRead(STUDENT, 4L);
+
+        assertThat(notification.getReadAt()).isEqualTo(firstRead);
+    }
+
+    @Test
+    void markRead_othersOrMissingNotification_returnsNotFound() {
+        given(repository.findByIdAndUserId(4L, STUDENT)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.markRead(STUDENT, 4L))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("Bildirim bulunamadı.");
+    }
+
+    @Test
+    void markAllRead_marksTheUsersUnreadNotificationsWithNow() {
+        service.markAllRead(STUDENT);
+
+        verify(repository).markAllRead(STUDENT, NOW);
+    }
+
+    private static Notification stored(long id, long userId, Instant createdAt) {
+        Notification notification = new Notification(userId,
+                NotificationMessages.courseApproved(COURSE, "Java'ya giriş"), createdAt);
+        ReflectionTestUtils.setField(notification, "id", id);
+        return notification;
     }
 }

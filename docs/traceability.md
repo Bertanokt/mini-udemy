@@ -140,7 +140,7 @@ Dört durumun hepsi testli: uçtan uca `Bolum6CriticalCasesIT` (case1–case4) v
 | FR-40 | Yönetici kategorileri ekler, düzenler ve siler | K | P2 | #118 ✓, #109 ✓, #146 | U: – | `CategoryServiceTest`, `AdminCategoryControllerTest` |
 | FR-41 | Kullanıcı bir kursu ya da yorumu gerekçeyle şikâyet edebilir; yönetici şikâyetleri inceler | K | P2 | #144, #146 | U: – | `ComplaintTest`, `ComplaintServiceTest`, `ComplaintControllerTest`, `ReviewServiceTest.assertVisible*`, `ComplaintIT` |
 | FR-42 | Yönetici platform raporlarını görür | K | P2 | #145 ✓, #147 ✓ | U: #145 ✓ | `PlatformReportServiceTest`, `AdminReportControllerTest`, `PlatformReportIT` |
-| FR-43 | Belirli olaylarda ilgili kullanıcıya uygulama içi bildirim oluşturulur | L | P1 | #124 ✓, #42 ✓ | U: #137 | `NotificationServiceTest`, `NotificationMessagesTest`, `NotificationListenerTest`, `NotificationScenarioIT` |
+| FR-43 | Belirli olaylarda ilgili kullanıcıya uygulama içi bildirim oluşturulur | L | P1 | #124 ✓, #125, #42 ✓ | U: #137 | `NotificationServiceTest`, `NotificationMessagesTest`, `NotificationListenerTest`, `NotificationScenarioIT`; okuma API'si (#125): `NotificationTest`, `NotificationControllerTest`, `NotificationApiIT` (liste en yeni önce, sayaç, okundu tek/hepsi, başkasının bildirimi 404) |
 | FR-44 | Kullanıcı bildirimlerini listeler, okunmamış sayısını görür ve okundu olarak işaretler | L | P1 | #125, #136 | U, E: #139 ✓ | – (#125 açık) |
 
 ### 2.2 Fonksiyonel olmayan gereksinimler

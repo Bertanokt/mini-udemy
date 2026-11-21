@@ -317,7 +317,7 @@ FROM (
     -- Sertifika → kursiyere
     SELECT en.student_id, 'CERTIFICATE_ISSUED', 'Sertifikanız hazır',
            '"' || co.title || '" kursunu tamamladınız; sertifikanız oluşturuldu.',
-           '/my-courses', ce.issued_at
+           '/certificates', ce.issued_at
     FROM certificates ce
     JOIN enrollments en ON en.id = ce.enrollment_id
     JOIN courses co ON co.id = en.course_id
