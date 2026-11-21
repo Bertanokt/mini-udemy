@@ -9,9 +9,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.miniudemy.auth.dto.AuthResponse;
 import com.miniudemy.auth.dto.LoginRequest;
+import com.miniudemy.auth.dto.PasswordResetConfirmRequest;
+import com.miniudemy.auth.dto.PasswordResetRequest;
 import com.miniudemy.auth.dto.RegisterRequest;
 import com.miniudemy.auth.dto.UserResponse;
 import com.miniudemy.auth.service.AuthService;
+import com.miniudemy.auth.service.PasswordResetService;
 
 import jakarta.validation.Valid;
 
@@ -21,9 +24,11 @@ import jakarta.validation.Valid;
 public class AuthController {
 
     private final AuthService authService;
+    private final PasswordResetService passwordResetService;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, PasswordResetService passwordResetService) {
         this.authService = authService;
+        this.passwordResetService = passwordResetService;
     }
 
     /** Öğrenci ya da eğitmen olarak kayıt; 201 + kullanıcı (token dönmez), ADMIN ve hatalı alanlar 400, kayıtlı e-posta 409. */
@@ -37,5 +42,19 @@ public class AuthController {
     @PostMapping("/login")
     public AuthResponse login(@Valid @RequestBody LoginRequest request) {
         return authService.login(request);
+    }
+
+    /** Parola yenileme bağlantısı (#115): e-posta kayıtlı olsun olmasın aynı gövdesiz 202. */
+    @PostMapping("/password-reset/request")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public void requestPasswordReset(@Valid @RequestBody PasswordResetRequest request) {
+        passwordResetService.requestReset(request.email());
+    }
+
+    /** Token ile yeni parola (#115): 204; geçersiz, süresi dolmuş ya da kullanılmış token 400. */
+    @PostMapping("/password-reset/confirm")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void confirmPasswordReset(@Valid @RequestBody PasswordResetConfirmRequest request) {
+        passwordResetService.confirmReset(request);
     }
 }
