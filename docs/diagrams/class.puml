@@ -402,6 +402,8 @@ package "com.miniudemy.notification" as notification {
       - link : String
       - readAt : Instant
       - createdAt : Instant
+      + markRead(now : Instant)
+      + isRead() : boolean
     }
     class NotificationContent <<record>> {
       type : NotificationType
