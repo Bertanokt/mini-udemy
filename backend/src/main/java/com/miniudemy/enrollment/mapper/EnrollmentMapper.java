@@ -8,6 +8,7 @@ import org.mapstruct.Mapping;
 import com.miniudemy.common.mapper.MapStructConfig;
 import com.miniudemy.course.dto.CourseSummaryResponse;
 import com.miniudemy.enrollment.domain.Enrollment;
+import com.miniudemy.enrollment.dto.EnrollmentRef;
 import com.miniudemy.enrollment.dto.EnrollmentResponse;
 
 /** {@code Enrollment} -> {@code EnrollmentResponse}. Kurs kartı ve ilerleme başka modüllerden geldiği için hazır verilir. */
@@ -22,4 +23,8 @@ public interface EnrollmentMapper {
     @Mapping(target = "lastAccessedAt", source = "lastAccessedAt")
     EnrollmentResponse toResponse(Enrollment enrollment, CourseSummaryResponse course, double progressPercent,
             Long lastLessonId, Instant lastAccessedAt);
+
+    /** Kaydın kimliği (#130). */
+    @Mapping(target = "enrollmentId", source = "id")
+    EnrollmentRef toRef(Enrollment enrollment);
 }
