@@ -100,8 +100,8 @@ Dört durumun hepsi testli: uçtan uca `Bolum6CriticalCasesIT` (case1–case4) v
 |---|---|---|---|---|---|---|
 | FR-01 | Kullanıcı ad soyad, e-posta ve parola ile kursiyer ya da eğitmen olarak kayıt olabilir | A | P1 | #12 ✓, #17 ✓ | U, E: #15 ✓ | `AuthServiceTest`, `AuthControllerTest` (kayıt: 201, ADMIN 400, kayıtlı e-posta 409); bütün `*IT`'lerde kayıt ucu |
 | FR-02 | Kullanıcı e-posta ve parolasıyla giriş yapabilir | A | P1 | #13 ✓, #18 ✓ | U, E: #15 ✓ | `AuthServiceTest`, `AuthControllerTest` (giriş: 200, yanlış 401, pasif 403); `DemoSeedIT` (9 hesap) |
-| FR-03 | Kullanıcı parolasını unuttuğunda parola yenileme isteyebilir ve tek kullanımlık bağlantıyla yeni parola belirleyebilir | A | P2 | #115, #117 | U: #15 ✓ | – (#115 açık) |
-| FR-04 | Kullanıcı kendi profilini görüntüleyip ad soyad ve kısa biyografisini güncelleyebilir | A | P2 | #116, #117 | U: #15 ✓ | `ProfileServiceTest`, `MeControllerTest` (profil görüntüleme); güncelleme #116 ile |
+| FR-03 | Kullanıcı parolasını unuttuğunda parola yenileme isteyebilir ve tek kullanımlık bağlantıyla yeni parola belirleyebilir | A | P2 | #115, #117 | U: #15 ✓ | `PasswordResetServiceTest` (bilinmeyen/pasif e-postada token ve bildirim yok, yalnız hash saklanır, süre, tek kullanım, yarış), `PasswordResetTokenTest`, `PasswordResetNotifierProfileTest` (token yalnız dev'de log'a), `AuthControllerTest` (202/204/400), `PasswordResetIT` (gerçek PostgreSQL: istek → onay → eski parola 401, ikinci kullanım ve süresi dolan bağlantı 400, yeni istek eskisini geçersiz kılar) — #115 |
+| FR-04 | Kullanıcı kendi profilini görüntüleyip ad soyad ve kısa biyografisini güncelleyebilir | A | P2 | #116, #117 | U: #15 ✓ | `ProfileServiceTest`, `MeControllerTest` (görüntüleme #14; güncelleme, e-posta/rol gönderilince 400, doğrulama #116), `ProfileApiIT` (gerçek PostgreSQL) |
 | FR-05 | Her işlem için kullanıcının rolü sunucu tarafında denetlenir | A | P1 | #10 ✓, #14 ✓, #19 ✓ | E: #139 ✓ | `SecurityConfigTest`, controller testleri (401/403), **`AccessMatrixIT`** (102 kontrol: her uçta girişsiz 401, yanlış rol 403, sözleşme = kod) |
 | FR-06 | Ders içeriklerine erişim, kursa kayıt ve kullanıcının yetkisine bağlıdır | A, C | P1 | #113 ✓, #45 ✓ | U, E: #139 ✓, #114 ✓ | `ContentDeliveryServiceTest`, `ContentControllerTest`, `ContentTokensTest`, `Bolum6CriticalCasesIT.case1`, `EnrollmentScenarioIT` |
 | FR-07 | Eğitmen başlık, açıklama, kategori, seviye, kapak görseli ve öğrenme hedefleriyle kurs oluşturabilir | B | P1 | #22 ✓, #33 ✓ | U: #31 ✓ | `CourseServiceTest.create_*`, `CourseControllerTest`, `CourseTest`, `CoursePublishingScenarioIT` |
@@ -186,7 +186,7 @@ Dört durumun hepsi testli: uçtan uca `Bolum6CriticalCasesIT` (case1–case4) v
 | Gereksinim sayısı | 44 | 19 |
 | En az bir geliştirme issue'su olan | 44 | 19 |
 | Test issue'su ya da manuel doğrulaması olan | 44 | 19 |
-| Bugün `main`'de en az bir otomatik testi olan | **42** | **16** |
-| Otomatik testi olmayan | 2: FR-03 (#115, geliştirme issue'su açık), FR-29 (ön yüzde sabit metin; manuel kontrol, #68) | 3: NFR-07, NFR-17 (görsel/tarayıcı, #68), NFR-14 (süreç, her PR'da CI) |
+| Bugün `main`'de en az bir otomatik testi olan | **43** | **16** |
+| Otomatik testi olmayan | 1: FR-29 (ön yüzde sabit metin; manuel kontrol, #68) | 3: NFR-07, NFR-17 (görsel/tarayıcı, #68), NFR-14 (süreç, her PR'da CI) |
 
 16.11'de otomatik testi olan FR sayısı 6, NFR sayısı 4'tü. `main`'de 1154 test var (964 birim, 13 mimari, 177 entegrasyon; 21.11.2026); servis katmanı satır coverage'ı %98,4 (test raporu, #99). **P1 gereksinimlerden otomatik testi olmayan** yalnız FR-29: akreditasyon ibaresi ön yüzde sabit metin ve ön yüz için otomatik test aracı yok (proje kuralı); bug bash'te (#68) kontrol edilir.

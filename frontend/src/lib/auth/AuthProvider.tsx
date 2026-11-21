@@ -21,6 +21,8 @@ export interface AuthContextValue {
   /** Giriş yapar; başarısızsa ApiError fırlatır (401 yanlış bilgi, 403 pasif hesap, 400 alan hatası). */
   login: (request: LoginRequest) => Promise<UserResponse>;
   logout: () => void;
+  /** Profil güncellenince (#116) başlıktaki ad gibi yerler yeni bilgiyi göstersin. */
+  updateUser: (user: UserResponse) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -68,9 +70,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoaded(null);
   }, []);
 
+  const updateUser = useCallback(
+    (updated: UserResponse) => {
+      if (token !== null) setLoaded({ token, user: updated });
+    },
+    [token],
+  );
+
   const value = useMemo<AuthContextValue>(
-    () => ({ status, user, token, login, logout }),
-    [status, user, token, login, logout],
+    () => ({ status, user, token, login, logout, updateUser }),
+    [status, user, token, login, logout, updateUser],
   );
 
   return <AuthContext value={value}>{children}</AuthContext>;

@@ -3,6 +3,8 @@ package com.miniudemy.auth.service;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.miniudemy.auth.domain.User;
+import com.miniudemy.auth.dto.UpdateProfileRequest;
 import com.miniudemy.auth.dto.UserResponse;
 import com.miniudemy.auth.mapper.UserMapper;
 import com.miniudemy.auth.repository.UserRepository;
@@ -29,5 +31,17 @@ public class ProfileService {
         return userRepository.findById(userId)
                 .map(userMapper::toResponse)
                 .orElseThrow(() -> new NotFoundException("Kullanıcı bulunamadı."));
+    }
+
+    /**
+     * Ad soyad ve kısa biyografiyi günceller (#116). E-posta ve rol bu yolla değişmez: istek DTO'su bu alanları
+     * {@code @Null} ile reddeder, entity'de de yalnız {@link User#updateProfile} çağrılır.
+     */
+    @Transactional
+    public UserResponse updateMyProfile(Long userId, UpdateProfileRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Kullanıcı bulunamadı."));
+        user.updateProfile(request.fullName().strip(), request.bio() == null ? null : request.bio().strip());
+        return userMapper.toResponse(userRepository.saveAndFlush(user));
     }
 }

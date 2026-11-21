@@ -40,6 +40,17 @@ package "com.miniudemy.auth" as auth {
       - createdAt : Instant
       - updatedAt : Instant
       + setActive(active : boolean) : void
+      + updateProfile(fullName : String, bio : String) : void
+      + changePasswordHash(passwordHash : String) : void
+    }
+    class PasswordResetToken <<entity>> {
+      - id : Long
+      - userId : Long
+      - tokenHash : String
+      - expiresAt : Instant
+      - usedAt : Instant
+      - createdAt : Instant
+      + isUsableAt(now : Instant) : boolean
     }
     enum Role {
       STUDENT
@@ -51,6 +62,12 @@ package "com.miniudemy.auth" as auth {
     class AccountLookupService
     class AuthService
     class ProfileService
+    class PasswordResetService
+    interface PasswordResetNotifier {
+      + sendResetLink(email : String, resetLink : String, expiresAt : Instant) : void
+    }
+    class LoggingPasswordResetNotifier <<dev>>
+    class DisabledPasswordResetNotifier <<!dev>>
     class UserAccountService
     class UserDirectoryService
     class UserStatsService
@@ -469,6 +486,10 @@ package "com.miniudemy.common.exception" as commonex {
 
 ' ---- JPA ilişkileri (modül içi) ----
 User --> "1" Role : role
+PasswordResetToken ..> User : userId
+PasswordResetService --> PasswordResetNotifier
+LoggingPasswordResetNotifier ..|> PasswordResetNotifier
+DisabledPasswordResetNotifier ..|> PasswordResetNotifier
 Course "*" --> "1" Category : category
 Course *-- "*" Section : sections
 Section *-- "*" Lesson : lessons

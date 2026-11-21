@@ -104,6 +104,20 @@ public class User {
         return active;
     }
 
+    /**
+     * Profil güncelleme (#116): yalnız ad soyad ve kısa biyografi. E-posta ve rol bu yolla değişmez. Boş biyografi
+     * {@code null} olarak saklanır (sözleşme: "null ya da boş gönderilirse temizlenir").
+     */
+    public void updateProfile(String fullName, String bio) {
+        this.fullName = fullName;
+        this.bio = bio == null || bio.isBlank() ? null : bio;
+    }
+
+    /** Parola yenileme (#115): yeni parolanın BCrypt özeti. Düz parola buraya gelmez. */
+    public void changePasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
+    }
+
     /** Hesabı aktifleştirir ya da pasifleştirir (yönetici işlemi, #60). */
     public void setActive(boolean active) {
         this.active = active;

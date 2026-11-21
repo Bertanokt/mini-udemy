@@ -92,9 +92,10 @@ export function Header() {
               )}
               {/* Kullanıcı değişince zil sıfırdan kurulur; önceki kullanıcının sayısı ve listesi taşınmaz (#136). */}
               <NotificationBell key={user.id} onNavigate={close} />
-              <span className="nav-user" title={user.email}>
+              {/* Ad, profil sayfasına gider (#117). */}
+              <Link href="/profile" className="nav-user" title={`${user.email} · Profilim`} onClick={close}>
                 {user.fullName}
-              </span>
+              </Link>
               <button type="button" className="nav-logout" onClick={onLogout}>
                 Çıkış
               </button>
