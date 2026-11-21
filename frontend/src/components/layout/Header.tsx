@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { NotificationBell } from "@/components/notification/NotificationBell";
 import type { Role } from "@/lib/api/auth";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { HOME_BY_ROLE } from "@/lib/auth/routes";
@@ -16,7 +17,7 @@ const PANEL_LINKS: Partial<Record<Role, { href: string; label: string }>> = {
 };
 
 /**
- * Üst menü (#19). Girişsizken Giriş/Kayıt; girişliyken rolün paneli, bildirim alanı yeri, kullanıcı adı ve Çıkış.
+ * Üst menü (#19). Girişsizken Giriş/Kayıt; girişliyken rolün paneli, bildirim zili (#136), kullanıcı adı ve Çıkış.
  * 600 px altında menü düğmesiyle açılıp kapanır.
  *
  * Oturuma bağlı kısım yalnız bileşen tarayıcıda bağlandıktan sonra çizilir (#256). Oturum localStorage'da durduğu
@@ -89,8 +90,8 @@ export function Header() {
                   {panel.label}
                 </Link>
               )}
-              {/* Bildirim zili ve okunmamış sayısı #136'da buraya gelecek. */}
-              <span className="nav-notifications" data-slot="notifications" />
+              {/* Kullanıcı değişince zil sıfırdan kurulur; önceki kullanıcının sayısı ve listesi taşınmaz (#136). */}
+              <NotificationBell key={user.id} onNavigate={close} />
               <span className="nav-user" title={user.email}>
                 {user.fullName}
               </span>

@@ -105,10 +105,6 @@ a {
   display: none;
 }
 
-.nav-notifications:empty {
-  display: none;
-}
-
 /* Dar ekranda menü düğmeyle açılır; açıkken başlığın altında tam genişlikte liste (#19). */
 @media (max-width: 600px) {
   .nav-toggle {

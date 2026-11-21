@@ -2,7 +2,7 @@
 
 Proje dokümanındaki beş senaryonun ([use-cases.md](use-cases.md) › 1) sunumda adım adım gösterimi. Her adımda **ne gösterilir** ve **hangi mimari nokta devreye girer** yazılıdır. Veriler seed verisinden gelir (#67, README › Demo hesapları); bütün hesapların parolası `Demo1234!`.
 
-> **Ekranı henüz olmayan adımlar** (21.11.2026): bildirim listesi (zil, #136; API var: `GET /api/me/notifications`, #125), katalogda puan filtresi (#305; API'de `minRating` var), kullanıcının şikâyet oluşturması (düğme yok; `POST /api/complaints`). Bu adımlar aşağıda **API ile** verildi. Uçtan uca testleri olduğu için davranışları doğrulanmış durumda (her senaryonun sonunda test adı).
+> **Ekranı henüz olmayan adımlar** (21.11.2026): katalogda puan filtresi (#305; API'de `minRating` var), kullanıcının şikâyet oluşturması (düğme yok; `POST /api/complaints`). Bu adımlar aşağıda **API ile** verildi. Uçtan uca testleri olduğu için davranışları doğrulanmış durumda (her senaryonun sonunda test adı).
 >
 > **Sıra önerisi:** Senaryo 5'in sayıları seed'e göredir. Senaryo 2'de yeni bir kursiyer kaydolunca "Sıfırdan Python"da 6 kayıt ve %16,7 tamamlanma görünür. Ya Senaryo 5 Senaryo 2'den önce gösterilir ya da sayılar "seed'e göre" diye söylenir.
 
@@ -87,7 +87,7 @@ Test: `ResumeScenarioIT`.
 | 4 | `ayse.yilmaz@…` → "Kayıtlı kurslarım" → "Sertifikalarım" (`/certificates`) → sertifikayı aç (`/certificates/{id}`) → "Yazdır" | Kursiyer adı, kurs, tarih, doğrulama kodu (`K7Q2-M9XA-4T`) ve doğrulama bağlantısı; "resmî akreditasyon değildir" ibaresi. Zorunlu dersler + zorunlu sınavlar tamamsa otomatik, tek sertifika. Başkasının sertifikası "bulunamadı" | `CertificateListener` → `CertificateIssuingService` (UNIQUE + `ON CONFLICT`); `CertificateIssued` → bildirim. Sekans diyagramı: `docs/diagrams/seq-certificate.png` |
 | 5 | Giriş yapmadan (gizli pencere) sertifikadaki bağlantı: `/verify/K7Q2-M9XA-4T`; sonra kodu bozarak dene | "✓ Geçerli sertifika": yalnız kursiyer adı, kurs ve tarih. Geçersiz kodda "bulunamadı" | Herkese açık uç (`GET /api/certificates/verify/{code}`); e-posta ya da id dönmez, kod büyük/küçük harften bağımsız (#130). Başkasının sertifikası 404, çünkü 403 varlığını belli ederdi |
 
-Bildirimler (Senaryo 1, 2, 4'te yazılır): ekranı yok (#136). Göstermek için ilgili hesabın token'ıyla `GET /api/me/notifications` ve `GET /api/me/notifications/unread-count`.
+Bildirimler (Senaryo 1, 2, 4'te yazılır): üst menüdeki zil (#136). Alıcı hesapla giriş yapınca zilde okunmamış sayısı görünür (sayfa geçişinde, sekmeye dönünce ve 60 sn'de bir yenilenir). Zile tıklayınca en yeni 10 bildirim açılır. Bildirime tıklamak onu okundu işaretler ve bağlantısına gider, örneğin "Kursunuz onaylandı" → kurs sayfası, "Kursunuz reddedildi" → `/instructor`, "Yeni kayıt" → kurs istatistikleri. "Hepsini okundu işaretle" sayıyı sıfırlar. API: `GET /api/me/notifications`, `GET /api/me/notifications/unread-count`, `POST /api/me/notifications/{id}/read`, `POST /api/me/notifications/read-all`.
 
 Test: `QuizCertificateScenarioIT`, `CertificateScenarioIT`, `NotificationScenarioIT`, `NotificationApiIT`.
 
