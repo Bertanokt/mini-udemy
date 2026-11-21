@@ -1523,3 +1523,16 @@ a.qb-btn {
     padding-left: 0;
   }
 }
+
+/* Yazdırma (#131): site başlığı ve yalnız ekranda gereken öğeler basılmaz. */
+@media print {
+  .site-header,
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+  }
+}

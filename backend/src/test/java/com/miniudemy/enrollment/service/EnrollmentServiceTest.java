@@ -15,6 +15,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -34,6 +35,7 @@ import com.miniudemy.enrollment.domain.Enrollment;
 import com.miniudemy.enrollment.domain.EnrollmentCreated;
 import com.miniudemy.enrollment.dto.EnrollmentProgressSnapshot;
 import com.miniudemy.enrollment.dto.EnrollmentResponse;
+import com.miniudemy.enrollment.dto.EnrollmentRef;
 import com.miniudemy.enrollment.mapper.EnrollmentMapperImpl;
 import com.miniudemy.enrollment.repository.EnrollmentRepository;
 
@@ -245,5 +247,26 @@ class EnrollmentServiceTest {
         assertThat(result).extracting(EnrollmentResponse::progressPercent).containsExactly(0.0, 50.0);
         assertThat(result).extracting(EnrollmentResponse::lastLessonId).containsExactly(null, 11L);
         assertThat(result).extracting(EnrollmentResponse::lastAccessedAt).containsExactly(null, opened);
+    }
+
+    // --- kayıt kimliği (#130) ---
+
+    @Test
+    void findRefsByStudent_returnsEnrollmentStudentAndCourseOfEveryEnrollment() {
+        given(repository.findAllByStudentIdOrderByEnrolledAtDescIdDesc(42L)).willReturn(List.of(
+                enrollment(9L, 42L, 5L, Instant.parse("2026-11-18T10:00:00Z")),
+                enrollment(8L, 42L, 3L, Instant.parse("2026-11-10T10:00:00Z"))));
+
+        assertThat(service.findRefsByStudent(42L))
+                .containsExactly(new EnrollmentRef(9L, 42L, 5L), new EnrollmentRef(8L, 42L, 3L));
+    }
+
+    @Test
+    void findRef_existingEnrollment_givesItsStudentAndCourse_missingIsEmpty() {
+        given(repository.findById(9L)).willReturn(Optional.of(enrollment(9L, 42L, 5L, Instant.parse("2026-11-18T10:00:00Z"))));
+        given(repository.findById(404L)).willReturn(Optional.empty());
+
+        assertThat(service.findRef(9L)).contains(new EnrollmentRef(9L, 42L, 5L));
+        assertThat(service.findRef(404L)).isEmpty();
     }
 }
