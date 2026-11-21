@@ -84,6 +84,51 @@ class CertificateScenarioIT extends IntegrationTestBase {
         assertThat(codes).hasSize(2).doesNotHaveDuplicates().allMatch(c -> c.matches(CODE));
     }
 
+    @Test
+    void studentSeesOwnCertificate_othersCannot_andAnyoneVerifiesItByCode() {
+        Course course = publishedCourse();
+        String ayse = enrolledStudent("Ayşe Yılmaz", "ayse@example.com", course);
+        String mehmet = enrolledStudent("Mehmet Demir", "mehmet@example.com", course);
+        complete(ayse, course.l1());
+        complete(ayse, course.l3());
+        assertThat(attempt(ayse, course.requiredQuiz(), true)).isTrue();
+        assertThat(certificateCount(course)).isEqualTo(1);
+
+        // Sertifikalarım (#130): kursiyerin kendi sertifikası, adlarla.
+        ResponseEntity<JsonNode> mine = get("/api/me/certificates", ayse);
+        assertThat(mine.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(mine.getBody()).hasSize(1);
+        JsonNode certificate = mine.getBody().get(0);
+        assertThat(certificate.get("courseId").asLong()).isEqualTo(course.id());
+        assertThat(certificate.get("courseTitle").asText()).isEqualTo("Java'ya giriş");
+        assertThat(certificate.get("studentName").asText()).isEqualTo("Ayşe Yılmaz");
+        assertThat(certificate.get("instructorName").asText()).isEqualTo("Zeynep Kaya");
+        assertThat(certificate.get("issuedAt").asText()).isNotBlank();
+        String code = certificate.get("verificationCode").asText();
+        assertThat(code).matches(CODE);
+        long id = certificate.get("id").asLong();
+        assertThat(get("/api/me/certificates/" + id, ayse).getBody().get("verificationCode").asText()).isEqualTo(code);
+
+        // Başkası göremez: listesi boş, sertifikanın adresi 404.
+        assertThat(get("/api/me/certificates", mehmet).getBody()).isEmpty();
+        assertThat(get("/api/me/certificates/" + id, mehmet).getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+
+        // Herkese açık doğrulama: girişsiz; yalnız ad, kurs, tarih ve geçerlilik.
+        ResponseEntity<JsonNode> verified = get("/api/certificates/verify/" + code, null);
+        assertThat(verified.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(verified.getBody().get("valid").asBoolean()).isTrue();
+        assertThat(verified.getBody().get("studentName").asText()).isEqualTo("Ayşe Yılmaz");
+        assertThat(verified.getBody().get("courseTitle").asText()).isEqualTo("Java'ya giriş");
+        assertThat(verified.getBody().get("issuedAt").asText()).isEqualTo(certificate.get("issuedAt").asText());
+        List<String> fields = new ArrayList<>();
+        verified.getBody().fieldNames().forEachRemaining(fields::add);
+        assertThat(fields).containsExactlyInAnyOrder("valid", "courseTitle", "studentName", "issuedAt");
+        assertThat(get("/api/certificates/verify/" + code.toLowerCase(), null).getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+        assertThat(get("/api/certificates/verify/YOKK-YOKK-YO", null).getStatusCode())
+                .isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
     // --- Hazırlık ---
 
     private Course publishedCourse() {
