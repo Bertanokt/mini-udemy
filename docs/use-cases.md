@@ -97,12 +97,12 @@ Senaryolar birden fazla kullanım durumunu uçtan uca birleştirir. Her senaryon
 
 1. Kursiyer oturumu kapatıp daha sonra tekrar giriş yapar (UC-02).
 2. Kursiyer kayıtlı kurslar panelini açar; her kurs için ilerleme yüzdesi ve son izlenen ders görünür (UC-11).
-3. Kursiyer bir kursta "Devam et"e tıklar.
+3. Kursiyer bir kursta "Kaldığın yerden devam et"e tıklar.
 4. Sistem son izlenen dersi oynatıcıda açar (UC-14).
 
 **Alternatif / hata akışları**
 
-- **4a. Hiç ders izlenmemiş:** "Devam et" kursun ilk dersini açar.
+- **4a. Hiç ders açılmamış:** Düğme "Derse başla" olur ve ilk tamamlanmamış dersi açar; bütün dersler tamamlanmışsa kursun ilk dersini.
 - **2a. Kayıtlı kurs yok:** Panel boş gösterilir ve kataloğa yönlendirir.
 - **2b. Yayından kaldırılmış kurs:** Daha önce kaydolan kursiyer kursu panelde görmeye ve içeriğe erişmeye devam eder.
 
@@ -378,9 +378,9 @@ Modül sırasıyla (A–L). Senaryolarda ayrıntılı anlatılan adımlar burada
 - **Aktör:** Kursiyer
 - **Ön koşul:** Kursiyer kursa kayıtlı.
 - **Ana akış:**
-  1. Kursiyer kurs sayfasında ya da kayıtlı kurslar panelinde "Devam et"e tıklar.
+  1. Kursiyer kurs sayfasında ya da kayıtlı kurslar panelinde "Kaldığın yerden devam et"e tıklar.
   2. Sistem son izlenen dersi açar.
-- **Alternatif / hata:** Hiç ders izlenmemişse ilk ders açılır.
+- **Alternatif / hata:** Hiç ders açılmamışsa düğme "Derse başla" olur ve ilk tamamlanmamış dersi açar.
 - **Son koşul:** Kursiyer son kaldığı derste.
 - **Gereksinimler / issue'lar:** FR-22 · #119, #120
 

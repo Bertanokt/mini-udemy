@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { UserManager } from "./UserManager";
+import { Loading } from "@/components/common/Loading";
 
 export const metadata: Metadata = {
   title: "Kullanıcı yönetimi · Mini Udemy",
@@ -12,7 +13,7 @@ export const instant = false;
 export default function UsersPage() {
   return (
     // Filtreler URL'den okunduğu için istemcide çizilir.
-    <Suspense fallback={<p className="auth-status">Kullanıcılar yükleniyor…</p>}>
+    <Suspense fallback={<Loading text="Kullanıcılar yükleniyor…" />}>
       <UserManager />
     </Suspense>
   );

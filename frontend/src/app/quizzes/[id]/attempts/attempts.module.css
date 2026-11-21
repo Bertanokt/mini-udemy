@@ -64,13 +64,9 @@
   color: var(--err);
 }
 
-.empty {
-  color: var(--muted);
-}
-
 .button {
   font: inherit;
-  color: #fff;
+  color: var(--accent-fg);
   background: var(--accent);
   border: 1px solid var(--accent);
   border-radius: 6px;
@@ -89,5 +85,14 @@
   .bestTag {
     display: block;
     margin-left: 0;
+  }
+}
+
+/* Dokunma hedefi (#71): bağlantı olarak kullanılan düğmeler de dar ekranda 44 px. */
+@media (max-width: 768px), (pointer: coarse) {
+  .button {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
   }
 }

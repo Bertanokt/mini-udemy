@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import type { Role } from "@/lib/api/auth";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { loginHref } from "@/lib/auth/routes";
+import { Loading } from "@/components/common/Loading";
 
 /**
  * Sayfayı yalnız verilen rollere gösterir (#19).
@@ -27,7 +28,7 @@ export function RequireRole({ roles, children }: { roles: Role[]; children: Reac
   }, [status, pathname, router]);
 
   if (status !== "authenticated" || user === null) {
-    return <p className="auth-status">Oturum kontrol ediliyor…</p>;
+    return <Loading text="Oturum kontrol ediliyor…" />;
   }
   if (!roles.includes(user.role)) {
     return (

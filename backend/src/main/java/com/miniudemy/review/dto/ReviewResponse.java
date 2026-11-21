@@ -6,7 +6,7 @@ import com.miniudemy.auth.dto.UserSummary;
 
 /**
  * Değerlendirme yanıtı (docs/api/openapi.yaml › ReviewResponse). {@code moderationReason} yalnız yönetici
- * yanıtlarında dolu olur (#142); bu modüldeki uçlarda her zaman null.
+ * yanıtlarında ({@code ReviewMapper.toAdminResponse}, #142) dolu olur; herkese açık ve kursiyer uçlarında her zaman null.
  */
 public record ReviewResponse(
         Long id,

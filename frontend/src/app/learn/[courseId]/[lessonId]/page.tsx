@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { LessonPlayerView } from "./LessonPlayerView";
+import { Loading } from "@/components/common/Loading";
 
 export const metadata: Metadata = {
   title: "Ders · Mini Udemy",
@@ -12,7 +13,7 @@ export const instant = false;
 /** `params` çalışma zamanında bilinir; beklenirken kabuk önceden çizilsin diye Suspense içinde çözülür. */
 export default function LessonPage() {
   return (
-    <Suspense fallback={<p className="auth-status">Ders yükleniyor…</p>}>
+    <Suspense fallback={<Loading text="Ders yükleniyor…" />}>
       <LessonPlayerView />
     </Suspense>
   );

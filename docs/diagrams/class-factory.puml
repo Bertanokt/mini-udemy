@@ -1,0 +1,170 @@
+@startuml class-factory
+' UML sınıf diyagramı: Factory Method deseni — ders içerik türleri (#51; ADR-011).
+' Sınıf, alan ve metot adları koddakiyle birebir; getter'lar gösterilmez. Tutarlılık tablosu PR #51'de.
+' Render (Graphviz gerekmez, smetana yerleşimi; PNG ve SVG ayrı komutlarla):
+'   java -Duser.language=en -Duser.country=US -jar plantuml.jar -tpng docs/diagrams/class-factory.puml
+'   java -Duser.language=en -Duser.country=US -jar plantuml.jar -tsvg docs/diagrams/class-factory.puml
+
+!pragma layout smetana
+!include class-style.iuml
+
+title Mini Udemy - Sınıf diyagramı: Factory Method (LessonContentFactory) — [[../adr/0011-factory-method-icerik-turleri.md ADR-011]]
+
+package "com.miniudemy.content.service" {
+  class ContentUploadService <<service>> {
+    - factories : LessonContentFactories
+    - storage : StorageService
+    + uploadLessonContent(instructorId : Long, lessonId : Long, originalName : String, content : InputStream) : LessonResponse
+    + uploadCourseCover(instructorId : Long, courseId : Long, originalName : String, content : InputStream) : CourseResponse
+  }
+
+  class ContentDeliveryService <<service>> {
+    - factories : LessonContentFactories
+    + issueContentToken(lessonId : Long, viewerId : Long, viewerIsAdmin : boolean) : IssuedContentToken
+    + openLessonContentWithToken(lessonId : Long, token : String) : ContentDownload
+    + openLessonContent(lessonId : Long, viewerId : Long, viewerIsAdmin : boolean) : ContentDownload
+    + openCourseCover(courseId : Long) : ContentDownload
+  }
+
+  class LessonContentFactories <<service>> {
+    - byType : Map<LessonContentType, LessonContentFactory> = new EnumMap<>(LessonContentType.class)
+    + LessonContentFactories(factories : List<LessonContentFactory>)
+    + forType(type : LessonContentType) : LessonContentFactory
+  }
+
+  abstract class LessonContentFactory <<Creator>> {
+    + {abstract} type() : LessonContentType
+    # {abstract} createContent() : LessonContent
+    + create() : LessonContent {final}
+  }
+
+  class VideoContentFactory <<component>> <<ConcreteCreator>> {
+    + type() : LessonContentType
+    # createContent() : LessonContent
+  }
+
+  class PdfContentFactory <<component>> <<ConcreteCreator>> {
+    + type() : LessonContentType
+    # createContent() : LessonContent
+  }
+
+  class DocumentContentFactory <<component>> <<ConcreteCreator>> {
+    + type() : LessonContentType
+    # createContent() : LessonContent
+  }
+
+  interface StorageService {
+    + store(originalName : String, content : InputStream, policy : FilePolicy, uploaderId : Long) : StoredFileInfo
+    + get(fileId : Long) : StoredFileInfo
+    + open(fileId : Long) : Resource
+    + delete(fileId : Long) : void
+  }
+}
+
+package "com.miniudemy.content.domain" {
+  abstract class LessonContent <<sealed>> <<Product>> {
+    + {abstract} filePolicy() : FilePolicy
+    + {abstract} deliveryMode() : DeliveryMode
+    + {abstract} supportsRangeRequests() : boolean
+  }
+
+  class VideoContent <<final>> <<ConcreteProduct>> {
+    {static} - POLICY : FilePolicy
+    + filePolicy() : FilePolicy
+    + deliveryMode() : DeliveryMode
+    + supportsRangeRequests() : boolean
+  }
+
+  class PdfContent <<final>> <<ConcreteProduct>> {
+    {static} - POLICY : FilePolicy
+    + filePolicy() : FilePolicy
+    + deliveryMode() : DeliveryMode
+    + supportsRangeRequests() : boolean
+  }
+
+  class DocumentContent <<final>> <<ConcreteProduct>> {
+    {static} - POLICY : FilePolicy
+    + filePolicy() : FilePolicy
+    + deliveryMode() : DeliveryMode
+    + supportsRangeRequests() : boolean
+  }
+
+  class FilePolicy <<record>> {
+    allowedFormats : Set<FileFormat>
+    maxBytes : long
+    tooLargeMessage : String
+    unsupportedTypeMessage : String
+    --
+    {static} + megabytes(n : long) : long
+    + allows(format : FileFormat) : boolean
+  }
+
+  enum FileFormat {
+    MP4
+    WEBM
+    PDF
+    DOCX
+    PPTX
+    JPEG
+    PNG
+    WEBP
+    --
+    - mimeType : String
+    + mimeType() : String
+  }
+
+  enum DeliveryMode {
+    INLINE
+    ATTACHMENT
+  }
+
+  class CoverImage <<final>> {
+    {static} + POLICY : FilePolicy
+  }
+}
+
+package "com.miniudemy.course.domain" {
+  enum LessonContentType {
+    VIDEO
+    PDF
+    DOCUMENT
+  }
+}
+
+ContentUploadService --> "1" LessonContentFactories : factories
+ContentDeliveryService --> "1" LessonContentFactories : factories
+ContentUploadService --> "1" StorageService : storage
+ContentUploadService ..> CoverImage : CoverImage.POLICY
+LessonContentFactories o--> "3" LessonContentFactory : byType
+LessonContentFactories ..> LessonContentType
+LessonContentFactory <|-- VideoContentFactory
+LessonContentFactory <|-- PdfContentFactory
+LessonContentFactory <|-- DocumentContentFactory
+LessonContentFactory ..> LessonContent : <<create>>
+VideoContentFactory ..> VideoContent : <<create>>
+PdfContentFactory ..> PdfContent : <<create>>
+DocumentContentFactory ..> DocumentContent : <<create>>
+LessonContent <|-- VideoContent
+LessonContent <|-- PdfContent
+LessonContent <|-- DocumentContent
+LessonContent ..> FilePolicy
+LessonContent ..> DeliveryMode
+FilePolicy --> "*" FileFormat : allowedFormats
+
+note right of LessonContentFactory
+  <b>Factory Method</b>: create() şablon metottur,
+  ürünü alt sınıfın createContent()'i üretir.
+  Yükleme: forType(lesson.contentType()).create().filePolicy()
+  Sunuş: forType(ref.contentType()).create()
+         → deliveryMode(), supportsRangeRequests()
+  Servislerde tür için if/switch yok.
+end note
+
+note bottom of DocumentContent
+  VIDEO: MP4/WEBM ≤ 200 MB, INLINE, range destekli
+  PDF: PDF ≤ 20 MB, INLINE
+  DOCUMENT: PDF/DOCX/PPTX ≤ 20 MB, ATTACHMENT
+  (sınır ve mesajlar ürünün POLICY sabitinde)
+end note
+
+@enduml

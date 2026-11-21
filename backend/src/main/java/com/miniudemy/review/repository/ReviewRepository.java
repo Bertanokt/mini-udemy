@@ -19,6 +19,20 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     /** Gizli olmayan yorumlar; sıra {@code pageable} ile gelir. */
     Page<Review> findByCourseIdAndHiddenFalse(Long courseId, Pageable pageable);
 
+    String ADMIN_FILTER = """
+            from Review r
+            where (:courseId is null or r.courseId = :courseId)
+              and (:hidden is null or r.hidden = :hidden)
+            """;
+
+    /**
+     * Yönetici moderasyon listesi (#142): gizliler dahil; boş filtre koşulu devre dışı bırakır. Sayfa başına en fazla
+     * iki sorgu (veri + sayım).
+     */
+    @Query(value = "select r " + ADMIN_FILTER, countQuery = "select count(r) " + ADMIN_FILTER)
+    Page<Review> searchForAdmin(@Param("courseId") Long courseId, @Param("hidden") Boolean hidden,
+            Pageable pageable);
+
     /** Bir kursun görünür yorumlarında puan başına sayı tek sorguda; hiç yorumu olmayan puan sonuçta yer almaz. */
     @Query("select r.rating as rating, count(r) as total from Review r "
             + "where r.courseId = :courseId and r.hidden = false group by r.rating")

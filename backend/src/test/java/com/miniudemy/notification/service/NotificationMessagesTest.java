@@ -62,6 +62,6 @@ class NotificationMessagesTest {
 
         assertThat(content).isEqualTo(new NotificationContent(NotificationType.CERTIFICATE_ISSUED,
                 "Sertifikanız hazır", "\"Java'ya giriş\" kursunu tamamladınız; sertifikanız oluşturuldu.",
-                "/my-courses"));
+                "/certificates"));
     }
 }

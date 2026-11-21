@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { RequireRole } from "@/components/auth/RequireRole";
+import { Loading } from "@/components/common/Loading";
 
 /**
  * Ders oynatıcı (#45) giriş ister. Kim hangi derse erişir kuralı backend'dedir (kayıtlı kursiyer, kursun eğitmeni,
@@ -8,7 +9,7 @@ import { RequireRole } from "@/components/auth/RequireRole";
  */
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <Suspense fallback={<p className="auth-status">Yükleniyor…</p>}>
+    <Suspense fallback={<Loading />}>
       <RequireRole roles={["STUDENT", "INSTRUCTOR", "ADMIN"]}>{children}</RequireRole>
     </Suspense>
   );
