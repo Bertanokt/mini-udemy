@@ -1,7 +1,7 @@
 # Proje planı: Gantt, görev dağılımı, risk analizi
 
 Proje raporu şablonunun 6. bölümü (#82). Planlanan takvim `CONTRIBUTING.md` › Sprint'teki milestone'lardan, görev sayıları GitHub'daki issue'lardan alındı.
-**Veri tarihi:** 16.11.2026 14:10 (İstanbul saati); risk tablosu ve freeze kararı (bölüm 6) 17.11.2026'da güncellendi. Hafta 5'te gerçekleşenle güncellenecek.
+**Veri tarihi:** 16.11.2026 14:10 (İstanbul saati); risk tablosu ve freeze kararı (bölüm 6) 17.11.2026'da, Gantt'ın gerçekleşen kısmı ve bölüm 8 21.11.2026'da güncellendi (#104). Rapordaki özeti: [`../rapor/bolum-5-8.md`](../rapor/bolum-5-8.md) › 6.
 
 ## 1. Takvim özeti
 
@@ -41,12 +41,13 @@ gantt
     IP-6 Raporlama (ilerleme, test raporu, Word)  :ip6, 2026-10-28, 2026-12-02
     IP-7 Demo (seed data, senaryo, prova)         :ip7, 2026-11-18, 2026-12-02
 
-    section Gerçekleşen (16.11 itibarıyla)
+    section Gerçekleşen (21.11 itibarıyla; PR ile kapanan issue'ların ilk–son merge tarihi)
     Repo iskeleti ve backlog (PR'sız commit'ler)  :done, g0, 2026-10-15, 2026-10-24
-    H1 doküman ve tasarım PR'ları                 :done, g1, 2026-11-11, 2026-11-14
-    Migration'lar ve API sözleşmesi               :done, g2, 2026-11-13, 2026-11-16
-    Auth zinciri (#8, #9, #10, #13) ve kurs entity'leri (#21) :done, g3, 2026-11-13, 2026-11-17
-    Kalan iş (H1–H4 açık issue'lar)               :active, g4, 2026-11-16, 2026-11-18
+    H1 işleri (25 issue)                          :done, g1, 2026-11-11, 2026-11-19
+    H2 işleri (29 issue)                          :done, g2, 2026-11-14, 2026-11-21
+    H3 işleri (28 issue)                          :done, g3, 2026-11-14, 2026-11-22
+    H4 işleri (25 issue)                          :done, g4, 2026-11-15, 2026-11-22
+    H5 işleri (11 issue, devam ediyor)            :active, g5, 2026-11-17, 2026-11-25
 ```
 
 ## 3. Faz dağılımı
@@ -142,15 +143,19 @@ Projede ücretli yazılım lisansı kullanılmıyor; **ürünün lisans maliyeti
 
 Geliştirme aracı olarak kullanılan Claude Code ücretli bir abonelik gerektirir; ürünün çalışması için gerekli değildir ve ürünün lisans maliyetine dahil değildir.
 
-## 8. Planlanan ve gerçekleşen (16.11.2026)
+## 8. Planlanan ve gerçekleşen (21.11.2026 akşamı)
 
-| Milestone | Planlanan bitiş | Planlanan issue | Kapanan | Not |
+Kapanan: GitHub'da "completed" kapanan issue; "not planned" kapatılanlar (6) sayılmaz. Parantez içinde 16.11 değeri.
+
+| Milestone | Planlanan bitiş | Issue | Kapanan | Açık (21.11) |
 |---|---|---|---|---|
-| Hafta 1 | 27.10 | 27 | 19 | İlk PR'lar 11.11'de; #12, #14 ve #15 dahil 8 issue açık |
-| Hafta 2 | 03.11 | 32 | 5 | Kurs ve kayıt işleri auth zincirini bekledi |
-| Hafta 3 | 10.11 | 33 | 4 | Hafta içinde `main`'e değişiklik girmedi |
-| Hafta 4 | 17.11 | 33 | 1 | Devam ediyor; freeze 17.11 |
-| Hafta 5 | 24.11 | 14 | 0 | Başlamadı |
-| Sunum | 01.12 | 7 | 0 | Başlamadı |
+| Hafta 1 | 27.10 | 26 | 26 (19) | – |
+| Hafta 2 | 03.11 | 32 | 32 (5) | – |
+| Hafta 3 | 10.11 | 33 | 33 (4) | – |
+| Hafta 4 | 17.11 | 31 | 30 (1) | #66 OpenAPI eşitleme |
+| Hafta 5 | 24.11 | 18 | 12 (0) | #68 bug bash, #72 README, #97 (PR #316), #99, #101, #257 |
+| Sunum | 01.12 | 7 | 0 (0) | Başlamadı |
+| Milestone'suz | – | 7 | 6 | #305 puan filtresi |
+| **Toplam** | | **154** | **139 (29)** | |
 
-Ayrıntılar haftalık raporlarda: [`progress/`](progress/).
+Merge edilen PR: 157 (Bertan 58, Eray 39, Veronika 33, Sedat 27); hepsi 11.11–21.11 arasında, en yoğun gün 17.11 (32 PR). Ayrıntılar haftalık raporlarda: [`progress/`](progress/).
