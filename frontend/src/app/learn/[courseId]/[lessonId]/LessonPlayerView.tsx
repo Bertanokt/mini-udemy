@@ -8,6 +8,8 @@ import { createContentToken, lessonContentUrl, type ContentTokenResponse } from 
 import { listSections, type LessonResponse, type SectionResponse } from "@/lib/api/courses";
 import { formatDuration } from "@/components/course/CourseCard";
 import { learnHref, locateLesson } from "@/lib/learn/navigation";
+import { useSectionQuizzes, type SectionQuiz } from "@/lib/learn/useSectionQuizzes";
+import { useAuth } from "@/lib/auth/AuthProvider";
 import styles from "../player.module.css";
 
 type Sections =
@@ -34,6 +36,11 @@ export function LessonPlayerView() {
   const [retry, setRetry] = useState(0);
   const [loaded, setLoaded] = useState<Sections | null>(null);
   const [listOpen, setListOpen] = useState(false);
+  const { user } = useAuth();
+  const sectionQuizzes = useSectionQuizzes(
+    loaded?.kind === "ok" ? loaded.sections.map((s) => s.id) : [],
+    user?.role === "STUDENT",
+  );
   const key = `${params.courseId}#${retry}`;
   const state: Sections | null =
     courseId === null ? { key, kind: "notFound" } : loaded?.key === key ? loaded : null;
@@ -113,6 +120,7 @@ export function LessonPlayerView() {
                   </li>
                 ))}
               </ol>
+              <SectionQuizLinks quizzes={sectionQuizzes.get(s.id)} courseId={courseId} />
             </div>
           ))}
         </nav>
@@ -139,6 +147,37 @@ export function LessonPlayerView() {
         </p>
       </section>
     </div>
+  );
+}
+
+const QUIZ_STATUS: Record<SectionQuiz["status"], string> = {
+  passed: "✓ Geçildi",
+  failed: "Denendi, geçilmedi",
+  notAttempted: "",
+};
+
+/**
+ * Bölümün sınav bağlantıları (#304): yalnız kursa kayıtlı kursiyerde (`useSectionQuizzes`). Sınav sayfasına kurs id'si
+ * de gönderilir ki sonuç ekranındaki "Kursa dön" buraya geri getirsin (#58).
+ */
+function SectionQuizLinks({ quizzes, courseId }: { quizzes: SectionQuiz[] | undefined; courseId: number }) {
+  if (!quizzes || quizzes.length === 0) return null;
+  return (
+    <ul className={styles.quizzes} aria-label="Bölüm sınavları">
+      {quizzes.map(({ quiz, status }) => (
+        <li key={quiz.id}>
+          <Link href={`/quizzes/${quiz.id}?course=${courseId}`}>
+            <span>📝 {quiz.title}</span>
+            <span className={styles.lessonMeta}>
+              Sınav{quiz.required ? " · Zorunlu" : ""}
+              {QUIZ_STATUS[status] && (
+                <span className={status === "passed" ? styles.quizPassed : undefined}> · {QUIZ_STATUS[status]}</span>
+              )}
+            </span>
+          </Link>
+        </li>
+      ))}
+    </ul>
   );
 }
 
