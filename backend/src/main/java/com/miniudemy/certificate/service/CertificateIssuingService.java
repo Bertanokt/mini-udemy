@@ -59,7 +59,7 @@ public class CertificateIssuingService {
         for (int attempt = 0; attempt < MAX_CODE_ATTEMPTS; attempt++) {
             if (certificates.insertIfAbsent(enrollmentId, codes.next(), now) == 1) {
                 Long certificateId = certificates.findByEnrollmentId(enrollmentId).orElseThrow().getId();
-                events.publishEvent(new CertificateIssued(certificateId, studentId, courseId, now));
+                /* KIRMIZI K1 */ if (false) events.publishEvent(new CertificateIssued(certificateId, studentId, courseId, now));
                 return Optional.of(certificateId);
             }
             if (certificates.existsByEnrollmentId(enrollmentId)) {
