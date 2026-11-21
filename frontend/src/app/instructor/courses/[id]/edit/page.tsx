@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { EditCourse } from "./EditCourse";
+import { Loading } from "@/components/common/Loading";
 
 export const metadata: Metadata = {
   title: "Kursu düzenle · Mini Udemy",
@@ -12,7 +13,7 @@ export const instant = false;
 /** Eğitmen panelindeki (#38) her kurs satırının "Düzenle" bağlantısından açılır (#33). */
 export default function EditCoursePage() {
   return (
-    <Suspense fallback={<p className="auth-status">Yükleniyor…</p>}>
+    <Suspense fallback={<Loading />}>
       <EditCourse />
     </Suspense>
   );

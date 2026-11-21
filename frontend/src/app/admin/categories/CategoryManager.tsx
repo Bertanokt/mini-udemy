@@ -6,6 +6,9 @@ import { createCategory, deleteCategory, updateCategory } from "@/lib/api/admin"
 import { listCategories, type CategoryResponse } from "@/lib/api/catalog";
 import { ApiError } from "@/lib/api/client";
 import { NAME_MAX, errorMessage, nameFieldError, sortByName, validateName } from "./validation";
+import { Loading } from "@/components/common/Loading";
+import { ErrorMessage } from "@/components/common/ErrorMessage";
+import { EmptyState } from "@/components/common/EmptyState";
 
 type Load =
   | { state: "loading" }
@@ -160,16 +163,9 @@ export function CategoryManager() {
         </p>
       )}
 
-      {load.state === "loading" && <p className="auth-status">Kategoriler yükleniyor…</p>}
+      {load.state === "loading" && <Loading text="Kategoriler yükleniyor…" />}
 
-      {load.state === "error" && (
-        <div className="qb-state" role="alert">
-          <p className="auth-error">{load.message}</p>
-          <button type="button" className="qb-btn" onClick={retry}>
-            Tekrar dene
-          </button>
-        </div>
-      )}
+      {load.state === "error" && <ErrorMessage message={load.message} onRetry={retry} />}
 
       {load.state === "ready" && (
         <>
@@ -199,7 +195,7 @@ export function CategoryManager() {
           </form>
 
           {load.categories.length === 0 && (
-            <p className="qb-state">Henüz kategori yok. Yukarıdan ilk kategoriyi ekleyin.</p>
+            <EmptyState message="Henüz kategori yok. Yukarıdan ilk kategoriyi ekleyin." />
           )}
 
           <ul className="qb-list">

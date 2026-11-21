@@ -64,10 +64,6 @@
   color: var(--err);
 }
 
-.empty {
-  color: var(--muted);
-}
-
 .button {
   font: inherit;
   color: #fff;

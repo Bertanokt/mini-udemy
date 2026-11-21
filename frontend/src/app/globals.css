@@ -159,10 +159,6 @@ a {
   margin-bottom: 8px;
 }
 
-.status-down {
-  color: var(--err);
-}
-
 /* Katalog */
 .visually-hidden {
   position: absolute;
@@ -231,14 +227,9 @@ a {
   font-size: 0.875rem;
 }
 
-.catalog-status,
 .catalog-count {
   color: var(--muted);
   margin: 16px 0;
-}
-
-.catalog-status button {
-  margin-top: 8px;
 }
 
 .course-grid {

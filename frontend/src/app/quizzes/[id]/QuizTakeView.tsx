@@ -13,6 +13,7 @@ import {
 import { buildAnswers, questionLabel, toggleOption, unansweredQuestionIds, type Selection } from "@/lib/quiz/answers";
 import { learnHref } from "@/lib/learn/navigation";
 import styles from "./take.module.css";
+import { Loading } from "@/components/common/Loading";
 
 type Loaded =
   | { key: string; kind: "ok"; quiz: StudentQuizResponse }
@@ -127,7 +128,7 @@ export function QuizTakeView() {
   return (
     <section>
       <h1>{quiz?.title ?? "Sınav"}</h1>
-      {state === null && <p className={styles.status}>Sınav yükleniyor…</p>}
+      {state === null && <Loading text="Sınav yükleniyor…" />}
       {state?.kind === "forbidden" && (
         <p role="alert" className={styles.error}>
           Bu sınava girmek için kursa kayıtlı olmalısın.

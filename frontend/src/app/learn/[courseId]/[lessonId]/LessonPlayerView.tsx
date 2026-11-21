@@ -18,6 +18,7 @@ import { useCourseProgress, type ProgressState } from "@/lib/learn/useCourseProg
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { ProgressBar, formatPercent } from "@/components/progress/ProgressBar";
 import styles from "../player.module.css";
+import { Loading } from "@/components/common/Loading";
 
 type Sections =
   | { key: string; kind: "ok"; sections: SectionResponse[] }
@@ -80,7 +81,7 @@ export function LessonPlayerView() {
     };
   }, [courseId, key]);
 
-  if (state === null) return <p className={styles.status}>Ders yükleniyor…</p>;
+  if (state === null) return <Loading text="Ders yükleniyor…" />;
   if (state.kind === "notFound") return <NotFound text="Kurs bulunamadı." />;
   if (state.kind === "error") {
     return (

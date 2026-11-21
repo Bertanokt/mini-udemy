@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { AttemptsView } from "./AttemptsView";
+import { Loading } from "@/components/common/Loading";
 
 export const metadata: Metadata = {
   title: "Sınav denemelerim · Mini Udemy",
@@ -12,7 +13,7 @@ export const instant = false;
 /** `params` çalışma zamanında bilinir; beklenirken kabuk önceden çizilsin diye Suspense içinde çözülür. */
 export default function QuizAttemptsPage({ params }: { params: Promise<{ id: string }> }) {
   return (
-    <Suspense fallback={<p className="auth-status">Denemeler yükleniyor…</p>}>
+    <Suspense fallback={<Loading text="Denemeler yükleniyor…" />}>
       <AttemptsView params={params} />
     </Suspense>
   );

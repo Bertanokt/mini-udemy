@@ -24,6 +24,7 @@ import {
   type QuizErrors,
 } from "@/lib/quiz/quizValidation";
 import { errorMessage } from "./errors";
+import { Loading } from "@/components/common/Loading";
 
 function emptyDraft(): QuizDraft {
   return {
@@ -149,7 +150,7 @@ export function QuizForm({
 
   const titleId = `quiz-form-title-${quizId ?? `new-${sectionId}`}`;
 
-  if (load.state === "loading") return <p className="auth-status">Sınav yükleniyor…</p>;
+  if (load.state === "loading") return <Loading text="Sınav yükleniyor…" />;
   if (load.state === "error") {
     return (
       <div className="qb-state" role="alert">

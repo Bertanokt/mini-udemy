@@ -154,10 +154,6 @@
   cursor: default;
 }
 
-.status {
-  color: var(--muted);
-}
-
 .error {
   color: var(--err);
 }

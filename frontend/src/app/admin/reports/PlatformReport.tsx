@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getPlatformReport, type PlatformReportResponse } from "@/lib/api/admin";
 import { ApiError } from "@/lib/api/client";
+import { Loading } from "@/components/common/Loading";
+import { ErrorMessage } from "@/components/common/ErrorMessage";
+import { EmptyState } from "@/components/common/EmptyState";
 
 const ROLE_LABELS: Record<string, string> = {
   STUDENT: "Öğrenci",
@@ -67,16 +70,9 @@ export function PlatformReport() {
       <h1>Platform raporu</h1>
       <p className="an-note">Sayılar tüm zamanlarındır. Tamamlanma: kursu %100 bitirmiş kayıt.</p>
 
-      {!result && <p className="auth-status">Rapor yükleniyor…</p>}
+      {!result && <Loading text="Rapor yükleniyor…" />}
 
-      {result?.kind === "error" && (
-        <div className="qb-state" role="alert">
-          <p>{result.message}</p>
-          <button type="button" onClick={() => setRetry((n) => n + 1)}>
-            Tekrar dene
-          </button>
-        </div>
-      )}
+      {result?.kind === "error" && <ErrorMessage message={result.message} onRetry={() => setRetry((n) => n + 1)} />}
 
       {result?.kind === "ok" && <ReportBody report={result.data} />}
     </section>
@@ -127,7 +123,7 @@ function ReportBody({ report }: { report: PlatformReportResponse }) {
       <section aria-labelledby="rp-top-h">
         <h2 id="rp-top-h">En çok kayıt alan kurslar</h2>
         {report.topCourses.length === 0 ? (
-          <p className="qb-state">Henüz kayıt yok.</p>
+          <EmptyState message="Henüz kayıt yok." />
         ) : (
           <div className="an-scroll">
             <table className="an-table">

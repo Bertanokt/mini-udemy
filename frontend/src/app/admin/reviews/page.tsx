@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ReviewModerationList } from "./ReviewModerationList";
+import { Loading } from "@/components/common/Loading";
 
 export const metadata: Metadata = {
   title: "Yorum moderasyonu · Mini Udemy",
@@ -13,7 +14,7 @@ export const instant = false;
 export default function AdminReviewsPage() {
   return (
     // Filtreler ve sayfa URL'den okunduğu için istemcide çizilir.
-    <Suspense fallback={<p className="auth-status">Yorumlar yükleniyor…</p>}>
+    <Suspense fallback={<Loading text="Yorumlar yükleniyor…" />}>
       <ReviewModerationList />
     </Suspense>
   );
