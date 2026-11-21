@@ -99,7 +99,7 @@ Seviye kısaltmaları bölüm 1'deki tablodadır. "Test issue'su" sütunundaki i
 
 | NFR | Ne doğrulanır | Seviye | Test issue'su |
 |---|---|---|---|
-| NFR-01 | Liste uçları `page`/`size` alır; `size` > 50 sınırlanır ya da 400 | E | #65 |
+| NFR-01 | Liste uçları `page`/`size` alır; `size` > 100 → 400 | E | #65 |
 | NFR-02 | Video `Range` isteğine 206 Partial Content döner; dosya akışla gönderilir | E | #114 |
 | NFR-03 | Kayıtsız kursiyerin içerik ve dosya isteği 403; dosyaya doğrudan URL ile ulaşılamaz | E | #139, #114 |
 | NFR-04 | Korumalı uçlar JWT olmadan 401; parola BCrypt ile saklanır, logda düz parola yok | E, İ | #139, #15 |

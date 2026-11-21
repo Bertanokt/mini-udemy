@@ -2,7 +2,7 @@
 
 Hocanın Proje Yazım Şablonu'nun 1–3. bölümlerinin içeriği (#102). Word dosyasında birleştirme #69'da yapılır; bu dosya metnin kaynağıdır. Ayrıntılı tablolar repodaki dokümanlarda; burada rapora girecek özetleri var. Bölüm 4 (mimari, desenler, SOLID, API): #103; bölüm 5–8: [`bolum-5-8.md`](bolum-5-8.md) (#104, taslak PR #287; merge edilene kadar bağlantı `main`'de açılmaz).
 
-**Veri tarihi:** 20.11.2026, `main` @ `c99d931`. ⟨…⟩ ile işaretli yerler test raporu (#99), bug bash (#68), demo provası (#106), diyagram–kod tutarlılık kontrolünün sonu (#97) ve ekran görüntüleri bitince doldurulacak; son güncelleme 01.12.2026'dan önce.
+**Veri tarihi:** 21.11.2026, `main` @ `d1726d3`. ⟨…⟩ ile işaretli yerler test raporu (#99), bug bash (#68), demo provası (#106), diyagram–kod tutarlılık kontrolünün sonu (#97) ve ekran görüntüleri bitince doldurulacak; son güncelleme 01.12.2026'dan önce.
 
 **Şablon numaraları:** 3.2, 3.3.1–3.3.8, 3.4.1, 3.4.5 ve 3.4.7 issue'lardaki şablon atıflarından (#77, #78, #79, #87, #88) alındı. 3.4.2, 3.4.3, 3.4.4 ve 3.4.6'nın sırası tahmindir; Word şablonuyla birleştirirken (#69) kontrol edilecek.
 
@@ -165,7 +165,7 @@ Proje tanım dokümanının 5. bölümündeki teknik beklentilerden **19 ölçü
 
 | Başlık | NFR | Ölçüt (özet) | Doğrulama |
 |---|---|---|---|
-| 3.3.1 Performans | NFR-01, 02 | Listeler sayfalı (`size` ≤ 50); dosyalar akışla, video `Range` (206) destekli | Test |
+| 3.3.1 Performans | NFR-01, 02 | Listeler sayfalı (`size` ≤ 100, aşan 400); dosyalar akışla, video `Range` (206) destekli | Test |
 | 3.3.2 Güvenlik | NFR-03–06 | Kayıtsız içerik isteği 403; JWT'siz istek 401; parolalar BCrypt; sahiplik sunucuda denetlenir; gizli bilgi ortam değişkeninde | Test, inceleme |
 | 3.3.3 Kullanılabilirlik ve mobil uyumluluk | NFR-07, 08 | 360 px'te yatay kaydırma yok; doğrulama hatası ilgili alanın altında | Demo, test |
 | 3.3.4 Güvenilirlik ve veri bütünlüğü | NFR-09, 10 | Mükerrer kayıt ve sertifika yok (benzersizlik kısıtı); ilerleme yüzdesi sınır durumlarıyla testli | Test |
@@ -186,7 +186,7 @@ Proje tanım dokümanının 4. bölümündeki beş temel senaryo; her biri aktö
 |---|---|---|---|---|
 | 1 | Kurs yayımlama | Eğitmen, Yönetici | Kurs oluştur (Taslak) → bölüm/ders ekle → içerik yükle → soru bankası ve bölüm sınavı → onaya gönder (İncelemede) → yönetici onaylar (Yayımlandı) | Red: gerekçeyle Taslak'a döner; geçersiz dosya 413/415; geçersiz durum geçişi 409; başka eğitmenin kursu 403 |
 | 2 | Kursa kayıt ve öğrenme | Kursiyer | Katalogda ara → kurs ayrıntısı → ücretsiz kayıt → dersi izle → tamamlandı işaretle → ilerleme yeniden hesaplanır | Mükerrer kayıt 409; kayıtsız içerik isteği 403; dersi olmayan bölüm %0 |
-| 3 | Kaldığı yerden devam | Kursiyer | Tekrar giriş → kayıtlı kurslar paneli (yüzde, son ders) → "Devam et" son izlenen dersi açar | Hiç ders izlenmemişse ilk ders açılır |
+| 3 | Kaldığı yerden devam | Kursiyer | Tekrar giriş → kayıtlı kurslar paneli (yüzde, son ders) → "Kaldığın yerden devam et" son izlenen dersi açar | Hiç ders açılmamışsa düğme "Derse başla" olur ve ilk tamamlanmamış dersi açar |
 | 4 | Sınav ve sertifika | Kursiyer, Sistem, Ziyaretçi | Bölüm sınavı → otomatik puanlama → geçti/kaldı → koşullar tamamsa sertifika oluşur → herkes kodla doğrular | Kaldı: sınırsız deneme; koşul eksikse sertifika yok; ikinci sertifika oluşmaz |
 | 5 | Eğitmen analitiği | Eğitmen | Kurslarım → kurs istatistikleri: kayıt, tamamlanma oranı, sınav başarısı, kursiyer ilerlemesi | Başka eğitmenin kursu 403 |
 
@@ -221,7 +221,7 @@ Genel bakış diyagramı 10 modülün domain ve service sınıflarını ve modü
 | Factory Method | [`class-factory.png`](../docs/diagrams/class-factory.png) | `content` — `LessonContentFactory` ve VIDEO, PDF, DOCUMENT fabrikaları | ADR-011 |
 | DTO + Mapper | [`class-dto-mapper.png`](../docs/diagrams/class-dto-mapper.png) | Her modülün `dto` ve `mapper` paketi (MapStruct) | ADR-006 |
 
-*Tutarlılık:* diyagramlar `main`'deki koddan çıkarıldı (#51, PR #283) ve PR'da diyagram–kod tablosuyla verildi. #97 kontrolü ⟨#97: sınıf diyagramı kontrolü bekleniyor⟩.
+*Tutarlılık:* diyagramlar `main`'deki koddan çıkarıldı (#51, PR #283) ve PR'da diyagram–kod tablosuyla verildi. #97 son kontrolünde (21.11) kodun `domain`, `service` ve `listener` sınıfları ile diyagramdaki 103 metot adı betikle karşılaştırıldı; tek eksik `CertificateQueryService` (#297), PR #316 ile ekleniyor ⟨PR #316 merge edilince güncellenecek⟩.
 
 #### 3.4.4 Dinamik model: sekans diyagramları
 
@@ -243,11 +243,11 @@ Sistem bağlamı (C4 seviye 1) üç kullanıcı rolünü ve Mini Udemy'yi; conta
 
 ![C4 — container](../docs/diagrams/c4-container.png)
 
-*Tutarlılık (#97, 19.11):* container'lar ve ilişkiler `docker-compose.yml` ile aynı. Veritabanı açıklamasının yeni tabloları da (değerlendirme, sertifika, bildirim) anması önerildi ⟨#97 sonucuna göre güncellenecek⟩.
+*Tutarlılık (#97, 19.11 ve 21.11):* container'lar ve ilişkiler `docker-compose.yml` ile aynı. Veritabanı açıklamasında değerlendirme, sertifika, bildirim ve şikâyet tabloları eksikti; PR #316 ile ekleniyor ⟨PR #316 merge edilince güncellenecek⟩.
 
 #### 3.4.6 Veri modeli: ER diyagramı
 
-Veritabanı şeması yalnız Flyway migration'larıyla değişir (ADR-003). ER diyagramı 20 tablo içerir; bunların 19'u `main`'deki migration'larda var. `password_reset_tokens` parola yenileme işiyle (#115, açık) gelecek.
+Veritabanı şeması yalnız Flyway migration'larıyla değişir (ADR-003). ER diyagramı 20 tablo içerir; 20'si de `main`'deki migration'larda var. Sonuncusu `password_reset_tokens`, parola yenileme işiyle (#115, PR #322) 21.11'de geldi.
 
 ![ER diyagramı](../docs/diagrams/er.png)
 
@@ -259,7 +259,7 @@ Veritabanı şeması yalnız Flyway migration'larıyla değişir (ADR-003). ER d
 | Sınav | `questions`, `options`, `quizzes`, `quiz_questions`, `quiz_attempts`, `attempt_answers` |
 | Sertifika, yorum, bildirim, şikâyet | `certificates`, `reviews`, `notifications`, `complaints` |
 
-*Tutarlılık (#97, 19.11):* migration'daki her tablo tablo, kolon, tip ve NOT NULL düzeyinde betikle karşılaştırıldı; fark yok. `complaints` migration'ı o tarihten sonra geldi (#144) ⟨#97: yeniden kontrol⟩.
+*Tutarlılık (#97, 19.11 ve 21.11):* migration'daki her tablo tablo, kolon, tip ve NOT NULL düzeyinde betikle karşılaştırıldı; fark yok. 21.11 kontrolünde `complaints` (#144) dahil 19 tablo birebir aynı. `password_reset_tokens` migration'ı o kontrolden sonra geldi ⟨#97: yeniden kontrol⟩.
 
 #### 3.4.7 Kullanıcı arayüzü
 
@@ -270,9 +270,11 @@ UI taslakları (#88) kapsam dışı bırakıldı; bu bölümde wireframe yerine 
 | Ziyaretçi | Katalog ve arama | `/` | ⟨mobil, masaüstü⟩ |
 | Ziyaretçi | Kurs ayrıntısı | `/courses/[id]` | ⟨mobil, masaüstü⟩ |
 | Ziyaretçi | Kayıt ol, giriş yap | `/register`, `/login` | ⟨mobil, masaüstü⟩ |
+| Ziyaretçi | Sertifika doğrulama (girişsiz) | `/verify/[code]` | ⟨mobil, masaüstü⟩ |
 | Kursiyer | Kayıtlı kurslarım | `/my-courses` | ⟨mobil, masaüstü⟩ |
 | Kursiyer | Kurs oynatıcısı | `/learn/[courseId]/[lessonId]` | ⟨mobil, masaüstü⟩ |
 | Kursiyer | Sınav ve denemeler | `/quizzes/[id]`, `/quizzes/[id]/attempts` | ⟨mobil, masaüstü⟩ |
+| Kursiyer | Sertifikalarım, sertifika (yazdırılabilir) | `/certificates`, `/certificates/[id]` | ⟨mobil, masaüstü⟩ |
 | Eğitmen | Eğitmen paneli | `/instructor` | ⟨mobil, masaüstü⟩ |
 | Eğitmen | Kurs formu | `/instructor/courses/new`, `…/[id]/edit` | ⟨mobil, masaüstü⟩ |
 | Eğitmen | Bölüm ve dersler, içerik yükleme ve önizleme | `…/[id]/sections` | ⟨mobil, masaüstü⟩ |
@@ -284,4 +286,4 @@ UI taslakları (#88) kapsam dışı bırakıldı; bu bölümde wireframe yerine 
 | Yönetici | Yorumlar, şikâyetler | `/admin/reviews`, `/admin/complaints` | ⟨mobil, masaüstü⟩ |
 | Yönetici | Raporlar | `/admin/reports` | ⟨mobil, masaüstü⟩ |
 
-Ekran geçişleri rol bazında 7.4'teki kullanım kılavuzunda adım adım anlatılır. `/learn/[courseId]` ayrı bir ekran değildir, kursun ilk dersine yönlendirir. Bölüm/ders yönetimi (#34) PR #300 ile 20.11'de eklendi. 21.11 itibarıyla ekranı henüz olmayan işler: tamamlandı düğmesi ve ilerleme çubukları (#46), sertifika görüntüleme ve doğrulama (#130, #131), bildirim zili ve listesi (#136). Liste ⟨24.11 sonrası ekranlara göre⟩ güncellenecek.
+Ekran geçişleri rol bazında 7.4'teki kullanım kılavuzunda adım adım anlatılır. `/learn/[courseId]` ayrı bir ekran değildir, kursun ilk dersine yönlendirir. Bölüm/ders yönetimi (#34) PR #300 ile 20.11'de; tamamlandı düğmesi ve ilerleme çubukları (#46, PR #299), sertifika görüntüleme ve doğrulama (#130, PR #297; #131, PR #309) 21.11'de eklendi. 21.11 itibarıyla ekranı henüz olmayan tek iş bildirim zili ve listesi (#136, PR #323 açık). Liste ⟨24.11 sonrası ekranlara göre⟩ güncellenecek.
