@@ -18,10 +18,12 @@ import com.fasterxml.jackson.databind.JsonNode;
  *
  * <p>Kapsanan adımlar: sınavı açma, doğru cevaplar görünmeden (UC-15) → kalma ve önceki denemeler (3a, UC-16) →
  * geçme ve sonuç (puan, yüzde, geçti) → koşullar tamamlanınca doğrulama kodlu sertifika (4), eksik koşulda sertifika
- * yok (4a) → kayıtsız kursiyer sınava giremez (1a).
+ * yok (4a) → kursiyer sertifikasını görür (UC-17) ve kodu girişsiz doğrulanır (5, UC-06) → "sınav sonucu" ve
+ * "sertifika hazır" bildirimleri kursiyerin bildirim listesinde, okunmamış sayısıyla (FR-43, FR-44) → kayıtsız
+ * kursiyer sınava giremez (1a).
  *
- * <p>Kapsanmayan: sertifikayı görüntüleme ve herkese açık doğrulama (UC-17, UC-06; uçlar #130'da) ve "sınav sonucu",
- * "sertifika oluşturuldu" bildirimleri (#124). Bu uçlar main'e girince bu sınıfa eklenir.
+ * <p>Görüntüleme ve doğrulamanın ayrıntıları (başkasının sertifikası 404, yanıt alanları) {@code CertificateScenarioIT}'te,
+ * bildirim alıcıları {@code NotificationScenarioIT}'te; burada aynı kursiyerin akışında uçtan uca bağlanır (#138).
  */
 class QuizCertificateScenarioIT extends IntegrationTestBase {
 
@@ -75,6 +77,37 @@ class QuizCertificateScenarioIT extends IntegrationTestBase {
         // Sınavı yeniden geçmek ikinci sertifika üretmez.
         submit(course, student, course.correct());
         assertThat(certificateCount()).isEqualTo(1);
+
+        // 4. Kursiyer sertifikasını "Sertifikalarım"da görür; kod veritabanındakiyle aynı.
+        JsonNode mine = get("/api/me/certificates", student).getBody();
+        assertThat(mine).hasSize(1);
+        assertThat(mine.get(0).get("courseTitle").asText()).isEqualTo("Sıfırdan Python");
+        assertThat(mine.get(0).get("studentName").asText()).isEqualTo("Ayşe Yılmaz");
+        String code = mine.get(0).get("verificationCode").asText();
+        assertThat(code).isEqualTo(jdbc.queryForObject("SELECT verification_code FROM certificates", String.class));
+
+        // 5. Sertifikayı gören üçüncü kişi kodu giriş yapmadan doğrular.
+        ResponseEntity<JsonNode> verified = get("/api/certificates/verify/" + code, null);
+        assertThat(verified.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(verified.getBody().get("valid").asBoolean()).isTrue();
+        assertThat(verified.getBody().get("studentName").asText()).isEqualTo("Ayşe Yılmaz");
+        assertThat(verified.getBody().get("courseTitle").asText()).isEqualTo("Sıfırdan Python");
+
+        // Bildirimler (FR-43, FR-44): üç sınav sonucu ve bir "sertifika hazır", en yeni önce; hepsi okunmamış.
+        JsonNode notifications = get("/api/me/notifications", student).getBody().get("content");
+        assertThat(notifications).extracting(n -> n.get("type").asText() + ": " + n.get("title").asText())
+                .containsExactly(
+                        "QUIZ_COMPLETED: Sınavı geçtiniz",
+                        "CERTIFICATE_ISSUED: Sertifikanız hazır",
+                        "QUIZ_COMPLETED: Sınavı geçtiniz",
+                        "QUIZ_COMPLETED: Sınavı geçemediniz");
+        assertThat(notifications.get(1).get("link").asText()).isEqualTo("/certificates");
+        assertThat(unreadCount(student)).isEqualTo(4);
+
+        // Kursiyer hepsini okundu işaretler.
+        assertThat(post("/api/me/notifications/read-all", student, null).getStatusCode())
+                .isEqualTo(HttpStatus.NO_CONTENT);
+        assertThat(unreadCount(student)).isZero();
     }
 
     @Test
@@ -144,6 +177,10 @@ class QuizCertificateScenarioIT extends IntegrationTestBase {
         return Map.of("answers", chosen.entrySet().stream()
                 .map(e -> Map.of("questionId", e.getKey(), "optionIds", List.of(e.getValue())))
                 .toList());
+    }
+
+    private long unreadCount(String token) {
+        return get("/api/me/notifications/unread-count", token).getBody().get("count").asLong();
     }
 
     private long certificateCount() {
