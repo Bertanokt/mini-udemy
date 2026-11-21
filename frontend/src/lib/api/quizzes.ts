@@ -1,9 +1,26 @@
 import { apiFetch } from "./client";
 
-// Tipler docs/api/openapi.yaml'daki ScoringType, StudentQuizResponse ve AttemptSummaryResponse ile aynıdır.
+// Tipler docs/api/openapi.yaml'daki ScoringType, QuizSummaryResponse, StudentQuizResponse ve AttemptSummaryResponse
+// ile aynıdır.
 // (Soru bankası ve eğitmen uçları lib/api/quiz.ts'tedir.)
 
 export type ScoringType = "SINGLE_ANSWER" | "MULTI_ALL_OR_NOTHING" | "MULTI_PARTIAL";
+
+/** Sınavın özeti (sözleşme › QuizSummaryResponse); bölümün sınav listesinde döner. */
+export interface QuizSummaryResponse {
+  id: number;
+  sectionId: number;
+  title: string;
+  scoringType: ScoringType;
+  passThreshold: number;
+  required: boolean;
+  questionCount: number;
+}
+
+/** Bölümün sınavları (kursa kayıtlı STUDENT, kursun eğitmeni ya da ADMIN); kayıtsızsa 403 (ApiError). */
+export function listSectionQuizzes(sectionId: number): Promise<QuizSummaryResponse[]> {
+  return apiFetch<QuizSummaryResponse[]>(`/api/sections/${sectionId}/quizzes`);
+}
 
 export interface StudentQuizResponse {
   id: number;

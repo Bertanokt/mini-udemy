@@ -72,9 +72,9 @@ Test: `ResumeScenarioIT`.
 
 | # | Adım | Gösterilen | Mimari nokta |
 |---|---|---|---|
-| 1 | `elif.sahin@…` ile giriş → Python "Giriş sınavı" (`/quizzes/{id}`) | Sorular doğru cevap bilgisi olmadan | Öğrenci görünümü DTO'su (`correct` alanı yok) |
-| 2 | Yanlış cevapla gönder | "Kaldın", önceki denemeler listesinde | **Strategy**: puanlama türüne göre `ScoringStrategyResolver` stratejiyi seçer (tek doğru / hep ya hiç / kısmi) |
-| 3 | Doğru cevapla tekrar gönder | Puan, yüzde, "Geçtin" | `QuizCompleted` olayı (**Observer**): bildirim + sertifika dinleyicisi |
+| 1 | `elif.sahin@…` ile giriş → "Kayıtlı kurslarım" → "Kaldığın yerden devam et" → oynatıcının ders listesinde "Giriş" bölümünün altındaki "📝 Giriş sınavı" (durumu "Denendi, geçilmedi") | Sorular doğru cevap bilgisi olmadan | Öğrenci görünümü DTO'su (`correct` alanı yok); sınav listesi yalnız kayıtlı kursiyere (`GET /api/sections/{id}/quizzes`, #304) |
+| 2 | Yanlış cevapla gönder → "Tekrar dene" | "Kaldın"; soru bazında sonuç; "Tekrar dene" formu boş cevaplarla yeniden açar, denemeler "Deneme geçmişim"de | **Strategy**: puanlama türüne göre `ScoringStrategyResolver` stratejiyi seçer (tek doğru / hep ya hiç / kısmi) |
+| 3 | Doğru cevapla tekrar gönder → "Kursa dön" | Puan, yüzde, "Geçtin"; oynatıcıda sınav "✓ Geçildi" | `QuizCompleted` olayı (**Observer**): bildirim + sertifika dinleyicisi |
 | 4 | Sertifika (Ayşe'de var: `K7Q2-M9XA-4T`) | Zorunlu dersler + zorunlu sınavlar tamamsa otomatik, tek sertifika | `CertificateListener` → `CertificateIssuingService` (UNIQUE + `ON CONFLICT`); `CertificateIssued` → bildirim. Sekans diyagramı: `docs/diagrams/seq-certificate.png` |
 | 5 | Herkese açık doğrulama `/api/certificates/verify/{code}` | — | **#130 gelince**; şimdilik sertifika veritabanında gösterilir |
 

@@ -8,6 +8,7 @@ import { createContentToken, lessonContentUrl, type ContentTokenResponse } from 
 import { listSections, type LessonResponse, type SectionResponse } from "@/lib/api/courses";
 import { formatDuration } from "@/components/course/CourseCard";
 import { learnHref, locateLesson } from "@/lib/learn/navigation";
+import { useSectionQuizzes, type SectionQuiz } from "@/lib/learn/useSectionQuizzes";
 import { useCourseProgress, type ProgressState } from "@/lib/learn/useCourseProgress";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { ProgressBar, formatPercent } from "@/components/progress/ProgressBar";
@@ -31,6 +32,7 @@ function errorMessage(err: unknown, fallback: string): string {
  * Liste `GET /api/courses/{id}/sections`'tan gelir; içerik token'lı adresten açılır (ADR-012).
  * Kursiyer için (#46): kurs ve bölüm ilerleme çubukları, tamamlanan derslerde tik ve "Tamamlandı" düğmesi; ikisi de
  * `GET /api/me/courses/{id}/progress` ve tamamlama yanıtından gelir. Eğitmen ve yönetici önizlerken görünmez.
+ * Her bölümün altında o bölümün sınav bağlantıları ve kursiyerin durumu (#304, `SectionQuizLinks`).
  */
 export function LessonPlayerView() {
   const params = useParams<{ courseId: string; lessonId: string }>();
@@ -40,6 +42,10 @@ export function LessonPlayerView() {
   const [loaded, setLoaded] = useState<Sections | null>(null);
   const [listOpen, setListOpen] = useState(false);
   const { user } = useAuth();
+  const sectionQuizzes = useSectionQuizzes(
+    loaded?.kind === "ok" ? loaded.sections.map((s) => s.id) : [],
+    user?.role === "STUDENT",
+  );
   const { state: progress, complete } = useCourseProgress(courseId, user?.role === "STUDENT");
   const done = new Set(progress.kind === "ok" ? progress.progress.completedLessonIds : []);
   const sectionPercent = new Map(
@@ -149,6 +155,7 @@ export function LessonPlayerView() {
                   </li>
                 ))}
               </ol>
+              <SectionQuizLinks quizzes={sectionQuizzes.get(s.id)} courseId={courseId} />
             </div>
           ))}
         </nav>
@@ -176,6 +183,37 @@ export function LessonPlayerView() {
         </p>
       </section>
     </div>
+  );
+}
+
+const QUIZ_STATUS: Record<SectionQuiz["status"], string> = {
+  passed: "✓ Geçildi",
+  failed: "Denendi, geçilmedi",
+  notAttempted: "",
+};
+
+/**
+ * Bölümün sınav bağlantıları (#304): yalnız kursa kayıtlı kursiyerde (`useSectionQuizzes`). Sınav sayfasına kurs id'si
+ * de gönderilir ki sonuç ekranındaki "Kursa dön" buraya geri getirsin (#58).
+ */
+function SectionQuizLinks({ quizzes, courseId }: { quizzes: SectionQuiz[] | undefined; courseId: number }) {
+  if (!quizzes || quizzes.length === 0) return null;
+  return (
+    <ul className={styles.quizzes} aria-label="Bölüm sınavları">
+      {quizzes.map(({ quiz, status }) => (
+        <li key={quiz.id}>
+          <Link href={`/quizzes/${quiz.id}?course=${courseId}`}>
+            <span>📝 {quiz.title}</span>
+            <span className={styles.lessonMeta}>
+              Sınav{quiz.required ? " · Zorunlu" : ""}
+              {QUIZ_STATUS[status] && (
+                <span className={status === "passed" ? styles.quizPassed : undefined}> · {QUIZ_STATUS[status]}</span>
+              )}
+            </span>
+          </Link>
+        </li>
+      ))}
+    </ul>
   );
 }
 
