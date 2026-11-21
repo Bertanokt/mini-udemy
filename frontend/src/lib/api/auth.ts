@@ -1,7 +1,7 @@
 import { apiFetch } from "./client";
 
 // Tipler docs/api/openapi.yaml'daki şemalarla aynıdır (Role, RegisterRole, RegisterRequest, LoginRequest,
-// AuthResponse, UserResponse).
+// AuthResponse, UserResponse, UpdateProfileRequest, PasswordResetConfirmRequest).
 
 export type Role = "STUDENT" | "INSTRUCTOR" | "ADMIN";
 
@@ -56,4 +56,42 @@ export function login(request: LoginRequest): Promise<AuthResponse> {
 /** GET /api/me: token sahibinin profili. */
 export function me(): Promise<UserResponse> {
   return apiFetch<UserResponse>("/api/me");
+}
+
+export interface UpdateProfileRequest {
+  fullName: string;
+  /** Boş ya da null gönderilirse temizlenir. */
+  bio: string | null;
+}
+
+/** PUT /api/me (#116): yalnız ad soyad ve biyografi; e-posta ve rol değiştirilemez. */
+export function updateMyProfile(request: UpdateProfileRequest): Promise<UserResponse> {
+  return apiFetch<UserResponse>("/api/me", {
+    method: "PUT",
+    body: JSON.stringify(request),
+  });
+}
+
+/**
+ * POST /api/auth/password-reset/request (#115): e-posta kayıtlı olsun olmasın aynı gövdesiz 202. Bağlantı e-postayla
+ * gitmez; dev profilinde backend loguna yazılır.
+ */
+export function requestPasswordReset(email: string): Promise<void> {
+  return apiFetch<void>("/api/auth/password-reset/request", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
+export interface PasswordResetConfirmRequest {
+  token: string;
+  newPassword: string;
+}
+
+/** POST /api/auth/password-reset/confirm (#115): 204; geçersiz, süresi dolmuş ya da kullanılmış token 400. */
+export function confirmPasswordReset(request: PasswordResetConfirmRequest): Promise<void> {
+  return apiFetch<void>("/api/auth/password-reset/confirm", {
+    method: "POST",
+    body: JSON.stringify(request),
+  });
 }

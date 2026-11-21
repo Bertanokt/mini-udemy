@@ -110,6 +110,11 @@ export function LoginForm() {
         {submitting ? "Giriş yapılıyor…" : "Giriş yap"}
       </button>
       <p className="auth-switch">
+        <Link className="touch-link" href="/forgot-password">
+          Parolamı unuttum
+        </Link>
+      </p>
+      <p className="auth-switch">
         Hesabın yok mu? <Link href="/register">Kayıt ol</Link>
       </p>
     </form>
