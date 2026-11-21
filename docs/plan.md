@@ -143,7 +143,7 @@ Projede ücretli yazılım lisansı kullanılmıyor; **ürünün lisans maliyeti
 
 Geliştirme aracı olarak kullanılan Claude Code ücretli bir abonelik gerektirir; ürünün çalışması için gerekli değildir ve ürünün lisans maliyetine dahil değildir.
 
-## 8. Planlanan ve gerçekleşen (21.11.2026)
+## 8. Planlanan ve gerçekleşen (21.11.2026 akşamı)
 
 Kapanan: GitHub'da "completed" kapanan issue; "not planned" kapatılanlar (6) sayılmaz. Parantez içinde 16.11 değeri.
 
@@ -151,11 +151,11 @@ Kapanan: GitHub'da "completed" kapanan issue; "not planned" kapatılanlar (6) sa
 |---|---|---|---|---|
 | Hafta 1 | 27.10 | 26 | 26 (19) | – |
 | Hafta 2 | 03.11 | 32 | 32 (5) | – |
-| Hafta 3 | 10.11 | 33 | 30 (4) | #115–#117 parola yenileme ve profil (P2) |
-| Hafta 4 | 17.11 | 32 | 29 (1) | #136 bildirim zili, #138 Senaryo 4–5 testi (PR #312), #66 OpenAPI eşitleme |
-| Hafta 5 | 24.11 | 18 | 11 (0) | #68 bug bash, #72 README, #97 (PR #316), #99, #101, #71, #257 |
+| Hafta 3 | 10.11 | 33 | 33 (4) | – |
+| Hafta 4 | 17.11 | 31 | 30 (1) | #66 OpenAPI eşitleme |
+| Hafta 5 | 24.11 | 18 | 12 (0) | #68 bug bash, #72 README, #97 (PR #316), #99, #101, #257 |
 | Sunum | 01.12 | 7 | 0 (0) | Başlamadı |
-| Milestone'suz | – | 7 | 4 | Açık: #305 puan filtresi, #317 önizlemede token yenileme, #259 kesilen video isteğinde ERROR logu |
-| **Toplam** | | **155** | **132 (29)** | |
+| Milestone'suz | – | 7 | 6 | #305 puan filtresi |
+| **Toplam** | | **154** | **139 (29)** | |
 
-Merge edilen PR: 143 (Bertan 53, Eray 39, Veronika 31, Sedat 20); hepsi 11.11–21.11 arasında, en yoğun gün 17.11 (32 PR). Ayrıntılar haftalık raporlarda: [`progress/`](progress/).
+Merge edilen PR: 157 (Bertan 58, Eray 39, Veronika 33, Sedat 27); hepsi 11.11–21.11 arasında, en yoğun gün 17.11 (32 PR). Ayrıntılar haftalık raporlarda: [`progress/`](progress/).

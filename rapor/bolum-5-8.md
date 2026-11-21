@@ -2,7 +2,7 @@
 
 Hocanın Proje Yazım Şablonu'nun 5–8. bölümlerinin içeriği (#104). Word dosyasında birleştirme #69'da yapılır; bu dosya metnin kaynağıdır. Ayrıntılı tablolar repodaki dokümanlarda; burada rapora girecek özetleri var.
 
-**Veri tarihi:** 21.11.2026 (ilk taslak 19.11). ⟨…⟩ ile işaretli yerler bug bash (#68), test raporu (#99) ve demo provası (#106) bitince doldurulacak; son güncelleme 01.12.2026'dan önce.
+**Veri tarihi:** 21.11.2026 akşamı, #328 sonrası (ilk taslak 19.11). ⟨…⟩ ile işaretli yerler bug bash (#68), test raporu (#99) ve demo provası (#106) bitince doldurulacak; son güncelleme 01.12.2026'dan önce.
 
 ---
 
@@ -55,7 +55,7 @@ Kaynak: [`docs/plan.md`](../docs/plan.md) (#82). Bu bölüm o dokümanın gerçe
 | Faz | Planlanan | Gerçekleşen (21.11.2026) |
 |---|---|---|
 | Analiz ve tasarım (Hafta 1) | 21–27.10 | Gereksinimler, use-case'ler, ER, OpenAPI ve mimari kurallar repo iskeletiyle birlikte 15–24.10'da hazırlandı; PR'larla `main`'e girişi 11–14.11 |
-| Geliştirme (Hafta 2–4) | 28.10–17.11 | Kod 11–21.11 arasında geldi (143 PR; en yoğun gün 17.11, 32 PR). Feature freeze 17.11'de uygulandı; P2 işler "İnce" kapsamla sürdü, eksik ekranlar 20–21.11'de tamamlandı |
+| Geliştirme (Hafta 2–4) | 28.10–17.11 | Kod 11–21.11 arasında geldi (157 PR; en yoğun gün 17.11, 32 PR). Feature freeze 17.11'de uygulandı; P2 işler "İnce" kapsamla sürdü, eksik ekranlar 20–21.11'de tamamlandı |
 | Test ve kararlılık (Hafta 5) | 18–24.11 | Senaryo testleri, Bölüm 6 testleri, erişim matrisi, seed verisi ve izlenebilirlik matrisi 17–19.11'de; beş senaryonun temiz kurulumda ekranda yürünmesi 21.11'de (#70); bug bash ve test raporu ⟨24.11⟩ |
 | Sunum hazırlığı | 25.11–01.12 | ⟨Word raporu, slaytlar, demo provası⟩ |
 
@@ -96,12 +96,12 @@ gantt
 |---|---|---|---|
 | Hafta 1 | 26 | 26 | 19 |
 | Hafta 2 | 32 | 32 | 5 |
-| Hafta 3 | 33 | 30 | 4 |
-| Hafta 4 | 32 | 29 | 1 |
-| Hafta 5 | 18 | 11 | 0 |
+| Hafta 3 | 33 | 33 | 4 |
+| Hafta 4 | 31 | 30 | 1 |
+| Hafta 5 | 18 | 12 | 0 |
 | Sunum | 7 | 0 | 0 |
-| Milestone'suz (demo yürüyüşünde açılanlar) | 7 | 4 | – |
-| **Toplam** | **155** | **132 (%85)** | **29** |
+| Milestone'suz (demo yürüyüşünde açılanlar) | 7 | 6 | – |
+| **Toplam** | **154** | **139 (%90)** | **29** |
 
 "Not planned" kapatılan 6 issue (kapsamdan çıkarılanlar) sayılmaz. Açık işlerin listesi `docs/plan.md` › 8'de.
 
@@ -111,11 +111,11 @@ Roller `CONTRIBUTING.md` › Roller tablosundan; her issue'nun tek rol etiketi v
 
 | Üye | Rol | Kapanan issue (atanan) | Merge edilen PR | `main`'deki commit |
 |---|---|---|---|---|
-| Bertan | Yazılım Mimarı | 42 / 43 | 53 | 60 |
-| Eray | Veri ve Entegrasyon | 40 / 42 | 39 | 39 |
-| Veronika | Kalite ve Süreç | 27 / 30 | 31 | 31 |
-| Sedat | Alan Tasarımcısı | 21 / 24 | 20 | 20 |
-| Atanmamış | – | 2 / 16 | – | – |
+| Bertan | Yazılım Mimarı | 43 / 43 | 58 | 65 |
+| Eray | Veri ve Entegrasyon | 39 / 41 | 39 | 39 |
+| Veronika | Kalite ve Süreç | 28 / 30 | 33 | 33 |
+| Sedat | Alan Tasarımcısı | 23 / 25 | 27 | 27 |
+| Atanmamış | – | 6 / 15 | – | – |
 
 **Git geçmişiyle tutarlılık.** `main` "Squash and merge" ile birleştirildiği için her PR tek commit'tir; PR ve commit sayıları bu yüzden birebir aynı. Tek fark Bertan'ın 7 commit'i: repo iskeleti ve backlog, PR kuralı konmadan önce (15–24.10) doğrudan `main`'e yazıldı. Komut: `git log --format='%an' main | sort | uniq -c`. ⟨Sayılar 01.12'de son kez alınacak.⟩
 
@@ -129,10 +129,10 @@ Tam tablo `docs/plan.md` › 6'da. Gerçekleşen ve sonucu belli olan riskler:
 |---|---|---|
 | R1 | Takvim kayması | **Gerçekleşti.** İlk PR 11.11'de. 17.11'de feature freeze kararı: §3'te adı geçen hiçbir iş kesilmedi, P2'ler "İnce" kapsama alındı, 3 iş kesildi (#73, #88, #185). |
 | R2 | Kritik yol bağımlılığı (auth zinciri) | Giderildi: auth zinciri 13–17.11'de kapandı. |
-| R3, R10 | Üyenin müsait olmaması, alan rolünde iş yükü | Gerçekleşti; işler devredildi. Sedat 15.11'de döndü ve toplam 21 issue kapattı. |
-| R5 | Testlerin yetişmemesi | Önlendi: `main`'de 1154 test, servis katmanında satır coverage'ı %98,4 (hedef %70). |
-| R6 | Review'sız merge, doküman–kod tutarsızlığı | İki kez gerçekleşti: ilk 4 PR onaysız birleşti; 21.11'de 11 PR hızlı kontrol beklenmeden merge edildi ve merge sonrası kontrol edildi (3'ünde doküman ve kanıt eksiği bulundu). İzlenebilirlik matrisi (#98) ve diyagram–kod kontrolü (#97, 9 diyagramın 9'u; bileşen diyagramı CI'da `ComponentDiagramTest` ile) yapıldı. |
-| R7 | Giriş denemelerinde sınır yok | Kabul edildi (yerel demo, kapsam dışı); bölüm 8.3'te gelecek çalışma. |
+| R3, R10 | Üyenin müsait olmaması, alan rolünde iş yükü | Gerçekleşti; işler devredildi. Sedat 15.11'de döndü ve toplam 23 issue kapattı. |
+| R5 | Testlerin yetişmemesi | Önlendi: `main`'de 1188 test, servis katmanında satır coverage'ı %98,4 (hedef %70). |
+| R6 | Review'sız merge, doküman–kod tutarsızlığı | İki kez gerçekleşti: ilk 4 PR onaysız birleşti; 21.11'de iki dalgada 19 PR hızlı kontrol beklenmeden merge edildi ve merge sonrası kontrol edildi (3'ünde doküman ve kanıt eksiği bulundu, 16'sı temizdi). İzlenebilirlik matrisi (#98) ve diyagram–kod kontrolü (#97, 9 diyagramın 9'u; bileşen diyagramı CI'da `ComponentDiagramTest` ile) yapıldı. |
+| R7 | Giriş ve parola yenileme denemelerinde sınır yok | Kabul edildi (yerel demo, kapsam dışı); bölüm 8.3'te gelecek çalışma. Parola yenilemede varlık sızmıyor (her e-postaya aynı 202), token yalnız özetiyle saklanıyor ve tek kullanımlık (#115) |
 | R8 | Demo günü ortamın çalışmaması | 21.11'de temiz kurulumda (`docker compose down -v` + `up --build`) beş senaryo ekranda yüründü (#70); eksik çıkan ekranlar aynı gün tamamlandı. İlk build ~22 dk sürdüğü için sunum günü image'lar önceden build edilecek. ⟨Demo provası (#106) sonucu⟩ |
 
 ### 6.6 Bütçe
@@ -185,13 +185,15 @@ Uygulanan önlemler (kodda kontrol edildi, `frontend/src`):
 
 - Sayfa dili `lang="tr"`; ekran okuyucular Türkçe okur.
 - Form alanlarının hepsi etiketli (`<label>`, `aria-label`). Hatalı alan `aria-invalid` ile işaretlenir ve hata metni `aria-describedby` ile alana bağlanır.
-- Hata mesajları `role="alert"` (51 yerde), yükleniyor ve başarı mesajları `role="status"` ile duyurulur.
+- Yükleniyor, hata ve boş durumlar ortak bileşenlerle (#320): `Loading` (`role="status"`, `aria-live="polite"`), `ErrorMessage` (`role="alert"`, "Tekrar dene"), `EmptyState`. Önceden "yükleniyor" metinleri ekran okuyucuya duyurulmuyordu.
 - Bölgeler ve gezinme etiketli: ders listesi `nav aria-label="Bölümler ve dersler"`, önceki/sonraki ders gezinmesi, katalog araması `role="search"`.
 - Ders listesi aç/kapa düğmesi `aria-expanded` ve `aria-controls` taşır; puan yıldızları klavyeyle seçilebilir ve odak görünür (`:focus-visible`).
 - Dekoratif öğeler `aria-hidden`, anlamlı görseller (`role="img"`) metinle açıklanır.
-- Mobil uyumluluk (NFR-07): 360 px genişlikte yatay kaydırma olmaması hedeflendi; ⟨bug bash'te (#68) kontrol sonucu⟩.
+- Mobil uyumluluk (NFR-07, #321): 360 px'te sayfalarda yatay kaydırma yok; dar ya da dokunmatik ekranda düğme, form alanı ve tek başına duran bağlantılar ≥ 44 px (WCAG 2.5.5; cümle içi bağlantılar istisna). Önce/sonra betikle ölçüldü: iki sayfadaki taşma (205 px ve 5 px) giderildi. ⟨Bug bash'te (#68) tekrar⟩.
+- Karanlık temada vurgu zeminli düğmelerin yazı rengi kontrast için ayrı değişkende (`--accent-fg`, #321).
+- Bildirim zilinin ekran okuyucu etiketi okunmamış sayısını söyler ("Bildirimler, 7 okunmamış"); panel Esc ile kapanır ve odak zile döner (#323).
 
-**Kısıt:** Resmî bir WCAG denetimi ve ekran okuyucuyla uçtan uca deneme yapılmadı; renk kontrastı ölçülmedi. Bunlar bölüm 8.3'te gelecek çalışma olarak yazıldı.
+**Kısıt:** Resmî bir WCAG denetimi ve ekran okuyucuyla uçtan uca deneme yapılmadı; renk kontrastı araçla ölçülmedi (yalnız karanlık temadaki bilinen düğme sorunu düzeltildi). Bunlar bölüm 8.3'te gelecek çalışma olarak yazıldı.
 
 ### 7.4 Kullanım kılavuzu
 
@@ -224,6 +226,7 @@ Frontend http://localhost:3000, backend http://localhost:8080. Veritabanı boşs
 7. Zorunlu dersler ve sınavlar bitince sertifika kendiliğinden oluşur: "Kurslarım" → "Sertifikalarım" (`/certificates`) → sertifika → "Yazdır". Sertifikada doğrulama kodu ve "resmî akreditasyon değildir" ibaresi var (deneyin: `ayse.yilmaz@…`).
 8. Sertifikayı gören herkes giriş yapmadan doğrulayabilir: `/verify/K7Q2-M9XA-4T` → "✓ Geçerli sertifika" (ad, kurs, tarih).
 9. Kurs sayfasında 1–5 puan ve yorum verin (kurs başına bir kez).
+10. Üst menüdeki zilde okunmamış bildirim sayısı görünür (kayıt, sınav sonucu, sertifika); zile tıklayınca liste açılır, bildirime tıklamak onu okundu yapar ve ilgili sayfaya götürür; "Hepsini okundu işaretle" de var.
 
 **Eğitmen olarak** (`mehmet.kaya@…`)
 
@@ -234,6 +237,11 @@ Frontend http://localhost:3000, backend http://localhost:8080. Veritabanı boşs
 5. Soru bankası (`/instructor/courses/{id}/questions`) ve bölüm sınavları (`/instructor/courses/{id}/quizzes`).
 6. Analitik (`/instructor/courses/{id}/analytics`): kayıt sayısı, ortalama ilerleme, tamamlanma oranı, sınav başarısı, puan dağılımı ve kursiyer listesi.
 
+**Her hesap için**
+
+- Başlıktaki ada tıklayınca "Profilim" (`/profile`): ad soyad ve kısa biyografi değiştirilir; e-posta ve hesap türü yalnız gösterilir.
+- Girişte "Parolamı unuttum" (`/forgot-password`): e-posta girilir, kayıtlı olsun olmasın aynı mesaj gösterilir. E-posta gönderilmez; yerel kurulumda bağlantı backend loguna yazılır (`docker compose logs backend | grep "Parola yenileme bağlantısı"`). Bağlantı (`/reset-password?token=…`) 30 dakika geçerli ve tek kullanımlıktır.
+
 **Yönetici olarak** (`admin@…`)
 
 1. Yönetici paneli (`/admin`) → "Kurs onayı" (`/admin/courses`): liste varsayılan olarak İncelemede bekleyen kursları gösterir (deneyin: "SQL ve Veritabanları"); durum filtresiyle diğerleri.
@@ -243,7 +251,7 @@ Frontend http://localhost:3000, backend http://localhost:8080. Veritabanı boşs
 5. Şikâyetler (`/admin/complaints`): kurs ve yorum şikâyetleri en yeni önce; her satır "İncelendi" ya da "Reddet" ile sonuçlandırılır. Kurs şikâyeti kurs inceleme ekranına bağlantı verir; gerekirse yorum moderasyonu ya da yayından kaldırma oradan yapılır.
 6. Diğer sayfalar: kullanıcılar (rol ve pasifleştirme, `/admin/users`), kategoriler (`/admin/categories`), platform raporu (`/admin/reports`).
 
-**Ekranı henüz olmayan işlemler** (21.11.2026; API ile yapılır, adımlar [`docs/demo.md`](../docs/demo.md)'de): bildirim listesi (zil, #136; API: `GET /api/me/notifications`), katalogda puan filtresi (#305; API: `minRating`), kullanıcının şikâyet oluşturması (`POST /api/complaints`; düğmesi yok). ⟨01.12'de ekranı gelenler adımlara eklenecek, ekran görüntüleri #72'den.⟩
+**Ekranı henüz olmayan işlemler** (21.11.2026 akşamı; API ile yapılır, adımlar [`docs/demo.md`](../docs/demo.md)'de): katalogda puan filtresi (#305; API: `minRating`), kullanıcının şikâyet oluşturması (`POST /api/complaints`; düğmesi yok). ⟨01.12'de ekranı gelenler adımlara eklenecek, ekran görüntüleri #72'den.⟩
 
 ### 7.5 Test planı ve test raporu özeti
 
@@ -253,18 +261,18 @@ Plan: [`docs/test-plan.md`](../docs/test-plan.md) (#92). Rapor: `docs/test-repor
 
 | Seviye | Araç | Sayı (21.11) |
 |---|---|---|
-| Birim | JUnit 5, Mockito, AssertJ | 964 |
+| Birim | JUnit 5, Mockito, AssertJ | 993 |
 | Mimari | ArchUnit | 13 |
-| Entegrasyon | Spring Boot Test + Testcontainers (gerçek PostgreSQL 17, gerçek HTTP) | 177 |
-| **Toplam** | | **1154**, hepsi CI'da yeşil |
+| Entegrasyon | Spring Boot Test + Testcontainers (gerçek PostgreSQL 17, gerçek HTTP) | 182 |
+| **Toplam** | | **1188**, hepsi CI'da yeşil |
 | Manuel | Tarayıcı, kontrol listesi (bug bash #68) | ⟨sonuç⟩ |
 
 **Kapsam.**
 
 - Servis katmanında satır coverage'ı **%98,4**, dal coverage'ı **%93,9** (hedef %70); genel %96,1 (JaCoCo).
-- Otomatik testi olan gereksinim: FR 42/44, NFR 16/19. Testi olmayan 2 FR: FR-03 parola yenileme (#115, yapılmadı) ve FR-29 akreditasyon ibaresi (ön yüzde sabit metin; ön yüz test aracı olmadığı için bug bash'te elle kontrol).
+- Otomatik testi olan gereksinim: FR 43/44, NFR 16/19. Testi olmayan tek FR: FR-29 akreditasyon ibaresi (ön yüzde sabit metin; ön yüz test aracı olmadığı için bug bash'te elle kontrol).
 - Proje tanımı Bölüm 6'nın dört kritik durumu (kayıtsız erişim, mükerrer kayıt, yetkisiz düzenleme, yanlış ilerleme hesabı) uçtan uca testli (`Bolum6CriticalCasesIT`).
-- Erişim matrisi testi (`AccessMatrixIT`, 115 kontrol): OpenAPI'deki her ucun rol bilgisinin koddaki yetki kuralıyla aynı olduğu denetlenir; gövdesiz uçlarda girişsiz istek 401, yanlış rol 403 alır.
+- Erişim matrisi testi (`AccessMatrixIT`, 122 kontrol): OpenAPI'deki her ucun rol bilgisinin koddaki yetki kuralıyla aynı olduğu denetlenir; gövdesiz uçlarda girişsiz istek 401, yanlış rol 403 alır.
 - Beş demo senaryosunun her biri bir entegrasyon testiyle doğrulandı.
 
 **Kırmızı kontrol bulguları.** Kod bilerek bozulduğunda yeşil kalan 4 test açığı bulundu ve kapatıldı: platform raporunda tamamlanma sayısı (#145), sınav puanlamada strateji seçimi (#56), ilerlemede %0 ve %100 sınırları (#44), bildirim dinleyicisinin commit sonrası çalışması (#137). Senaryo 4 testi (#138) sertifika görüntüleme, girişsiz doğrulama ve bildirimlerle uçtan uca genişletildi; iki bozma (bildirim olayı yok, doğrulama `valid=false`) testi kırmızıya düşürdü.
@@ -280,7 +288,7 @@ Plan: [`docs/test-plan.md`](../docs/test-plan.md) (#92). Rapor: `docs/test-repor
 | Yedekleme | Veritabanı `pg_dump` ile, yüklenen dosyalar depolama klasörünün kopyalanmasıyla. Gerçek kullanımda günlük yedek ve geri yükleme denemesi. |
 | İzleme | Spring Boot Actuator sağlık ucu (`/actuator/health`); hatalar sunucu loguna yazılır, kullanıcıya iç ayrıntı gösterilmez. |
 | Hata yönetimi | Hata GitHub'da `bug` etiketli issue olarak açılır, önceliği verilir, `fix/#<no>-...` dalında testle birlikte düzeltilir. |
-| Kalite güvencesi | Her değişiklik CI'dan (1154 test, ArchUnit kuralları, frontend lint + build) ve hızlı kontrolden geçer. |
+| Kalite güvencesi | Her değişiklik CI'dan (1188 test, ArchUnit kuralları, frontend lint + build) ve hızlı kontrolden geçer. |
 | Dokümantasyon | OpenAPI, diyagramlar ve ADR'ler kodla aynı PR'da güncellenir. |
 | Güvenlik | Üretimde JWT anahtarı yalnız ortam değişkeninden (`JWT_SECRET`) okunur; tanımlı değilse ya da 32 bayttan kısaysa uygulama açılmaz. Repodaki anahtarlar yalnız geliştirme ve test profillerinde. Bağımlılık güvenlik uyarıları (GitHub) takip edilir. |
 
@@ -292,8 +300,8 @@ Plan: [`docs/test-plan.md`](../docs/test-plan.md) (#92). Rapor: `docs/test-repor
 
 | Hedef | Durum (21.11.2026) |
 |---|---|
-| Üç rollü (kursiyer, eğitmen, yönetici) çevrim içi eğitim platformu | Backend'in 10 modülü çalışıyor; 44 FR'nin 42'sinin otomatik testi var. Frontend'de 27 sayfa. ⟨01.12 durumu⟩ |
-| Beş demo senaryosu (kurs yayımlama, kayıt ve öğrenme, kaldığı yerden devam, sınav ve sertifika, eğitmen analitiği) | Beşi de uçtan uca testli ve 21.11'de temiz kurulumda ekranda yüründü (#70). Ekranı olmayan yalnız bildirim zili (#136) ve puan filtresi (#305); API ile gösteriliyor (7.4). |
+| Üç rollü (kursiyer, eğitmen, yönetici) çevrim içi eğitim platformu | Backend'in 10 modülü çalışıyor; 44 FR'nin 43'ünün otomatik testi var. Frontend'de 30 sayfa; P2 işler (parola yenileme, profil, yorum moderasyonu, şikâyet, platform raporu) "İnce" kapsamla yapıldı. ⟨01.12 durumu⟩ |
+| Beş demo senaryosu (kurs yayımlama, kayıt ve öğrenme, kaldığı yerden devam, sınav ve sertifika, eğitmen analitiği) | Beşi de uçtan uca testli ve 21.11'de temiz kurulumda ekranda yüründü (#70). Bildirimler artık zille ekranda (#136). Ekranı olmayan yalnız puan filtresi (#305) ve şikâyet oluşturma; API ile gösteriliyor (7.4). |
 | Tasarım desenleri: State, Strategy, Factory Method, Observer, DTO + Mapper | Beşi de kodda; sınıf diyagramlarında (#51) ve SOLID dokümanında (#95) gösterildi. |
 | Modüler monolit, modül sınırları | 10 modül; sınırlar ArchUnit testleriyle CI'da denetleniyor, ihlal yok. |
 | Test hedefleri (test planı › 7) | Servis coverage'ı %98,4 (hedef %70); Bölüm 6 testleri ve erişim matrisi yeşil. ⟨Bug bash ve demo provası sonucu⟩ |
@@ -303,25 +311,25 @@ Plan: [`docs/test-plan.md`](../docs/test-plan.md) (#92). Rapor: `docs/test-repor
 
 - **Geç başlangıç:** Kod PR'ları 11.11'de başladı; dört haftalık geliştirme işi yaklaşık bir haftaya sığdırıldı. Bu yüzden 17.11'de kapsam yeniden belirlendi ve P2 işler "İnce" yapıldı.
 - **Ekip kapasitesi:** Bir üye iki hafta müsait değildi; işleri devredildi.
-- **Ekranı eksik akışlar:** Bildirim listesi, puan filtresi ve şikâyet oluşturma (7.4) yalnız API ile yapılabiliyor.
+- **Ekranı eksik akışlar:** Puan filtresi ve şikâyet oluşturma (7.4) yalnız API ile yapılabiliyor.
 - **Frontend'de otomatik test yok:** Arayüz yalnız lint, derleme ve elle test ile denetlendi.
-- **Güvenlik sınırları:** Giriş denemelerine sınır konmadı (R7); dosyalar yerel diskte tutuluyor.
+- **Güvenlik sınırları:** Giriş ve parola yenileme denemelerine sınır konmadı (R7); parola yenileme bağlantısı e-postayla gönderilmiyor (yalnız `dev`'de log'a yazılıyor); dosyalar yerel diskte tutuluyor.
 - **Performans:** Kurs süresinin hesabında bilinen bir N+1 sorgu sınırı var (#185, kapsamdan çıkarıldı); yük testi yapılmadı.
 - **Erişilebilirlik:** Resmî WCAG denetimi yapılmadı (7.3).
 
 ### 8.3 Gelecek çalışmalar
 
 - **Ödeme entegrasyonu** (#74, P3): ücretli kurslar ve ödeme sağlayıcısının test modu.
-- Giriş ve parola yenileme isteklerine deneme sınırı (R7) ve e-posta ile bildirim.
+- Giriş ve parola yenileme isteklerine deneme sınırı (R7); parola yenileme bağlantısının ve bildirimlerin e-postayla gönderilmesi (`PasswordResetNotifier` arayüzüne SMTP uygulaması).
 - Dosyaların bulut depolamaya (S3 uyumlu) taşınması; video için akış biçimi (HLS) ve farklı çözünürlükler.
 - Frontend için uçtan uca otomatik testler (ör. Playwright) ve erişilebilirlik denetimi.
-- ⟨01.12'de hâlâ açık kalan işler: #115–#117 parola yenileme ve profil; bildirim zili (#136); puan filtresi (#305); kullanıcı ekranında "Şikâyet et" düğmesi⟩
+- ⟨01.12'de hâlâ açık kalan işler: puan filtresi (#305); kullanıcı ekranında "Şikâyet et" düğmesi⟩
 
 ### 8.4 Tartışma
 
 ⟨Sunumdan önce ekipçe yazılacak. Önerilen başlıklar:⟩
 
 - Sıkı PR kuralları (kanıt tablosu, hızlı kontrol, doküman–kod uyumu) geç başlayan bir projede hızı düşürdü mü, yoksa hataları erken yakalayarak kazandırdı mı? Örnek: ilk PR'larda sözleşme ile ER arasındaki alan uzunluğu farkı review'da yakalandı.
-- Hızlı kontrolün merge'den önce yapılması: 21.11'de 11 PR kontrolsüz merge edildi; sonradan bakıldığında 3'ünde doküman ve kanıt eksiği vardı. Hız ile güvence arasındaki denge.
+- Hızlı kontrolün merge'den önce yapılması: 21.11'de 19 PR kontrolsüz merge edildi; sonradan bakıldığında 3'ünde doküman ve kanıt eksiği vardı. Hız ile güvence arasındaki denge.
 - Kırmızı kontrol, "yeşil" testlerin bir kısmının hatayı yakalamadığını gösterdi (4 açık). Coverage yüksek olsa bile testin doğru şeyi denetlediği ayrıca kanıtlanmalı.
 - Yapay zekâ desteği (Claude Code) iş üretimini hızlandırdı; buna karşı "her teknik iddia kodla karşılaştırılır" kuralı ve katkı notları, üyelerin kendi kodunu anlayıp anlatabilmesi için gerekli oldu.
