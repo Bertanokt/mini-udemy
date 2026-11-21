@@ -212,7 +212,8 @@ export function LessonRow({
   const fileInput = useRef<HTMLInputElement>(null);
   const uploadAbort = useRef<AbortController | null>(null);
 
-  // Satır kaldırılınca (sayfadan çıkış, ders/bölüm silme) süren yükleme kesilir (#317).
+  // Sayfadan çıkınca ya da ders/bölüm silinince süren yükleme kesilir (#317). Next önceki sayfayı kaldırmadan gizli
+  // tutsa da (cacheComponents) efekt temizliği çalışır.
   useEffect(() => () => uploadAbort.current?.abort(), []);
 
   const rule = CONTENT_RULES[lesson.contentType];
@@ -235,7 +236,8 @@ export function LessonRow({
       setVersion((v) => v + 1);
       onUploaded(updated);
     } catch (e) {
-      // İptal yalnız satır kaldırılınca olur: kullanıcı sayfadan çıkmıştır, hata gösterilmez.
+      // İptal yalnız sayfadan çıkınca olur, hata değildir. Gizli tutulan sayfanın durumu korunduğu için burada mesaj
+      // yazılsaydı kullanıcı geri dönünce görürdü.
       if (isAbortError(e)) return;
       if (isConflict(e)) onConflict(e);
       else setUploadError(apiMessage(e, "İçerik yüklenemedi. Lütfen tekrar deneyin."));
