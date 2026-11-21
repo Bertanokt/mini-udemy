@@ -16,6 +16,7 @@ import {
   type CourseAction,
   type CourseActionTarget,
 } from "../CourseActionDialog";
+import { Loading } from "@/components/common/Loading";
 
 type Load =
   | { key: string; kind: "ok"; course: CourseDetailResponse }
@@ -95,7 +96,7 @@ export function CourseReview() {
     </Link>
   );
 
-  if (state === null) return <p className="auth-status">Kurs yükleniyor…</p>;
+  if (state === null) return <Loading text="Kurs yükleniyor…" />;
   if (state.kind === "notFound") {
     return (
       <section className="qb" role="alert">

@@ -7,6 +7,7 @@ import { register, type RegisterRequest, type RegisterRole } from "@/lib/api/aut
 import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { validateRegister, type RegisterErrors, type RegisterField } from "@/lib/auth/validation";
+import { Loading } from "@/components/common/Loading";
 
 const ROLE_OPTIONS: { value: RegisterRole; label: string }[] = [
   { value: "STUDENT", label: "Öğrenci" },
@@ -72,7 +73,7 @@ export function RegisterForm() {
   }
 
   if (status !== "anonymous") {
-    return <p className="auth-status">Oturum kontrol ediliyor…</p>;
+    return <Loading text="Oturum kontrol ediliyor…" />;
   }
 
   return (

@@ -7,6 +7,9 @@ import { listUsers, setUserStatus, type AdminUserPage, type AdminUserResponse } 
 import type { Role } from "@/lib/api/auth";
 import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/AuthProvider";
+import { Loading } from "@/components/common/Loading";
+import { ErrorMessage } from "@/components/common/ErrorMessage";
+import { EmptyState } from "@/components/common/EmptyState";
 
 const PAGE_SIZE = 20;
 
@@ -185,26 +188,15 @@ export function UserManager() {
         </label>
       </div>
 
-      {result === null && <p className="auth-status">Kullanıcılar yükleniyor…</p>}
+      {result === null && <Loading text="Kullanıcılar yükleniyor…" />}
 
-      {result?.kind === "error" && (
-        <div className="qb-state" role="alert">
-          <p className="auth-error">{result.message}</p>
-          <button type="button" className="qb-btn" onClick={() => setRetry((n) => n + 1)}>
-            Tekrar dene
-          </button>
-        </div>
-      )}
+      {result?.kind === "error" && <ErrorMessage message={result.message} onRetry={() => setRetry((n) => n + 1)} />}
 
       {result?.kind === "ok" && result.data.content.length === 0 && (
-        <div className="qb-state">
-          <p>Aramanıza uyan kullanıcı bulunamadı.</p>
-          {queryKey !== "" && (
-            <button type="button" className="qb-btn" onClick={() => router.push(pathname)}>
-              Filtreleri temizle
-            </button>
-          )}
-        </div>
+        <EmptyState
+          message="Aramanıza uyan kullanıcı bulunamadı."
+          action={queryKey !== "" ? { label: "Filtreleri temizle", onClick: () => router.push(pathname) } : undefined}
+        />
       )}
 
       {result?.kind === "ok" && result.data.content.length > 0 && (

@@ -8,6 +8,9 @@ import { formatDuration } from "@/components/course/CourseCard";
 import { learnHref } from "@/lib/learn/navigation";
 import { ResumeLink } from "@/components/progress/ResumeLink";
 import styles from "./my-courses.module.css";
+import { Loading } from "@/components/common/Loading";
+import { ErrorMessage } from "@/components/common/ErrorMessage";
+import { EmptyState } from "@/components/common/EmptyState";
 
 type Result =
   | { kind: "ok"; items: EnrollmentResponse[] }
@@ -61,22 +64,10 @@ export function MyCoursesView() {
       <p>
         <Link href="/certificates">Sertifikalarım</Link>
       </p>
-      {result === null && <p className={styles.status}>Kurslarınız yükleniyor…</p>}
-      {result?.kind === "error" && (
-        <div role="alert">
-          <p className={styles.error}>{result.message}</p>
-          <button type="button" className={styles.button} onClick={() => setRetry((r) => r + 1)}>
-            Tekrar dene
-          </button>
-        </div>
-      )}
+      {result === null && <Loading text="Kurslarınız yükleniyor…" />}
+      {result?.kind === "error" && <ErrorMessage message={result.message} onRetry={() => setRetry((r) => r + 1)} />}
       {result?.kind === "ok" && result.items.length === 0 && (
-        <div className={styles.empty}>
-          <p>Henüz bir kursa kayıt olmadınız.</p>
-          <Link href="/" className={styles.button}>
-            Kurslara göz at
-          </Link>
-        </div>
+        <EmptyState message="Henüz bir kursa kayıt olmadınız." action={{ label: "Kurslara göz at", href: "/" }} />
       )}
       {result?.kind === "ok" && result.items.length > 0 && (
         <ul className={styles.list}>

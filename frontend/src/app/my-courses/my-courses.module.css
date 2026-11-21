@@ -81,14 +81,6 @@
   color: var(--err);
 }
 
-.empty {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 12px;
-  color: var(--muted);
-}
-
 @media (max-width: 600px) {
   .item {
     grid-template-columns: 1fr;

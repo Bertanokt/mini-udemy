@@ -16,6 +16,9 @@ import {
 import { SCORING_LABELS } from "@/lib/quiz/quizValidation";
 import { errorMessage } from "./errors";
 import { QuizForm } from "./QuizForm";
+import { Loading } from "@/components/common/Loading";
+import { ErrorMessage } from "@/components/common/ErrorMessage";
+import { EmptyState } from "@/components/common/EmptyState";
 
 interface SectionQuizzes {
   section: SectionResponse;
@@ -174,29 +177,23 @@ export function QuizList() {
         </p>
       )}
 
-      {load.state === "loading" && <p className="auth-status">Sınavlar yükleniyor…</p>}
+      {load.state === "loading" && <Loading text="Sınavlar yükleniyor…" />}
 
-      {load.state === "error" && (
-        <div className="qb-state" role="alert">
-          <p className="auth-error">{load.message}</p>
-          {!load.final && (
-            <button type="button" className="qb-btn" onClick={retry}>
-              Tekrar dene
-            </button>
-          )}
-        </div>
-      )}
+      {load.state === "error" && <ErrorMessage message={load.message} onRetry={load.final ? undefined : retry} />}
 
       {load.state === "ready" && (
         <>
           {bankEmpty && (
-            <p className="qb-state">
-              Soru bankası boş. Sınav oluşturmak için önce{" "}
-              <Link href={`/instructor/courses/${courseId}/questions`}>soru bankasına</Link> soru ekleyin.
-            </p>
+            <EmptyState
+              message="Soru bankası boş. Sınav oluşturmak için önce soru bankasına soru ekleyin."
+              action={{ label: "Soru bankasına git", href: `/instructor/courses/${courseId}/questions` }}
+            />
           )}
           {load.sections.length === 0 && (
-            <p className="qb-state">Bu kursun henüz bölümü yok. Sınav bir bölüme eklenir; önce bölüm oluşturun.</p>
+            <EmptyState
+              message="Bu kursun henüz bölümü yok. Sınav bir bölüme eklenir; önce bölüm oluşturun."
+              action={{ label: "Bölüm ve dersler", href: `/instructor/courses/${courseId}/sections` }}
+            />
           )}
 
           <ul className="qb-list">

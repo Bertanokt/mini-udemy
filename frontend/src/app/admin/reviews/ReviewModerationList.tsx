@@ -7,6 +7,9 @@ import { listAdminCourses, listAdminReviews, setReviewVisibility, type ReviewPag
 import { ApiError } from "@/lib/api/client";
 import type { ReviewResponse } from "@/lib/api/reviews";
 import { HideReviewDialog } from "./HideReviewDialog";
+import { Loading } from "@/components/common/Loading";
+import { ErrorMessage } from "@/components/common/ErrorMessage";
+import { EmptyState } from "@/components/common/EmptyState";
 
 const PAGE_SIZE = 20;
 /** Kurs filtresi ve kurs adları için; ince kapsamda tek sayfa yeterli, listede olmayan kurs "Kurs #id" görünür. */
@@ -178,32 +181,15 @@ export function ReviewModerationList() {
         </label>
       </div>
 
-      {result === null && <p className="auth-status">Yorumlar yükleniyor…</p>}
+      {result === null && <Loading text="Yorumlar yükleniyor…" />}
 
-      {result?.kind === "error" && (
-        <div className="qb-state" role="alert">
-          <p className="auth-error">{result.message}</p>
-          <button type="button" className="qb-btn" onClick={() => setReload((n) => n + 1)}>
-            Tekrar dene
-          </button>
-        </div>
-      )}
+      {result?.kind === "error" && <ErrorMessage message={result.message} onRetry={() => setReload((n) => n + 1)} />}
 
       {data && data.content.length === 0 && (
-        <div className="qb-state">
-          <p>
-            {emptyPage
-              ? "Bu sayfada yorum kalmadı."
-              : query.hidden === true
-                ? "Gizli yorum yok."
-                : "Bu filtreyle yorum yok."}
-          </p>
-          {emptyPage && (
-            <button type="button" className="qb-btn" onClick={() => go({ page: null })}>
-              İlk sayfaya dön
-            </button>
-          )}
-        </div>
+        <EmptyState
+          message={emptyPage ? "Bu sayfada yorum kalmadı." : query.hidden === true ? "Gizli yorum yok." : "Bu filtreyle yorum yok."}
+          action={emptyPage ? { label: "İlk sayfaya dön", onClick: () => go({ page: null }) } : undefined}
+        />
       )}
 
       {data && data.content.length > 0 && (

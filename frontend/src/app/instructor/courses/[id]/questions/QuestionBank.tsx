@@ -6,6 +6,9 @@ import { ApiError } from "@/lib/api/client";
 import { deleteQuestion, listQuestions, type QuestionResponse } from "@/lib/api/quiz";
 import { errorMessage } from "./errors";
 import { QuestionForm } from "./QuestionForm";
+import { Loading } from "@/components/common/Loading";
+import { ErrorMessage } from "@/components/common/ErrorMessage";
+import { EmptyState } from "@/components/common/EmptyState";
 
 type Load =
   | { state: "loading" }
@@ -150,18 +153,9 @@ export function QuestionBank() {
         </p>
       )}
 
-      {load.state === "loading" && <p className="auth-status">Sorular yükleniyor…</p>}
+      {load.state === "loading" && <Loading text="Sorular yükleniyor…" />}
 
-      {load.state === "error" && (
-        <div className="qb-state" role="alert">
-          <p className="auth-error">{load.message}</p>
-          {!load.forbidden && (
-            <button type="button" className="qb-btn" onClick={retry}>
-              Tekrar dene
-            </button>
-          )}
-        </div>
-      )}
+      {load.state === "error" && <ErrorMessage message={load.message} onRetry={load.forbidden ? undefined : retry} />}
 
       {load.state === "ready" && editing !== null && (
         <QuestionForm
@@ -188,9 +182,9 @@ export function QuestionBank() {
           )}
 
           {questions.length === 0 && (
-            <p className="qb-state">Bu kursun soru bankası boş. “Soru ekle” ile ilk soruyu oluşturun.</p>
+            <EmptyState message="Bu kursun soru bankası boş. “Soru ekle” ile ilk soruyu oluşturun." />
           )}
-          {questions.length > 0 && filtered.length === 0 && <p className="qb-state">Aramanızla eşleşen soru yok.</p>}
+          {questions.length > 0 && filtered.length === 0 && <EmptyState message="Aramanızla eşleşen soru yok." />}
 
           <ul className="qb-list">
             {filtered.map((q) => (

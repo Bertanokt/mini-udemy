@@ -15,6 +15,9 @@ import {
   type CourseLevel,
   type CourseSummaryPage,
 } from "@/lib/api/catalog";
+import { Loading } from "@/components/common/Loading";
+import { ErrorMessage } from "@/components/common/ErrorMessage";
+import { EmptyState } from "@/components/common/EmptyState";
 
 const PAGE_SIZE = 12;
 
@@ -174,26 +177,15 @@ export function CatalogView() {
         )}
       </div>
 
-      {result.kind === "loading" && <p className="catalog-status">Kurslar yükleniyor…</p>}
+      {result.kind === "loading" && <Loading text="Kurslar yükleniyor…" />}
 
-      {result.kind === "error" && (
-        <div className="catalog-status status-down" role="alert">
-          <p>{result.message}</p>
-          <button type="button" onClick={() => setRetry((n) => n + 1)}>
-            Tekrar dene
-          </button>
-        </div>
-      )}
+      {result.kind === "error" && <ErrorMessage message={result.message} onRetry={() => setRetry((n) => n + 1)} />}
 
       {result.kind === "ok" && result.data.content.length === 0 && (
-        <div className="catalog-status">
-          <p>Aramanıza uyan kurs bulunamadı.</p>
-          {queryKey && (
-            <button type="button" onClick={() => router.push(pathname)}>
-              Filtreleri temizle
-            </button>
-          )}
-        </div>
+        <EmptyState
+          message="Aramanıza uyan kurs bulunamadı."
+          action={queryKey ? { label: "Filtreleri temizle", onClick: () => router.push(pathname) } : undefined}
+        />
       )}
 
       {result.kind === "ok" && result.data.content.length > 0 && (

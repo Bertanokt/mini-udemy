@@ -7,6 +7,7 @@ import { ApiError } from "@/lib/api/client";
 import { getMyCertificate, type CertificateResponse } from "@/lib/api/certificates";
 import { CertificateNotice, formatCertificateDate } from "@/components/certificate/CertificateNotice";
 import styles from "../certificate.module.css";
+import { Loading } from "@/components/common/Loading";
 
 type Loaded =
   | { key: string; kind: "ok"; certificate: CertificateResponse }
@@ -53,7 +54,7 @@ export function CertificateView() {
     };
   }, [id, key]);
 
-  if (state === null) return <p className={styles.status}>Sertifika yükleniyor…</p>;
+  if (state === null) return <Loading text="Sertifika yükleniyor…" />;
   if (state.kind === "notFound") {
     return (
       <div role="alert">
