@@ -1,8 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { ApiError } from "@/lib/api/client";
-import { createContentToken, lessonContentUrl, uploadLessonContent } from "@/lib/api/content";
+import { ApiError, isAbortError } from "@/lib/api/client";
+import {
+  contentTokenRefreshDelayMs,
+  createContentToken,
+  lessonContentUrl,
+  uploadLessonContent,
+  type ContentTokenResponse,
+} from "@/lib/api/content";
 import type { ContentType, LessonResponse } from "@/lib/api/courses";
 import { createLesson, updateLesson } from "@/lib/api/instructor";
 import {
@@ -204,6 +210,10 @@ export function LessonRow({
   const [previewOpen, setPreviewOpen] = useState(false);
   const [version, setVersion] = useState(0);
   const fileInput = useRef<HTMLInputElement>(null);
+  const uploadAbort = useRef<AbortController | null>(null);
+
+  // Satır kaldırılınca (sayfadan çıkış, ders/bölüm silme) süren yükleme kesilir (#317).
+  useEffect(() => () => uploadAbort.current?.abort(), []);
 
   const rule = CONTENT_RULES[lesson.contentType];
   const canUpload = permissions.editable || (permissions.canUploadNew && !lesson.hasContent);
@@ -218,14 +228,19 @@ export function LessonRow({
     setUploading(file);
     setProgress(0);
     setPreviewOpen(false);
+    const controller = new AbortController();
+    uploadAbort.current = controller;
     try {
-      const updated = await uploadLessonContent(lesson.id, file, setProgress);
+      const updated = await uploadLessonContent(lesson.id, file, setProgress, controller.signal);
       setVersion((v) => v + 1);
       onUploaded(updated);
     } catch (e) {
+      // İptal yalnız satır kaldırılınca olur: kullanıcı sayfadan çıkmıştır, hata gösterilmez.
+      if (isAbortError(e)) return;
       if (isConflict(e)) onConflict(e);
       else setUploadError(apiMessage(e, "İçerik yüklenemedi. Lütfen tekrar deneyin."));
     } finally {
+      uploadAbort.current = null;
       setUploading(null);
       setProgress(null);
     }
@@ -323,7 +338,10 @@ export function LessonRow({
   );
 }
 
-type Preview = { kind: "loading" } | { kind: "ok"; url: string } | { kind: "error"; message: string };
+type Preview =
+  | { kind: "loading" }
+  | { kind: "ok"; token: ContentTokenResponse; url: string }
+  | { kind: "error"; message: string };
 
 /**
  * Yüklenen içeriğin önizlemesi: içerik token'ı alınır (eğitmen kendi kursunun içeriğini açabilir, ADR-012).
@@ -332,17 +350,28 @@ type Preview = { kind: "loading" } | { kind: "ok"; url: string } | { kind: "erro
  */
 function ContentPreview({ lesson }: { lesson: LessonResponse }) {
   const [state, setState] = useState<Preview>({ kind: "loading" });
+  const [attempt, setAttempt] = useState(0);
   const [videoFailed, setVideoFailed] = useState(false);
 
+  // Yenilemede eski bağlantı yeni token gelene kadar görünür kalır ("hazırlanıyor"a dönülmez).
   useEffect(() => {
     let cancelled = false;
     createContentToken(lesson.id)
-      .then((t) => !cancelled && setState({ kind: "ok", url: lessonContentUrl(lesson.id, t.token) }))
+      .then((token) => !cancelled && setState({ kind: "ok", token, url: lessonContentUrl(lesson.id, token.token) }))
       .catch((e: unknown) => !cancelled && setState({ kind: "error", message: apiMessage(e, "Önizleme açılamadı.") }));
     return () => {
       cancelled = true;
     };
-  }, [lesson.id]);
+  }, [lesson.id, attempt]);
+
+  // PDF ve doküman bağlantısı tıklandığında geçerli olsun diye token süresi dolmadan yenilenir; kural oynatıcıyla
+  // aynıdır (#317). Video yenilenmez: adres değişince video baştan yüklenir.
+  const token = state.kind === "ok" ? state.token : null;
+  useEffect(() => {
+    if (token === null || lesson.contentType === "VIDEO") return;
+    const timer = setTimeout(() => setAttempt((a) => a + 1), contentTokenRefreshDelayMs(token));
+    return () => clearTimeout(timer);
+  }, [token, lesson.contentType]);
 
   if (state.kind === "loading") return <p className="qz-muted">Önizleme hazırlanıyor…</p>;
   if (state.kind === "error") {
