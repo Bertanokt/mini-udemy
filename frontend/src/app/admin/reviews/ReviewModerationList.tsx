@@ -136,7 +136,7 @@ export function ReviewModerationList() {
     <section className="qb usr">
       <div className="qb-head">
         <h1>Yorum moderasyonu</h1>
-        <Link href="/admin">Yönetici paneli</Link>
+        <Link className="touch-link" href="/admin">Yönetici paneli</Link>
       </div>
 
       {notice && (
@@ -214,7 +214,7 @@ export function ReviewModerationList() {
                 {data.content.map((r) => (
                   <tr key={r.id}>
                     <td data-label="Kurs" className="usr-name">
-                      <Link href={`/admin/courses/${r.courseId}`}>{courseTitle(r.courseId)}</Link>
+                      <Link className="touch-link" href={`/admin/courses/${r.courseId}`}>{courseTitle(r.courseId)}</Link>
                     </td>
                     <td data-label="Yazar" className="usr-name">
                       {r.author.fullName}

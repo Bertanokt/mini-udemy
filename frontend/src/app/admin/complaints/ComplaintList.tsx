@@ -115,7 +115,7 @@ export function ComplaintList() {
     <section className="qb usr">
       <div className="qb-head">
         <h1>Şikâyetler</h1>
-        <Link href="/admin">Yönetici paneli</Link>
+        <Link className="touch-link" href="/admin">Yönetici paneli</Link>
       </div>
 
       {notice && (
@@ -161,7 +161,7 @@ export function ComplaintList() {
                     <tr key={c.id}>
                       <td data-label="Hedef">
                         {c.courseId !== null ? (
-                          <Link href={`/admin/courses/${c.courseId}`}>Kurs #{c.courseId}</Link>
+                          <Link className="touch-link" href={`/admin/courses/${c.courseId}`}>Kurs #{c.courseId}</Link>
                         ) : (
                           `Yorum #${c.reviewId}`
                         )}

@@ -62,7 +62,7 @@ export function MyCoursesView() {
     <section>
       <h1>Kayıtlı kurslarım</h1>
       <p>
-        <Link href="/certificates">Sertifikalarım</Link>
+        <Link className="touch-link" href="/certificates">Sertifikalarım</Link>
       </p>
       {result === null && <Loading text="Kurslarınız yükleniyor…" />}
       {result?.kind === "error" && <ErrorMessage message={result.message} onRetry={() => setRetry((r) => r + 1)} />}
@@ -97,7 +97,7 @@ function EnrollmentItem({ enrollment: e }: { enrollment: EnrollmentResponse }) {
       </div>
       <div className={styles.body}>
         <h2 className={styles.title}>
-          <Link href={resumeHref(e)}>{course.title}</Link>
+          <Link className="touch-link" href={resumeHref(e)}>{course.title}</Link>
         </h2>
         <p className={styles.meta}>
           {course.instructor.fullName} · {course.lessonCount} ders · {formatDuration(course.totalDurationSeconds)}

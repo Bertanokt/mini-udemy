@@ -59,7 +59,7 @@ export function CertificateView() {
     return (
       <div role="alert">
         <p className={styles.error}>Sertifika bulunamadı.</p>
-        <Link href="/certificates">Sertifikalarım</Link>
+        <Link className="touch-link" href="/certificates">Sertifikalarım</Link>
       </div>
     );
   }

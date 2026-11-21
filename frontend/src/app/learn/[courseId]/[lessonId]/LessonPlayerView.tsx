@@ -185,7 +185,7 @@ export function LessonPlayerView() {
           )}
         </nav>
         <p>
-          <Link href={`/courses/${courseId}`}>Kurs sayfasına dön</Link>
+          <Link className="touch-link" href={`/courses/${courseId}`}>Kurs sayfasına dön</Link>
         </p>
       </section>
     </div>

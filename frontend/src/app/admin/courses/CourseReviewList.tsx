@@ -106,7 +106,7 @@ export function CourseReviewList() {
     <section className="qb usr">
       <div className="qb-head">
         <h1>Kurs onayı</h1>
-        <Link href="/admin">Yönetici paneli</Link>
+        <Link className="touch-link" href="/admin">Yönetici paneli</Link>
       </div>
 
       {notice && (
@@ -172,7 +172,7 @@ export function CourseReviewList() {
                 {data.content.map((c) => (
                   <tr key={c.id}>
                     <td data-label="Kurs" className="usr-name">
-                      <Link href={`/admin/courses/${c.id}`}>{c.title}</Link>
+                      <Link className="touch-link" href={`/admin/courses/${c.id}`}>{c.title}</Link>
                     </td>
                     <td data-label="Eğitmen" className="usr-name">
                       {c.instructor.fullName}
