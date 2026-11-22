@@ -53,11 +53,15 @@ export function Header() {
   }
 
   const panel = user ? PANEL_LINKS[user.role] : undefined;
+  /** Bulunulan bölümün menü bağlantısı vurgulanır (yalnız görünüm). */
+  const navClass = (href: string) =>
+    (href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/")) ? "nav-active" : undefined;
 
   return (
     <header className="site-header">
       <div className="container header-inner">
         <Link href="/" className="brand" onClick={close}>
+          <span className="brand-mark" aria-hidden="true" />
           Mini Udemy
         </Link>
         <button
@@ -70,15 +74,15 @@ export function Header() {
           {open ? "Kapat" : "Menü"}
         </button>
         <nav id="site-nav" className={open ? "nav open" : "nav"} aria-label="Ana menü">
-          <Link href="/" onClick={close}>
+          <Link href="/" className={navClass("/")} onClick={close}>
             Kurslar
           </Link>
           {mounted && status === "anonymous" && (
             <>
-              <Link href="/login" onClick={close}>
+              <Link href="/login" className={navClass("/login")} onClick={close}>
                 Giriş
               </Link>
-              <Link href="/register" onClick={close}>
+              <Link href="/register" className={navClass("/register")} onClick={close}>
                 Kayıt
               </Link>
             </>
@@ -86,7 +90,7 @@ export function Header() {
           {mounted && status === "authenticated" && user && (
             <>
               {panel && (
-                <Link href={panel.href} onClick={close}>
+                <Link href={panel.href} className={navClass(panel.href)} onClick={close}>
                   {panel.label}
                 </Link>
               )}

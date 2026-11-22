@@ -8,7 +8,7 @@
 - Repo (herkese açık): https://github.com/Bertanokt/mini-udemy
 - Görev panosu — GitHub Project (herkese açık): https://github.com/users/Bertanokt/projects/1
 - Issue'lar: https://github.com/Bertanokt/mini-udemy/issues · Milestone'lar: https://github.com/Bertanokt/mini-udemy/milestones · Pull request'ler: https://github.com/Bertanokt/mini-udemy/pulls?q=is%3Apr
-- Üyelerin kendi yazdığı katkı notları: [Eray](https://github.com/Bertanokt/mini-udemy/blob/main/docs/katki/eray.md), [Veronika](https://github.com/Bertanokt/mini-udemy/blob/main/docs/katki/veronika.md)
+- Üyelerin kendi yazdığı katkı notları: [Bertan](https://github.com/Bertanokt/mini-udemy/blob/main/docs/katki/bertan.md), [Eray](https://github.com/Bertanokt/mini-udemy/blob/main/docs/katki/eray.md), [Veronika](https://github.com/Bertanokt/mini-udemy/blob/main/docs/katki/veronika.md)
 
 ## 2. Rol dağılımı
 
@@ -166,6 +166,7 @@ Yalnız `main`'e girmiş dosyalar sayılır. Metin dosyalarında yazar payı `gi
 | UML use-case diyagramı | [`docs/diagrams/use-case.png`](https://github.com/Bertanokt/mini-udemy/blob/main/docs/diagrams/use-case.png) | Sedat (görsel) | [#152](https://github.com/Bertanokt/mini-udemy/pull/152) |
 | UML use-case diyagramı | [`docs/diagrams/use-case.puml`](https://github.com/Bertanokt/mini-udemy/blob/main/docs/diagrams/use-case.puml) | Sedat %100 | [#152](https://github.com/Bertanokt/mini-udemy/pull/152) |
 | UML use-case diyagramı | [`docs/diagrams/use-case.svg`](https://github.com/Bertanokt/mini-udemy/blob/main/docs/diagrams/use-case.svg) | Sedat %100 | [#152](https://github.com/Bertanokt/mini-udemy/pull/152) |
+| Bireysel katkı | [`docs/katki/bertan.md`](https://github.com/Bertanokt/mini-udemy/blob/main/docs/katki/bertan.md) | Bertan %100 | [#333](https://github.com/Bertanokt/mini-udemy/pull/333) |
 | Bireysel katkı | [`docs/katki/eray.md`](https://github.com/Bertanokt/mini-udemy/blob/main/docs/katki/eray.md) | Eray %100 | [#155](https://github.com/Bertanokt/mini-udemy/pull/155) |
 | Bireysel katkı | [`docs/katki/veronika.md`](https://github.com/Bertanokt/mini-udemy/blob/main/docs/katki/veronika.md) | Veronika %100 | [#157](https://github.com/Bertanokt/mini-udemy/pull/157) |
 | Fonksiyonel olmayan gereksinimler | [`docs/non-functional-requirements.md`](https://github.com/Bertanokt/mini-udemy/blob/main/docs/non-functional-requirements.md) | Veronika %100 | [#156](https://github.com/Bertanokt/mini-udemy/pull/156) |

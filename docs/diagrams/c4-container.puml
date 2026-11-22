@@ -15,7 +15,7 @@ System_Boundary(mu, "Mini Udemy (docker compose)") {
   Container(web, "Web sunucusu", "Next.js 16, Node.js 22 (standalone)", "Sayfaları ve statik dosyaları (HTML, JS, CSS) verir. Backend'e istek atmaz.")
   Container(spa, "Web arayüzü", "React, tarayıcıda çalışır", "Sayfalar; API çağrıları src/lib/api/* üzerinden. JWT localStorage'da.")
   Container(api, "Backend API", "Spring Boot 3.5, Java 21, modüler monolit", "REST/JSON uçları (/api/**); JWT doğrulama, rol kontrolü, iş kuralları, Flyway migration'ları, olaylar.")
-  ContainerDb(db, "Veritabanı", "PostgreSQL 17", "Kullanıcılar, kurslar, kayıtlar, ilerleme, sınavlar, dosya meta verisi (stored_files).")
+  ContainerDb(db, "Veritabanı", "PostgreSQL 17", "Kullanıcılar, kurslar, kayıtlar, ilerleme, sınavlar, değerlendirmeler, sertifikalar, bildirimler, şikâyetler, dosya meta verisi (stored_files).")
   ContainerDb(files, "Dosya deposu", "Docker volume: uploads, /data/uploads", "Yüklenen video, PDF, doküman ve kapak görselleri; diskte UUID adıyla.")
 }
 
