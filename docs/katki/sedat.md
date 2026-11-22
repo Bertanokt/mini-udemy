@@ -1,0 +1,30 @@
+# Bireysel teknik katkı — Sedat (@sedatisener), Alan Tasarımcısı
+
+Son güncelleme: 22.11.2026
+
+## Yaptığım işler
+
+- **Gereksinim ve analiz** — [#151](https://github.com/Bertanokt/mini-udemy/pull/151) 44 fonksiyonel gereksinim ([#77](https://github.com/Bertanokt/mini-udemy/issues/77)), [#152](https://github.com/Bertanokt/mini-udemy/pull/152) use-case diyagramı ([#1](https://github.com/Bertanokt/mini-udemy/issues/1)), [#229](https://github.com/Bertanokt/mini-udemy/pull/229) senaryo 1–5 ve UC-01…UC-34 açıklamaları ([#79](https://github.com/Bertanokt/mini-udemy/issues/79))
+- **Diyagramlar ve tasarım dokümanları** — sekans diyagramları: kursa kayıt [#277](https://github.com/Bertanokt/mini-udemy/pull/277) ([#39](https://github.com/Bertanokt/mini-udemy/issues/39)), sınav çözme [#278](https://github.com/Bertanokt/mini-udemy/pull/278) ([#64](https://github.com/Bertanokt/mini-udemy/issues/64)), sertifika ve bildirim [#273](https://github.com/Bertanokt/mini-udemy/pull/273) ([#140](https://github.com/Bertanokt/mini-udemy/issues/140)); sınıf diyagramı ve beş desen diyagramı [#283](https://github.com/Bertanokt/mini-udemy/pull/283) ([#51](https://github.com/Bertanokt/mini-udemy/issues/51)); SOLID ve OOP dokümanı [#284](https://github.com/Bertanokt/mini-udemy/pull/284) ([#95](https://github.com/Bertanokt/mini-udemy/issues/95)); #97 kontrolünde bulunan farkların görüntüleri [#316](https://github.com/Bertanokt/mini-udemy/pull/316)
+- **Backend** — kurs yapısı entity ve repository'leri [#180](https://github.com/Bertanokt/mini-udemy/pull/180) ([#21](https://github.com/Bertanokt/mini-udemy/issues/21)); bildirim modülü [#266](https://github.com/Bertanokt/mini-udemy/pull/266) ([#124](https://github.com/Bertanokt/mini-udemy/issues/124)) ve API'si [#303](https://github.com/Bertanokt/mini-udemy/pull/303), [#315](https://github.com/Bertanokt/mini-udemy/pull/315) ([#125](https://github.com/Bertanokt/mini-udemy/issues/125)); yayından kaldırma ve yeniden inceleme [#270](https://github.com/Bertanokt/mini-udemy/pull/270) ([#123](https://github.com/Bertanokt/mini-udemy/issues/123)); yorum moderasyonu [#290](https://github.com/Bertanokt/mini-udemy/pull/290) ([#142](https://github.com/Bertanokt/mini-udemy/issues/142)); şikâyetler [#292](https://github.com/Bertanokt/mini-udemy/pull/292) ([#144](https://github.com/Bertanokt/mini-udemy/issues/144), [#146](https://github.com/Bertanokt/mini-udemy/issues/146)); hata düzeltmeleri [#262](https://github.com/Bertanokt/mini-udemy/pull/262) ([#184](https://github.com/Bertanokt/mini-udemy/issues/184)), [#294](https://github.com/Bertanokt/mini-udemy/pull/294) ([#293](https://github.com/Bertanokt/mini-udemy/issues/293))
+- **Frontend** — eğitmen kurs formu [#289](https://github.com/Bertanokt/mini-udemy/pull/289) ([#33](https://github.com/Bertanokt/mini-udemy/issues/33)), bölüm/ders yönetimi ve içerik yükleme [#300](https://github.com/Bertanokt/mini-udemy/pull/300) ([#34](https://github.com/Bertanokt/mini-udemy/issues/34)), bölüm sonu sınavı oluşturma [#272](https://github.com/Bertanokt/mini-udemy/pull/272) ([#50](https://github.com/Bertanokt/mini-udemy/issues/50)), yönetici kurs onay/red [#288](https://github.com/Bertanokt/mini-udemy/pull/288) ([#62](https://github.com/Bertanokt/mini-udemy/issues/62)), bildirim zili [#323](https://github.com/Bertanokt/mini-udemy/pull/323) ([#136](https://github.com/Bertanokt/mini-udemy/issues/136)), önizleme token'ı ve yükleme iptali [#319](https://github.com/Bertanokt/mini-udemy/pull/319) ([#317](https://github.com/Bertanokt/mini-udemy/issues/317))
+- **Rapor ve sunum** — rapor bölüm 1–3 [#295](https://github.com/Bertanokt/mini-udemy/pull/295), [#325](https://github.com/Bertanokt/mini-udemy/pull/325), [#327](https://github.com/Bertanokt/mini-udemy/pull/327), [#332](https://github.com/Bertanokt/mini-udemy/pull/332) ([#102](https://github.com/Bertanokt/mini-udemy/issues/102)); sunum soru havuzu [#328](https://github.com/Bertanokt/mini-udemy/pull/328) ([#107](https://github.com/Bertanokt/mini-udemy/issues/107))
+
+## Kararlar ve nedenleri
+
+- **Bildirimler olayla, commit'ten sonra:** `NotificationListener` altı olayı `AFTER_COMMIT` + `REQUIRES_NEW` ile dinliyor. Kayıt 409 ile düşerse bildirim yazılmıyor; bildirim yazılamazsa da kayıt geri alınmıyor. Metinler tek yerde (`NotificationMessages`). Altı olayı tek sınıfta tutmak bilinçli bir SRP ödünleşimi (`solid.md`).
+- **Yayından kaldırma gerekçesi yeniden incelemede kalıyor:** yönetici kursun neden kaldırıldığını görebilsin diye; onayda temizleniyor. Önceden kaydolmuş kursiyer kursa erişmeye devam ediyor; görünürlük kuralı tek yerde (`CourseVisibility`).
+- **Diyagramlar koddan:** sınıf ve sekans diyagramlarındaki sınıf, metot ve hata kodlarını koddan çıkardım; PR'larda diyagram–kod tablosu verdim. Desenleri genel diyagrama sığdırmak yerine her desene ayrı diyagram çizdim.
+- **Merge edilmiş migration değişmez:** #184'te `learning_outcomes` NULL gelince `NullPointerException` oluyordu. Eski migration'ı düzeltmek yerine yeni migration'la `NOT NULL DEFAULT '{}'` ekledim.
+- **Ekranda iş kuralı yok:** eğitmen formlarının salt okunur olup olmadığı kursun durumundan geliyor, asıl kontrol sunucudaki durum nesnesinde; ekran 409'u mesaj olarak gösteriyor.
+
+## Karşılaştığım problemler
+
+- **Windows satır sonları:** Docker'da `./mvnw: not found` hatası CRLF yüzündendi; klonda `core.autocrlf=input` ile çözdüm.
+- **Türkçe yerel ayar:** PlantUML C4 diyagramını render ederken `INFO`'yu `ınfo` diye küçültüp kütüphaneyi bulamadı; `-Duser.language=en` ile çözüldü.
+- **Paralel PR çakışmaları:** #124 ile #23 `architecture.md`'de, #288 ile #289 `globals.css`'te çakıştı. Çakışmayı merge commit'iyle çözüp birleşik kodda testleri yeniden çalıştırdım.
+- **Önizleme token'ı (#317):** içerik token'ı 5 dakikada dolduğu için uzun önizlemede 401 geliyordu; ekran token'ı süresi dolmadan yeniliyor ve sayfadan çıkınca yarım kalan yüklemeyi iptal ediyor.
+
+## Araç kullanımı
+
+Kod, test, diyagram ve doküman taslaklarını Claude Code ile ürettim. Kapsamı, tasarım kararlarını ve her PR'ı ben onayladım; her PR'da CI ve gerekli yerde Docker'da elle kontrol yaptım.
