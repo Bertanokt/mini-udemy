@@ -16,7 +16,7 @@
   color: inherit;
   background: none;
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
 }
 
@@ -54,9 +54,9 @@
   width: min(380px, calc(100vw - 32px));
   max-height: 70vh;
   overflow-y: auto;
-  background: var(--bg);
+  background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   box-shadow: 0 8px 24px rgb(0 0 0 / 0.15);
   padding: 12px;
 }
@@ -126,7 +126,7 @@
   text-align: left;
   background: none;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
 }
 

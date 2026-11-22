@@ -1,5 +1,5 @@
 .layout { display: grid; grid-template-columns: 300px 1fr; gap: 24px; align-items: start; }
-.sidebar { position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; }
+.sidebar { position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-md); }
 .main { min-width: 0; }
 .status { color: var(--muted); }
 .error { color: var(--err); }
@@ -12,11 +12,11 @@
 .lessons a:hover { background: color-mix(in srgb, var(--accent) 8%, transparent); }
 .lessons a.current { border-left-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); font-weight: 600; }
 .lessonMeta { color: var(--muted); font-size: 0.875rem; font-weight: 400; }
-.video { display: block; width: 100%; max-height: 70vh; background: #000; border-radius: 8px; }
-.file, .locked { border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+.video { display: block; width: 100%; max-height: 70vh; background: #000; border-radius: var(--radius-md); }
+.file, .locked { border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; }
 .locked { border-color: var(--err); }
 .pager { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin: 24px 0 16px; }
-.button { display: inline-block; padding: 8px 16px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: inherit; cursor: pointer; font: inherit; text-decoration: none; }
+.button { display: inline-block; padding: 8px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: transparent; color: inherit; cursor: pointer; font: inherit; text-decoration: none; }
 .primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
 
 /* Bölüm sınavları (#304) */
@@ -39,9 +39,9 @@
 @media (max-width: 768px) {
   .layout { grid-template-columns: 1fr; }
   .sidebar { position: static; max-height: none; overflow: visible; border: none; }
-  .listToggle { display: block; width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; background: transparent; color: inherit; font: inherit; cursor: pointer; text-align: left; }
+  .listToggle { display: block; width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: transparent; color: inherit; font: inherit; cursor: pointer; text-align: left; }
   .list { display: none; }
-  .listOpen { display: block; margin-top: 8px; border: 1px solid var(--border); border-radius: 8px; }
+  .listOpen { display: block; margin-top: 8px; border: 1px solid var(--border); border-radius: var(--radius-md); }
 }
 
 /* Dokunma hedefi (#71): bağlantı olarak kullanılan düğmeler de dar ekranda 44 px. */
