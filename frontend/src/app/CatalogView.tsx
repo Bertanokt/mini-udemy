@@ -117,7 +117,9 @@ export function CatalogView() {
 
   return (
     <section className="catalog">
-      <h1>Kurs kataloğu</h1>
+      <div className="catalog-hero">
+        <h1>Kurs kataloğu</h1>
+        <p className="catalog-lead">Yazılımdan veri bilimine, kendi hızınızda öğrenin.</p>
 
       <form className="catalog-search" role="search" onSubmit={onSearch} key={query.q ?? ""}>
         <label htmlFor="catalog-q" className="visually-hidden">
@@ -133,6 +135,7 @@ export function CatalogView() {
         />
         <button type="submit">Ara</button>
       </form>
+      </div>
 
       <div className="catalog-filters">
         <label>

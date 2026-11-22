@@ -22,6 +22,8 @@
   --err-soft: #fdeced;
   --warn: #9a5b00;
   --warn-soft: #fff4e0;
+  /* Puan yıldızları: beyaz yüzeyde 5,0:1. */
+  --star: #b45309;
   --cover-a: #6d63f0;
   --cover-b: #3b33b8;
 
@@ -78,6 +80,7 @@
     --err-soft: #2e1517;
     --warn: #f5b74e;
     --warn-soft: #2c2210;
+    --star: #fbbf24;
     --cover-a: #4a43c9;
     --cover-b: #25206f;
     --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
@@ -375,10 +378,58 @@ a {
   cursor: default;
 }
 
+/* Katalog başlığı: yumuşak vurgu zemininde başlık, kısa açıklama ve büyük arama kutusu. */
+.catalog-hero {
+  padding: var(--space-7) var(--space-6);
+  margin-bottom: var(--space-5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(90% 120% at 100% 0%, color-mix(in srgb, var(--accent) 16%, transparent) 0%, transparent 60%),
+    radial-gradient(80% 120% at 0% 100%, var(--accent-soft) 0%, transparent 70%),
+    var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.site-main .catalog-hero h1 {
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  margin-bottom: var(--space-2);
+}
+
+.site-main .catalog-lead {
+  color: var(--muted);
+  font-size: var(--text-lg);
+  margin-bottom: var(--space-5);
+}
+
 .catalog-search {
   display: flex;
   gap: 8px;
-  margin-bottom: 16px;
+  max-width: 640px;
+  padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+
+.catalog-search:focus-within {
+  border-color: var(--accent);
+  box-shadow: var(--ring), var(--shadow-md);
+}
+
+.catalog .catalog-search input {
+  border: 0;
+  background: transparent;
+  font-size: var(--text-md);
+}
+
+.catalog .catalog-search input:focus-visible {
+  box-shadow: none;
+}
+
+.catalog .catalog-search button[type="submit"] {
+  padding: 9px 22px;
 }
 
 .catalog-search input {
@@ -402,44 +453,94 @@ a {
   flex-wrap: wrap;
   align-items: flex-end;
   gap: 12px;
-  margin-bottom: 20px;
+  margin-bottom: var(--space-4);
 }
 
 .catalog-filters label {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  font-size: 0.875rem;
+  font-size: var(--text-xs);
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   color: var(--muted);
+}
+
+.catalog-filters select {
+  min-width: 11rem;
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: var(--text-sm);
+  font-weight: 500;
 }
 
 .catalog .chip {
-  border-radius: 999px;
-  font-size: 0.875rem;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-sm);
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
-.catalog-count {
+.site-main .catalog-count {
   color: var(--muted);
-  margin: 16px 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  margin: var(--space-4) 0 var(--space-3);
 }
 
 .course-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: var(--space-5);
 }
 
+/* Kurs kartı: kapak üstte tam genişlik, altında başlık, eğitmen, etiketler ve özet. */
 .course-card {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+  padding-bottom: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.course-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-strong);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .course-card,
+  .course-card:hover {
+    transition: none;
+    transform: none;
+  }
+}
+
+.course-card > :not(.course-card-link),
+.course-card-link .course-title {
+  margin-left: var(--space-4);
+  margin-right: var(--space-4);
+}
+
+.course-card-link {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
 }
 
 .course-cover {
   aspect-ratio: 16 / 9;
-  border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  background-color: var(--border);
+  background-color: var(--cover-b);
+  background-image: linear-gradient(135deg, var(--cover-a), var(--cover-b));
   background-size: cover;
   background-position: center;
   display: flex;
@@ -448,14 +549,22 @@ a {
   margin-bottom: 6px;
 }
 
+.course-card .course-cover {
+  border-radius: 0;
+  margin-bottom: 0;
+  border-bottom: 1px solid var(--border);
+}
+
 .course-cover-placeholder {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: var(--muted);
+  font-size: 2.75rem;
+  font-weight: 750;
+  color: #fff;
+  opacity: 0.92;
 }
 
 .course-title {
-  font-size: 1rem;
+  font-size: 1.0625rem;
+  font-weight: 700;
   line-height: 1.3;
 }
 
@@ -464,10 +573,16 @@ a {
 }
 
 .course-instructor {
-  font-size: 0.875rem;
+  align-self: flex-start;
+  font-size: var(--text-sm);
   color: var(--muted);
   text-decoration: underline;
-  text-underline-offset: 2px;
+  text-decoration-color: color-mix(in srgb, var(--muted) 45%, transparent);
+  text-underline-offset: 3px;
+}
+
+.course-instructor:hover {
+  color: var(--accent);
 }
 
 .course-tags {
@@ -489,8 +604,14 @@ a {
 }
 
 .course-meta {
-  font-size: 0.8125rem;
+  font-size: var(--text-sm);
   color: var(--muted);
+}
+
+.course-card .course-meta {
+  margin-top: auto;
+  margin-bottom: 0;
+  padding-top: var(--space-2);
 }
 
 .pagination {
@@ -506,20 +627,49 @@ a {
     grid-template-columns: 1fr;
   }
 
+  .catalog-hero {
+    padding: var(--space-5) var(--space-4);
+  }
+
+  /* Üç seçim kutusu dar ekranda tek satıra sığar; kurslar ilk ekranda görünür. */
+  .catalog-filters {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .catalog-filters .chip {
+    grid-column: 1 / -1;
+  }
+
   .catalog-filters label,
   .catalog-filters select {
     width: 100%;
+    min-width: 0;
   }
 }
 
-/* Giriş ve kayıt formları (#18, #17) */
+/* Giriş ve kayıt formları (#18, #17): ortada tek kart. */
 .auth-page {
-  max-width: 420px;
-  margin: 32px auto;
+  max-width: 460px;
+  margin: var(--space-5) auto;
+  padding: var(--space-6);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
 }
 
-.auth-page h1 {
-  margin-bottom: 20px;
+.site-main .auth-page h1 {
+  font-size: var(--text-2xl);
+  margin-bottom: var(--space-5);
+}
+
+@media (max-width: 600px) {
+  .auth-page {
+    margin: 0 auto;
+    padding: var(--space-5) var(--space-4);
+  }
 }
 
 .auth-form {
@@ -614,7 +764,18 @@ a {
 }
 
 .placeholder-page {
-  margin: 32px 0;
+  margin: var(--space-2) 0 var(--space-6);
+}
+
+/* Rapor gibi bölümlü sayfalarda ara başlıklar tablolardan ayrışsın. */
+.placeholder-page section > h2 {
+  font-size: var(--text-lg);
+  margin: var(--space-6) 0 var(--space-3);
+}
+
+.admin-menu + p {
+  margin-top: var(--space-5);
+  color: var(--muted);
 }
 
 .placeholder-page h1 {
@@ -667,7 +828,56 @@ a {
 
 .auth-switch a {
   color: var(--accent);
+  font-weight: 600;
   text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Tek başına duran bağlantılar (geri dön, Sertifikalarım, tablo içi kurs adları). */
+.touch-link {
+  color: var(--accent);
+  font-weight: 600;
+  text-underline-offset: 3px;
+}
+
+.touch-link:hover {
+  text-decoration: underline;
+}
+
+/* Yönetici paneli menüsü: kutucuklar. */
+.admin-menu {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--space-4);
+  margin-top: var(--space-5);
+}
+
+.admin-menu .touch-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 72px;
+  padding: var(--space-4) var(--space-5);
+  color: var(--fg);
+  font-size: var(--text-md);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.15s, box-shadow 0.15s, color 0.15s;
+}
+
+.admin-menu .touch-link::after {
+  content: "→";
+  color: var(--accent);
+}
+
+.admin-menu .touch-link:hover {
+  text-decoration: none;
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  box-shadow: var(--shadow-md);
 }
 
 /* Soru bankası (#122) */
@@ -1114,11 +1324,28 @@ a {
     clip: rect(0 0 0 0);
   }
 
+  /* Dar ekranda her satır ayrı bir kart; dış çerçeve kalkar. */
+  .usr-wrap {
+    background: none;
+    border: 0;
+    box-shadow: none;
+  }
+
   .usr-table tr {
+    background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    padding: 8px 12px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 8px 16px;
     margin-bottom: 12px;
+  }
+
+  .usr-table tbody tr:hover {
+    background: var(--surface);
+  }
+
+  .usr-table tbody tr:last-child td {
+    border-bottom: 0;
   }
 
   .usr-table td {
@@ -1388,7 +1615,9 @@ a.qb-btn {
 
 .an-sort {
   font: inherit;
-  font-weight: 600;
+  font-weight: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
   color: inherit;
   background: none;
   border: 0;
@@ -1794,6 +2023,27 @@ a.qb-btn {
   .sl-content {
     padding-left: 0;
   }
+}
+
+/* İç içe kartlar (bölüm içindeki dersler): içteki kart düz, ayrışma zemin tonuyla. */
+.qb-item .qb-item {
+  background: var(--surface-2);
+  box-shadow: none;
+  border-radius: var(--radius-md);
+}
+
+/* Dosya seçme düğmesi de ortak düğme gibi. */
+input[type="file"]::file-selector-button {
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--fg);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  margin-right: 10px;
+  cursor: pointer;
 }
 
 /* Ortak tablo başlığı: kullanıcı, yorum, şikâyet, kurs onayı ve analitik tabloları. */
