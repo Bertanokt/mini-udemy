@@ -767,6 +767,17 @@ a {
   margin: var(--space-2) 0 var(--space-6);
 }
 
+/* Rapor gibi bölümlü sayfalarda ara başlıklar tablolardan ayrışsın. */
+.placeholder-page section > h2 {
+  font-size: var(--text-lg);
+  margin: var(--space-6) 0 var(--space-3);
+}
+
+.admin-menu + p {
+  margin-top: var(--space-5);
+  color: var(--muted);
+}
+
 .placeholder-page h1 {
   margin-bottom: 8px;
 }
@@ -1604,7 +1615,9 @@ a.qb-btn {
 
 .an-sort {
   font: inherit;
-  font-weight: 600;
+  font-weight: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
   color: inherit;
   background: none;
   border: 0;
@@ -2010,6 +2023,27 @@ a.qb-btn {
   .sl-content {
     padding-left: 0;
   }
+}
+
+/* İç içe kartlar (bölüm içindeki dersler): içteki kart düz, ayrışma zemin tonuyla. */
+.qb-item .qb-item {
+  background: var(--surface-2);
+  box-shadow: none;
+  border-radius: var(--radius-md);
+}
+
+/* Dosya seçme düğmesi de ortak düğme gibi. */
+input[type="file"]::file-selector-button {
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--fg);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  margin-right: 10px;
+  cursor: pointer;
 }
 
 /* Ortak tablo başlığı: kullanıcı, yorum, şikâyet, kurs onayı ve analitik tabloları. */
