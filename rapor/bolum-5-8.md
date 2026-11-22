@@ -203,13 +203,14 @@ Uygulanan önlemler (kodda kontrol edildi, `frontend/src`):
 docker compose up --build
 ```
 
-Frontend http://localhost:3000, backend http://localhost:8080. Veritabanı boşsa örnek veri (seed, #67) açılışta yüklenir. Bütün demo hesaplarının parolası `Demo1234!`.
+Frontend http://localhost:3000, backend http://localhost:8080. Veritabanı boşsa örnek veri (seed, #67) açılışta yüklenir: 10 kurs (7'si yayında), 5 kategori, her kursta video, PDF ve doküman dersleri ile en az bir bölüm sınavı (#337). Bütün demo hesaplarının parolası `Demo1234!`; aşağıdaki tablo seçilmiş hesaplar, tam liste README › Demo hesapları.
 
 | Hesap | Rol | Durumu |
 |---|---|---|
-| `admin@miniudemy.dev` | Yönetici | – |
-| `mehmet.kaya@miniudemy.dev` | Eğitmen | "Sıfırdan Python" (yayında), "SQL ve Veritabanları" (incelemede), "Python 2 (eski)" (yayından kaldırılmış) |
-| `zeynep.ak@miniudemy.dev` | Eğitmen | "Java ile Nesne Yönelimli Programlama" (yayında), "Web Geliştirmeye Giriş" (reddedildi, gerekçeli) |
+| `admin@miniudemy.dev` | Yönetici | Onay kuyruğunda "SQL ve Veritabanları"; şikâyetlerde Selin'in açık şikâyeti |
+| `mehmet.kaya@miniudemy.dev` | Eğitmen | "Sıfırdan Python" ve "Pandas ile Veri Analizine Giriş" (yayında), "SQL ve Veritabanları" (incelemede), "Python 2 (eski)" (yayından kaldırılmış) |
+| `zeynep.ak@miniudemy.dev` | Eğitmen | "Java ile Nesne Yönelimli Programlama", "Arayüz Tasarımının Temelleri", "Git ile Sürüm Kontrolü" (yayında), "Web Geliştirmeye Giriş" (reddedildi, gerekçeli) |
+| `ece.yildiz@miniudemy.dev` | Eğitmen | "İş İngilizcesi: E-posta ve Toplantılar", "Scrum ile Çevik Proje Yönetimi" (yayında) |
 | `ayse.yilmaz@miniudemy.dev` | Kursiyer | Python %100, sertifikalı (`K7Q2-M9XA-4T`) |
 | `can.demir@miniudemy.dev` | Kursiyer | Python %67; kaldığı yer "Fonksiyon Tanımlama" |
 | `elif.sahin@miniudemy.dev` | Kursiyer | Python %50; giriş sınavından kaldı |
@@ -248,7 +249,7 @@ Frontend http://localhost:3000, backend http://localhost:8080. Veritabanı boşs
 2. "İncele" (`/admin/courses/{id}`): açıklama, hedefler, bölüm/ders listesi; içeriği olan derste "İçeriği aç" dersi yeni sekmede açar, içeriği olmayan ders "İçerik yok" diye işaretlidir.
 3. İncelemedeki kursu "Onayla" ya da gerekçeyle (5–1000 karakter) "Reddet"; yayındaki kursu gerekçeyle "Yayından kaldır". Liste ve durum hemen güncellenir, eğitmene bildirim yazılır.
 4. Yorum moderasyonu (`/admin/reviews`): durum ve kursa göre süzülen yorum listesi; uygunsuz yorum gerekçeyle "Gizle", sonra "Geri aç". Gizli yorum kurs sayfasında görünmez ve ortalamaya katılmaz (deneyin: Ayşe'nin Python yorumu gizlenince ortalama 4,3 → 4,0).
-5. Şikâyetler (`/admin/complaints`): kurs ve yorum şikâyetleri en yeni önce; her satır "İncelendi" ya da "Reddet" ile sonuçlandırılır. Kurs şikâyeti kurs inceleme ekranına bağlantı verir; gerekirse yorum moderasyonu ya da yayından kaldırma oradan yapılır.
+5. Şikâyetler (`/admin/complaints`): kurs ve yorum şikâyetleri en yeni önce; her satır "İncelendi" ya da "Reddet" ile sonuçlandırılır. Kurs şikâyeti kurs inceleme ekranına bağlantı verir; gerekirse yorum moderasyonu ya da yayından kaldırma oradan yapılır (deneyin: seed'de Selin'in "Java ile Nesne Yönelimli Programlama" için açık şikâyeti var).
 6. Diğer sayfalar: kullanıcılar (rol ve pasifleştirme, `/admin/users`), kategoriler (`/admin/categories`), platform raporu (`/admin/reports`).
 
 **Ekranı henüz olmayan işlemler** (21.11.2026 akşamı; API ile yapılır, adımlar [`docs/demo.md`](../docs/demo.md)'de): katalogda puan filtresi (#305; API: `minRating`), kullanıcının şikâyet oluşturması (`POST /api/complaints`; düğmesi yok). ⟨01.12'de ekranı gelenler adımlara eklenecek, ekran görüntüleri #72'den.⟩
