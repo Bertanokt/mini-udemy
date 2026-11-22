@@ -13,6 +13,7 @@ import { formatDuration } from "@/components/course/CourseCard";
 import { CourseReviews, type ReviewerState } from "@/components/review/CourseReviews";
 import { ResumeLink } from "@/components/progress/ResumeLink";
 import styles from "./course-detail.module.css";
+import { Loading } from "@/components/common/Loading";
 
 type CourseResult =
   | { kind: "ok"; course: CourseDetailResponse }
@@ -110,7 +111,7 @@ export function CourseDetailView() {
   }
 
   if (result === null) {
-    return <p className={styles.status}>Kurs yükleniyor…</p>;
+    return <Loading text="Kurs yükleniyor…" />;
   }
   if (result.kind === "notFound") {
     return (

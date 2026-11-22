@@ -99,7 +99,7 @@ Seviye kısaltmaları bölüm 1'deki tablodadır. "Test issue'su" sütunundaki i
 
 | NFR | Ne doğrulanır | Seviye | Test issue'su |
 |---|---|---|---|
-| NFR-01 | Liste uçları `page`/`size` alır; `size` > 50 sınırlanır ya da 400 | E | #65 |
+| NFR-01 | Liste uçları `page`/`size` alır; `size` > 100 → 400 | E | #65 |
 | NFR-02 | Video `Range` isteğine 206 Partial Content döner; dosya akışla gönderilir | E | #114 |
 | NFR-03 | Kayıtsız kursiyerin içerik ve dosya isteği 403; dosyaya doğrudan URL ile ulaşılamaz | E | #139, #114 |
 | NFR-04 | Korumalı uçlar JWT olmadan 401; parola BCrypt ile saklanır, logda düz parola yok | E, İ | #139, #15 |
@@ -133,44 +133,57 @@ Proje tanım dokümanı bölüm 6'daki dört durum ve dosya denetimleri her zama
 
 ## 6. Manuel test kontrol listesi (bug bash, #68)
 
-Her madde `docker compose up --build` ile ayağa kalkan sistemde, seed verisiyle (#67) denenir. Bulunan her hata ekran görüntüsü ve adımlarla issue olarak açılır (`bug` etiketi, öncelik P1/P2).
+Her madde `docker compose down -v && docker compose up --build` ile ayağa kalkan sistemde, seed verisiyle (#67) denenir; hesaplar README › Demo hesapları (parola `Demo1234!`). Liste rol × akış düzenindedir; bug bash günü #68'e yorum olarak kopyalanıp işaretlenir. Güncelleme: 21.11.2026 (o güne kadar gelen bütün ekranlar).
 
-**Kurulum**
-- [ ] Temiz bir makinede `docker compose up --build` hatasız tamamlanır; frontend, backend health ve veritabanı çalışır (NFR-16).
+**Bulunan hata:** ekran görüntüsü, adımlar, beklenen/gerçekleşen ve hesapla `bug` etiketli issue (bug şablonu), öncelik P1 (demo senaryosunu bozuyor ya da veri/yetki hatası) ya da P2; issue #68'e bağlanır, P1'ler Hafta 5 milestone'una alınır.
 
-**Senaryo 1: Kurs yayımlama (eğitmen + yönetici)**
-- [ ] Eğitmen olarak kayıt olup giriş yapılır.
-- [ ] Kurs oluşturulur; bölüm ve ders eklenir, sırası değiştirilir.
-- [ ] Video, PDF ve doküman yüklenir; 200 MB'tan büyük video ve izinsiz tür anlaşılır bir hata mesajıyla reddedilir.
-- [ ] Soru bankasına soru eklenir, bölüme sınav eklenir.
-- [ ] Kurs onaya gönderilir; yönetici reddeder (gerekçe eğitmen panelinde görünür), sonra onaylar; kurs katalogda görünür.
+**Kurulum ve genel**
+- [ ] Temiz `docker compose up --build` hatasız tamamlanır; süre not edilir (19.11'de önbelleksiz ~22 dk). Frontend 200, `/api/health` UP, log'da "Demo verisi yüklendi" (NFR-16).
+- [ ] Tarayıcı konsolunda girişten sonra hata yok; ağ sekmesinde beklenmeyen 4xx/5xx yok.
+- [ ] Video ileri sarılırken ve yükleme yarıda bırakılırken backend logunda ERROR ya da stack trace yok, yalnız DEBUG satırı var (#259, #326).
 
-**Senaryo 2: Kursa kayıt ve öğrenme (kursiyer)**
-- [ ] Katalogda arama ve filtreler çalışır; ayrıntı sayfasında toplam süre doğru.
-- [ ] Kayıt olmadan ders içeriği açılmaz.
-- [ ] Kursa kayıt olunur; ikinci kez kayıt denemesi anlaşılır bir mesajla reddedilir.
-- [ ] Video oynatılır ve ileri/geri sarılır; PDF tarayıcıda açılır; doküman iner.
-- [ ] Ders tamamlandı olarak işaretlenir; ilerleme yüzdesi doğru artar.
+**Ziyaretçi (giriş yapmamış)**
+- [ ] Katalog: arama, kategori ve seviye filtresi; boş sonuçta "Filtreleri temizle"; yalnız yayımlanmış kurslar ("Python 2 (eski)" yok).
+- [ ] Kurs detayı: hedefler, bölüm/ders listesi, toplam süre, 3 yorum ve ortalama 4,3; "Kayıt ol" giriş sayfasına götürür.
+- [ ] Kayıt ol (`/register`): boş ve hatalı alanlarda alan altı Türkçe hata; başarıdan sonra parola alanı DOM'da boş (#306).
+- [ ] Sertifika doğrulama (`/verify/K7Q2-M9XA-4T`): "✓ Geçerli sertifika", yalnız ad, kurs ve tarih; bozuk kodda "bulunamadı".
+- [ ] Parolamı unuttum (`/forgot-password`): kayıtlı ve kayıtsız e-postada aynı mesaj; bağlantı backend logunda (`docker compose logs backend | grep "Parola yenileme bağlantısı"`); `/reset-password?token=…` ile yeni parola; eski parola girmez, yenisi girer; aynı bağlantı ikinci kez "geçersiz" ve "Yeni bağlantı iste".
 
-**Senaryo 3: Kaldığı yerden devam**
-- [ ] Çıkış yapıp tekrar girilir; panelde ilerleme ve son ders görünür; "Devam et" doğru dersi açar.
+**Kursiyer** (`deniz.arslan`, `can.demir`, `elif.sahin`, `ayse.yilmaz`)
+- [ ] Kursa kayıt (yeni hesapla): düğme "Derse başla"ya döner; eğitmenin zilinde "Kursunuza yeni kayıt" görünür.
+- [ ] Kayıtsız hesapla ders adresi: "Bu derse erişmek için kursa kaydolun." (403).
+- [ ] Oynatıcı: PDF yeni sekmede açılır, video oynar ve ileri/geri sarılır, doküman iner; "Önceki / Sonraki" gezinmesi.
+- [ ] "Tamamlandı olarak işaretle": ders tiklenir, bölüm ve kurs çubukları doğru yüzdeyle artar (16,67 → %17 gösterimi); tamamlanan derste "✓ Tamamlandı" pasif.
+- [ ] Kayıtlı kurslarım (`can.demir`): "Son ders: Fonksiyon Tanımlama · %67 tamamlandı"; "Kaldığın yerden devam et" o dersi açar; başka ders açıp dönünce son ders güncellenir.
+- [ ] Sınav (`elif.sahin`): oynatıcının ders listesinde bölümün altında; doğru cevap bilgisi görünmez; kalınca "Tekrar dene" boş formla açar; geçince "Kursa dön"; "Deneme geçmişim"; soru satırında çift noktalama yok (#296).
+- [ ] Sertifika (`ayse.yilmaz`): "Sertifikalarım" → sertifika → "Yazdır" (başlık ve düğmeler baskıda yok); doğrulama kodu ve bağlantısı; **"resmî akreditasyon değildir" ibaresi görünür (FR-29: otomatik testi olmayan tek FR)**. Başkasının sertifika adresi "bulunamadı".
+- [ ] Değerlendirme: 1–5 puan ve yorum; ikinci yorum anlaşılır mesajla reddedilir.
+- [ ] Bildirim zili: okunmamış sayısı; tıklayınca okundu olur ve ilgili sayfaya gider; "Hepsini okundu işaretle"; Esc ile kapanır, odak zile döner.
+- [ ] Profilim: ad ve biyografi kaydedilir, başlıktaki ad değişir; e-posta ve hesap türü yalnız gösterilir.
 
-**Senaryo 4: Sınav ve sertifika**
-- [ ] Sınav çözülür; sonuçta puan, yüzde ve geçti/kaldı görünür; eşiğin altında kalınınca tekrar denenebilir.
-- [ ] Tüm zorunlu dersler ve sınavlar bitince sertifika oluşur; akreditasyon dışı ibaresi görünür (FR-29).
-- [ ] Doğrulama sayfasında geçerli kod bilgileri, geçersiz kod "bulunamadı" gösterir.
+**Eğitmen** (`mehmet.kaya`, `zeynep.ak`)
+- [ ] Yeni kurs: alan altı hatalar; kategori, seviye, hedef listesi (ekle/sil/taşı), kapak önizlemesi; 2 MB'tan büyük ya da görsel olmayan kapak anlaşılır hatayla reddedilir.
+- [ ] Bölüm ve dersler: ekle, düzenle, sil (onay penceresi), ↑/↓ sırala; içerik yükleme ilerleme çubuğu; yanlış tür 415, büyük dosya 413 mesajı dersin altında.
+- [ ] Önizleme: video sayfada oynar; PDF/doküman önizlemesi **5 dakikadan uzun açık kalınca da** açılır (token yenilenir, #317); yükleme sürerken sayfadan çıkınca hata mesajı kalmaz.
+- [ ] Onaya gönder: kurs İncelemede, form salt okunur ("Bilgiler"); yayındaki kursu gerekçeyle yayından kaldır; gerekçeler panelde (red: `zeynep.ak`, yayından kaldırma: `mehmet.kaya`).
+- [ ] Soru bankası ve bölüm sınavı (eşik varsayılan %70).
+- [ ] Analitik: kayıt, ortalama ilerleme, tamamlanma oranı, sınav başarı oranı, puan dağılımı ve kursiyer listesi seed verisiyle tutarlı (yeni kayıt yapıldıysa 6 kayıt, %16,7).
+- [ ] Başka eğitmenin kurs adresi (`/instructor/courses/{başkasının id}/edit`): "Kurs bulunamadı."
 
-**Senaryo 5: Eğitmen analitiği**
-- [ ] Eğitmen panelinde kayıt sayısı, tamamlanma oranı ve sınav başarı oranı seed verisiyle tutarlı.
+**Yönetici** (`admin`)
+- [ ] Kurs onayı: İncelemede listesi ("SQL ve Veritabanları"); "İncele" → içerik açılır, içeriksiz ders işaretli; onay, gerekçeli red (gerekçesiz hata), yayından kaldırma; liste hemen güncellenir, eğitmene bildirim.
+- [ ] Yorum moderasyonu: gizle (gerekçe zorunlu) → kurs sayfasında ortalama 4,3 → 4,0; geri aç → 4,3.
+- [ ] Şikâyetler: önceden `POST /api/complaints` ile oluşturulan şikâyet listede; "İncelendi" / "Reddet".
+- [ ] Kullanıcılar (rol, pasifleştirme; pasif hesap giriş yapamaz), kategoriler, platform raporu (sayılar seed ile tutarlı).
 
-**Yetki ve hatalar**
-- [ ] Kursiyer eğitmen/yönetici sayfalarını açamaz; başka eğitmenin kursunu düzenleyemez.
-- [ ] Form hataları ilgili alanın altında Türkçe ve anlaşılır gösterilir (NFR-08).
-- [ ] Bildirimler doğru olaylarda gelir ve okundu işaretlenince sayı düşer.
+**Yetki**
+- [ ] Kursiyer eğitmen ve yönetici sayfalarında "Yetkiniz yok"; eğitmen yönetici sayfalarında "Yetkiniz yok".
 
-**Uyumluluk**
-- [ ] Tarayıcı geliştirici araçlarında 360 px genişlikte hiçbir sayfada yatay kaydırma yok (NFR-07).
-- [ ] Senaryo 1–5 Chrome, Firefox ve Safari'nin güncel sürümlerinde denenir (NFR-17).
+**Uyumluluk ve erişilebilirlik**
+- [ ] 360 px genişlikte (geliştirici araçları) hiçbir sayfada yatay kaydırma yok; açık menü ve oynatıcının ders listesi dahil (NFR-07, #321).
+- [ ] Karanlık temada vurgu düğmelerinin yazısı okunur (#321).
+- [ ] Senaryo 1–5 Chrome, Firefox ve Safari'nin güncel sürümlerinde denenir; denenemeyen tarayıcı not edilir (NFR-17).
+- [ ] Klavyeyle gezinme: formlar, zil paneli ve puan yıldızlarında odak görünür.
 
 ## 7. Başarı ölçütleri
 

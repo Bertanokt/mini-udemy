@@ -4,6 +4,8 @@
   --muted: #6a6f73;
   --border: #d1d7dc;
   --accent: #5624d0;
+  /* Vurgu zeminindeki yazı (#71): açık temada beyaz 8,21:1. */
+  --accent-fg: #ffffff;
   --ok: #1e7e34;
   --err: #b32d0f;
 }
@@ -15,6 +17,8 @@
     --muted: #a0a0a0;
     --border: #333;
     --accent: #a689f5;
+    /* Beyaz yazı bu zeminde 2,79:1 kalıyordu; koyu yazı 6,71:1 (WCAG AA ≥ 4,5:1, #71). */
+    --accent-fg: #121212;
     --ok: #5fd07a;
     --err: #ff7b5c;
   }
@@ -101,10 +105,6 @@ a {
   display: none;
 }
 
-.nav-notifications:empty {
-  display: none;
-}
-
 /* Dar ekranda menü düğmeyle açılır; açıkken başlığın altında tam genişlikte liste (#19). */
 @media (max-width: 600px) {
   .nav-toggle {
@@ -159,10 +159,6 @@ a {
   margin-bottom: 8px;
 }
 
-.status-down {
-  color: var(--err);
-}
-
 /* Katalog */
 .visually-hidden {
   position: absolute;
@@ -207,7 +203,7 @@ a {
 .catalog-search button[type="submit"] {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--accent-fg);
 }
 
 .catalog-filters {
@@ -231,14 +227,9 @@ a {
   font-size: 0.875rem;
 }
 
-.catalog-status,
 .catalog-count {
   color: var(--muted);
   margin: 16px 0;
-}
-
-.catalog-status button {
-  margin-top: 8px;
 }
 
 .course-grid {
@@ -350,6 +341,7 @@ a {
 }
 
 .auth-form input,
+.auth-form textarea,
 .auth-form button {
   font: inherit;
   color: inherit;
@@ -360,6 +352,24 @@ a {
   width: 100%;
 }
 
+.auth-form textarea {
+  resize: vertical;
+}
+
+/* Profilde değiştirilemeyen bilgiler (#117): e-posta ve hesap türü. */
+.profile-fixed {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 12px;
+  color: var(--muted);
+}
+
+.profile-fixed dd {
+  color: var(--fg);
+  overflow-wrap: anywhere;
+}
+
+.auth-form textarea[aria-invalid="true"],
 .auth-form input[aria-invalid="true"] {
   border-color: var(--err);
 }
@@ -367,7 +377,7 @@ a {
 .auth-form button {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--accent-fg);
   cursor: pointer;
 }
 
@@ -504,7 +514,7 @@ a {
 .qb-primary {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--accent-fg);
 }
 
 .qb-danger {
@@ -815,6 +825,7 @@ a {
 
 .usr-wrap {
   overflow-x: auto;
+  position: relative;
 }
 
 .usr-table {
@@ -1091,6 +1102,8 @@ a.qb-btn {
 .an-scroll {
   overflow-x: auto;
   max-width: 100%;
+  /* Tablodaki görünmez ekran okuyucu metinleri (.an-sr, absolute) kutunun içinde kalsın; yoksa sayfayı yana taşırıyordu (#71). */
+  position: relative;
 }
 
 .an-table {
@@ -1521,6 +1534,58 @@ a.qb-btn {
 }
 
 /* Yazdırma (#131): site başlığı ve yalnız ekranda gereken öğeler basılmaz. */
+/* Dokunma hedefleri ve dar ekran (#71). Dar ekranda ya da dokunmatik cihazda düğme, form alanı ve tek başına duran
+   bağlantılar en az 44 px yüksekliktedir. Cümle içindeki bağlantılar hariç (WCAG 2.5.5 satır içi istisnası).
+   Masaüstünde fareyle kullanımda görünüm değişmez. */
+@media (max-width: 768px), (pointer: coarse) {
+  button,
+  select,
+  textarea,
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]):not([type="range"]) {
+    min-height: 44px;
+  }
+
+  .brand,
+  a.qb-btn,
+  .touch-link,
+  a.course-instructor {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  .nav-toggle {
+    min-width: 44px;
+  }
+
+  .nav.open > a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  /* Radyo düğmesi ve onay kutusu etiketin tamamıyla seçilir; etiket satırı 44 px. */
+  label:has(> input[type="radio"]),
+  label:has(> input[type="checkbox"]) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+  }
+
+  /* Dosya seçme alanı kendi genişliğiyle (~320 px) kutusundan taşmasın. */
+  input[type="file"] {
+    max-width: 100%;
+    min-height: 44px;
+  }
+
+  .sl-content,
+  .sl-file {
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+
 @media print {
   .site-header,
   .no-print {

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { QuizTakeView } from "./QuizTakeView";
+import { Loading } from "@/components/common/Loading";
 
 export const metadata: Metadata = {
   title: "Sınav · Mini Udemy",
@@ -11,7 +12,7 @@ export const instant = false;
 
 export default function QuizTakePage() {
   return (
-    <Suspense fallback={<p className="auth-status">Sınav yükleniyor…</p>}>
+    <Suspense fallback={<Loading text="Sınav yükleniyor…" />}>
       <QuizTakeView />
     </Suspense>
   );

@@ -1,0 +1,54 @@
+/* Ortak durum gösterimi (#71): yükleniyor, hata, boş liste. */
+.loading {
+  color: var(--muted);
+  margin: 16px 0;
+}
+
+.error,
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.error p {
+  margin: 0;
+  color: var(--err);
+  border: 1px solid var(--err);
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+
+.empty p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.button {
+  display: inline-block;
+  font: inherit;
+  color: inherit;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 14px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.primary {
+  color: var(--accent-fg);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+/* Dokunma hedefi (#71): bağlantı olarak kullanılan düğmeler de dar ekranda 44 px. */
+@media (max-width: 768px), (pointer: coarse) {
+  .button {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+}

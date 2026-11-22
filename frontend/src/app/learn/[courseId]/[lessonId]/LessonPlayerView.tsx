@@ -4,7 +4,12 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ApiError } from "@/lib/api/client";
-import { createContentToken, lessonContentUrl, type ContentTokenResponse } from "@/lib/api/content";
+import {
+  contentTokenRefreshDelayMs,
+  createContentToken,
+  lessonContentUrl,
+  type ContentTokenResponse,
+} from "@/lib/api/content";
 import { listSections, type LessonResponse, type SectionResponse } from "@/lib/api/courses";
 import { formatDuration } from "@/components/course/CourseCard";
 import { learnHref, locateLesson } from "@/lib/learn/navigation";
@@ -13,6 +18,7 @@ import { useCourseProgress, type ProgressState } from "@/lib/learn/useCourseProg
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { ProgressBar, formatPercent } from "@/components/progress/ProgressBar";
 import styles from "../player.module.css";
+import { Loading } from "@/components/common/Loading";
 
 type Sections =
   | { key: string; kind: "ok"; sections: SectionResponse[] }
@@ -75,7 +81,7 @@ export function LessonPlayerView() {
     };
   }, [courseId, key]);
 
-  if (state === null) return <p className={styles.status}>Ders yükleniyor…</p>;
+  if (state === null) return <Loading text="Ders yükleniyor…" />;
   if (state.kind === "notFound") return <NotFound text="Kurs bulunamadı." />;
   if (state.kind === "error") {
     return (
@@ -179,7 +185,7 @@ export function LessonPlayerView() {
           )}
         </nav>
         <p>
-          <Link href={`/courses/${courseId}`}>Kurs sayfasına dön</Link>
+          <Link className="touch-link" href={`/courses/${courseId}`}>Kurs sayfasına dön</Link>
         </p>
       </section>
     </div>
@@ -287,12 +293,6 @@ type TokenState =
   | { kind: "notFound" }
   | { kind: "error"; message: string };
 
-/** Token'ın yenilenmesi gereken an: sona ermesinden 30 sn önce, en az 10 sn sonra (saat kayması için sınırlı). */
-function refreshDelayMs(token: ContentTokenResponse): number {
-  const left = Date.parse(token.expiresAt) - Date.now();
-  return Math.min(Math.max(left - 30_000, 10_000), 5 * 60_000);
-}
-
 /**
  * Dersin içeriği. Önce içerik token'ı alınır (403 → kayıt ekranı, 404 → içerik yok); sonra türüne göre video
  * oynatıcı, yeni sekmede açılan PDF ya da indirme bağlantısı gösterilir.
@@ -326,7 +326,7 @@ function LessonContent({ courseId, lesson }: { courseId: number; lesson: LessonR
   const token = state?.kind === "ok" ? state.token : null;
   useEffect(() => {
     if (token === null || lesson.contentType === "VIDEO") return;
-    const timer = setTimeout(() => setAttempt((a) => a + 1), refreshDelayMs(token));
+    const timer = setTimeout(() => setAttempt((a) => a + 1), contentTokenRefreshDelayMs(token));
     return () => clearTimeout(timer);
   }, [token, lesson.contentType]);
 

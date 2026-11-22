@@ -1,10 +1,11 @@
 import { Suspense } from "react";
 import { CatalogView } from "./CatalogView";
+import { Loading } from "@/components/common/Loading";
 
 export default function Home() {
   // Katalog filtreleri URL'den okunduğu için istemcide çizilir; kabuk önceden hazırlanır.
   return (
-    <Suspense fallback={<p className="catalog-status">Kurslar yükleniyor…</p>}>
+    <Suspense fallback={<Loading text="Kurslar yükleniyor…" />}>
       <CatalogView />
     </Suspense>
   );

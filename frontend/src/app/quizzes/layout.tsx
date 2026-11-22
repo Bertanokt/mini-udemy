@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { RequireRole } from "@/components/auth/RequireRole";
+import { Loading } from "@/components/common/Loading";
 
 /**
  * /quizzes altındaki sayfalar yalnız STUDENT rolüne açık (#141).
@@ -7,7 +8,7 @@ import { RequireRole } from "@/components/auth/RequireRole";
  */
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <Suspense fallback={<p className="auth-status">Yükleniyor…</p>}>
+    <Suspense fallback={<Loading />}>
       <RequireRole roles={["STUDENT"]}>{children}</RequireRole>
     </Suspense>
   );

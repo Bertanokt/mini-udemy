@@ -14,6 +14,9 @@ import {
   type CourseAction,
   type CourseActionTarget,
 } from "./CourseActionDialog";
+import { Loading } from "@/components/common/Loading";
+import { ErrorMessage } from "@/components/common/ErrorMessage";
+import { EmptyState } from "@/components/common/EmptyState";
 
 const PAGE_SIZE = 20;
 const STATUSES = Object.keys(STATUS_LABELS) as CourseStatus[];
@@ -103,7 +106,7 @@ export function CourseReviewList() {
     <section className="qb usr">
       <div className="qb-head">
         <h1>Kurs onayı</h1>
-        <Link href="/admin">Yönetici paneli</Link>
+        <Link className="touch-link" href="/admin">Yönetici paneli</Link>
       </div>
 
       {notice && (
@@ -129,34 +132,23 @@ export function CourseReviewList() {
         </label>
       </div>
 
-      {result === null && <p className="auth-status">Kurslar yükleniyor…</p>}
+      {result === null && <Loading text="Kurslar yükleniyor…" />}
 
-      {result?.kind === "error" && (
-        <div className="qb-state" role="alert">
-          <p className="auth-error">{result.message}</p>
-          <button type="button" className="qb-btn" onClick={() => setReload((n) => n + 1)}>
-            Tekrar dene
-          </button>
-        </div>
-      )}
+      {result?.kind === "error" && <ErrorMessage message={result.message} onRetry={() => setReload((n) => n + 1)} />}
 
       {data && data.content.length === 0 && (
-        <div className="qb-state">
-          <p>
-            {emptyPage
+        <EmptyState
+          message={
+            emptyPage
               ? "Bu sayfada kurs kalmadı."
               : query.status === "IN_REVIEW"
                 ? "İncelemeyi bekleyen kurs yok."
                 : query.status
                   ? `“${STATUS_LABELS[query.status]}” durumunda kurs yok.`
-                  : "Henüz kurs yok."}
-          </p>
-          {emptyPage && (
-            <button type="button" className="qb-btn" onClick={() => go({ page: null })}>
-              İlk sayfaya dön
-            </button>
-          )}
-        </div>
+                  : "Henüz kurs yok."
+          }
+          action={emptyPage ? { label: "İlk sayfaya dön", onClick: () => go({ page: null }) } : undefined}
+        />
       )}
 
       {data && data.content.length > 0 && (
@@ -180,7 +172,7 @@ export function CourseReviewList() {
                 {data.content.map((c) => (
                   <tr key={c.id}>
                     <td data-label="Kurs" className="usr-name">
-                      <Link href={`/admin/courses/${c.id}`}>{c.title}</Link>
+                      <Link className="touch-link" href={`/admin/courses/${c.id}`}>{c.title}</Link>
                     </td>
                     <td data-label="Eğitmen" className="usr-name">
                       {c.instructor.fullName}

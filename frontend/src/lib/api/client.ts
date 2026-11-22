@@ -83,8 +83,10 @@ export async function apiFetch<T>(
     throw new ApiError(response.status, body);
   }
 
-  if (response.status === 204) {
-    return undefined as T;
+  // 204 ve gövdesiz 202 (ör. parola yenileme isteği, #115) JSON taşımaz.
+  if (response.status === 204 || response.status === 202) {
+    const text = await response.text();
+    return (text ? JSON.parse(text) : undefined) as T;
   }
   return (await response.json()) as T;
 }
@@ -92,9 +94,31 @@ export async function apiFetch<T>(
 /** Yüklemenin gönderilen kısmı, 0–100 arası tam sayı. */
 export type UploadProgress = (percent: number) => void;
 
-function sendUpload(path: string, body: FormData, token: string | null, onProgress?: UploadProgress) {
+/** İptal edilen istek `fetch`'teki gibi `AbortError` adlı `DOMException` ile reddedilir. */
+function abortError(): DOMException {
+  return new DOMException("Yükleme iptal edildi.", "AbortError");
+}
+
+/** İstek `signal` ile iptal edildiği için mi reddedildi? İptal bir hata değildir, kullanıcıya gösterilmez. */
+export function isAbortError(e: unknown): boolean {
+  return e instanceof DOMException && e.name === "AbortError";
+}
+
+function sendUpload(
+  path: string,
+  body: FormData,
+  token: string | null,
+  onProgress?: UploadProgress,
+  signal?: AbortSignal,
+) {
   return new Promise<{ status: number; text: string }>((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(abortError());
+      return;
+    }
     const xhr = new XMLHttpRequest();
+    const abort = () => xhr.abort();
+    const done = () => signal?.removeEventListener("abort", abort);
     xhr.open("POST", `${API_BASE_URL}${path}`);
     if (token) xhr.setRequestHeader("Authorization", `Bearer ${token}`);
     if (onProgress) {
@@ -102,8 +126,19 @@ function sendUpload(path: string, body: FormData, token: string | null, onProgre
         if (e.lengthComputable) onProgress(Math.min(100, Math.round((e.loaded / e.total) * 100)));
       };
     }
-    xhr.onload = () => resolve({ status: xhr.status, text: xhr.responseText });
-    xhr.onerror = () => reject(new TypeError("Ağ hatası"));
+    xhr.onload = () => {
+      done();
+      resolve({ status: xhr.status, text: xhr.responseText });
+    };
+    xhr.onerror = () => {
+      done();
+      reject(new TypeError("Ağ hatası"));
+    };
+    xhr.onabort = () => {
+      done();
+      reject(abortError());
+    };
+    signal?.addEventListener("abort", abort, { once: true });
     xhr.send(body);
   });
 }
@@ -112,10 +147,16 @@ function sendUpload(path: string, body: FormData, token: string | null, onProgre
  * Çok parçalı (multipart) dosya yükleme; `apiFetch`'in ilerleme bildiren karşılığıdır. `fetch` gönderilen bayt
  * sayısını bildiremediği için `XMLHttpRequest` kullanır. Token, 401'de oturumu kapatma ve `ApiError` davranışı
  * `apiFetch` ile aynıdır; 401'de istek tekrarlanmaz (yükleme uçları herkese açık değildir).
+ * `signal` iptal edilince istek kesilir (`xhr.abort()`) ve söz `isAbortError` ile tanınan bir hatayla reddedilir.
  */
-export async function apiUpload<T>(path: string, body: FormData, onProgress?: UploadProgress): Promise<T> {
+export async function apiUpload<T>(
+  path: string,
+  body: FormData,
+  onProgress?: UploadProgress,
+  signal?: AbortSignal,
+): Promise<T> {
   const token = tokenProvider();
-  const response = await sendUpload(path, body, token, onProgress);
+  const response = await sendUpload(path, body, token, onProgress, signal);
   if (response.status === 401 && token) unauthorizedHandler();
 
   if (response.status < 200 || response.status >= 300) {

@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.JsonNode;
  * Bildirim API'si (#125, FR-43). Gerçek HTTP ve gerçek PostgreSQL ile: bildirimler gerçek olaylarla (kurs onayı, iki
  * kayıt) doğar; eğitmen kendi bildirimlerini en yeni önce sayfalı listeler, sayacı görür, tek ve hepsini okundu
  * işaretler. Kursiyer eğitmenin bildirimini göremez ve işaretleyemez (404); eğitmenin bildirimi okunmamış kalır.
+ * Kursiyerin "hepsini okundu"su da eğitmenin bildirimlerine dokunmaz.
  */
 class NotificationApiIT extends IntegrationTestBase {
 
@@ -67,6 +68,11 @@ class NotificationApiIT extends IntegrationTestBase {
         assertThat(unreadCount(instructor)).isEqualTo(2);
         assertThat(types(ok(get("/api/me/notifications?unreadOnly=true", instructor))))
                 .containsExactly("ENROLLMENT_CREATED", "ENROLLMENT_CREATED");
+
+        // Kursiyerin "hepsini okundu"su yalnız kendi bildirimlerine dokunur; eğitmenin okunmamışları yerinde kalır.
+        assertThat(post("/api/me/notifications/read-all", ayse, null).getStatusCode())
+                .isEqualTo(HttpStatus.NO_CONTENT);
+        assertThat(unreadCount(instructor)).isEqualTo(2);
 
         // Hepsini okundu: sayaç sıfır; liste yine üç bildirim, hepsi okunmuş.
         assertThat(post("/api/me/notifications/read-all", instructor, null).getStatusCode())

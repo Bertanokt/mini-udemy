@@ -8,6 +8,9 @@ import {
   type AttemptSummaryResponse,
 } from "@/lib/api/quizzes";
 import styles from "./attempts.module.css";
+import { Loading } from "@/components/common/Loading";
+import { ErrorMessage } from "@/components/common/ErrorMessage";
+import { EmptyState } from "@/components/common/EmptyState";
 
 type Result =
   | { kind: "ok"; attempts: AttemptSummaryResponse[]; title: string | null; passThreshold: number | null }
@@ -95,25 +98,10 @@ export function AttemptsView({ params }: { params: Promise<{ id: string }> }) {
   return (
     <section>
       <h1>{result?.kind === "ok" && result.title ? result.title : "Sınav denemelerim"}</h1>
-      {result === null && <p className={styles.status}>Denemeler yükleniyor…</p>}
-      {result?.kind === "forbidden" && (
-        <p role="alert" className={styles.error}>
-          Bu sınavı görmek için kursa kayıtlı olmalısın.
-        </p>
-      )}
-      {result?.kind === "notFound" && (
-        <p role="alert" className={styles.error}>
-          Sınav bulunamadı.
-        </p>
-      )}
-      {result?.kind === "error" && (
-        <div role="alert">
-          <p className={styles.error}>{result.message}</p>
-          <button type="button" className={styles.button} onClick={() => setRetry((r) => r + 1)}>
-            Tekrar dene
-          </button>
-        </div>
-      )}
+      {result === null && <Loading text="Denemeler yükleniyor…" />}
+      {result?.kind === "forbidden" && <ErrorMessage message="Bu sınavı görmek için kursa kayıtlı olmalısın." />}
+      {result?.kind === "notFound" && <ErrorMessage message="Sınav bulunamadı." />}
+      {result?.kind === "error" && <ErrorMessage message={result.message} onRetry={() => setRetry((r) => r + 1)} />}
       {result?.kind === "ok" && <History result={result} />}
     </section>
   );
@@ -127,7 +115,7 @@ function History({ result }: { result: Extract<Result, { kind: "ok" }> }) {
     <>
       {threshold !== null && <p className={styles.meta}>Geçme eşiği: %{threshold}</p>}
       {sorted.length === 0 ? (
-        <p className={styles.empty}>Henüz denemen yok.</p>
+        <EmptyState message="Henüz denemen yok." />
       ) : (
         <>
           <div className={styles.summary} role="group" aria-label="Özet">

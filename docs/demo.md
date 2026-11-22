@@ -2,7 +2,7 @@
 
 Proje dokümanındaki beş senaryonun ([use-cases.md](use-cases.md) › 1) sunumda adım adım gösterimi. Her adımda **ne gösterilir** ve **hangi mimari nokta devreye girer** yazılıdır. Veriler seed verisinden gelir (#67, README › Demo hesapları); bütün hesapların parolası `Demo1234!`.
 
-> **Ekranı henüz olmayan adımlar** (21.11.2026): bildirim listesi (zil, #136; API var: `GET /api/me/notifications`, #125), katalogda puan filtresi (#305; API'de `minRating` var), kullanıcının şikâyet oluşturması (düğme yok; `POST /api/complaints`). Bu adımlar aşağıda **API ile** verildi. Uçtan uca testleri olduğu için davranışları doğrulanmış durumda (her senaryonun sonunda test adı).
+> **Ekranı henüz olmayan adımlar** (21.11.2026): katalogda puan filtresi (#305; API'de `minRating` var), kullanıcının şikâyet oluşturması (düğme yok; `POST /api/complaints`). Bu adımlar aşağıda **API ile** verildi. Uçtan uca testleri olduğu için davranışları doğrulanmış durumda (her senaryonun sonunda test adı).
 >
 > **Sıra önerisi:** Senaryo 5'in sayıları seed'e göredir. Senaryo 2'de yeni bir kursiyer kaydolunca "Sıfırdan Python"da 6 kayıt ve %16,7 tamamlanma görünür. Ya Senaryo 5 Senaryo 2'den önce gösterilir ya da sayılar "seed'e göre" diye söylenir.
 
@@ -87,7 +87,7 @@ Test: `ResumeScenarioIT`.
 | 4 | `ayse.yilmaz@…` → "Kayıtlı kurslarım" → "Sertifikalarım" (`/certificates`) → sertifikayı aç (`/certificates/{id}`) → "Yazdır" | Kursiyer adı, kurs, tarih, doğrulama kodu (`K7Q2-M9XA-4T`) ve doğrulama bağlantısı; "resmî akreditasyon değildir" ibaresi. Zorunlu dersler + zorunlu sınavlar tamamsa otomatik, tek sertifika. Başkasının sertifikası "bulunamadı" | `CertificateListener` → `CertificateIssuingService` (UNIQUE + `ON CONFLICT`); `CertificateIssued` → bildirim. Sekans diyagramı: `docs/diagrams/seq-certificate.png` |
 | 5 | Giriş yapmadan (gizli pencere) sertifikadaki bağlantı: `/verify/K7Q2-M9XA-4T`; sonra kodu bozarak dene | "✓ Geçerli sertifika": yalnız kursiyer adı, kurs ve tarih. Geçersiz kodda "bulunamadı" | Herkese açık uç (`GET /api/certificates/verify/{code}`); e-posta ya da id dönmez, kod büyük/küçük harften bağımsız (#130). Başkasının sertifikası 404, çünkü 403 varlığını belli ederdi |
 
-Bildirimler (Senaryo 1, 2, 4'te yazılır): ekranı yok (#136). Göstermek için ilgili hesabın token'ıyla `GET /api/me/notifications` ve `GET /api/me/notifications/unread-count`.
+Bildirimler (Senaryo 1, 2, 4'te yazılır): üst menüdeki zil (#136). Alıcı hesapla giriş yapınca zilde okunmamış sayısı görünür (sayfa geçişinde, sekmeye dönünce ve 60 sn'de bir yenilenir). Zile tıklayınca en yeni 10 bildirim açılır. Bildirime tıklamak onu okundu işaretler ve bağlantısına gider, örneğin "Kursunuz onaylandı" → kurs sayfası, "Kursunuz reddedildi" → `/instructor`, "Yeni kayıt" → kurs istatistikleri. "Hepsini okundu işaretle" sayıyı sıfırlar. API: `GET /api/me/notifications`, `GET /api/me/notifications/unread-count`, `POST /api/me/notifications/{id}/read`, `POST /api/me/notifications/read-all`.
 
 Test: `QuizCertificateScenarioIT`, `CertificateScenarioIT`, `NotificationScenarioIT`, `NotificationApiIT`.
 
@@ -101,6 +101,18 @@ Test: `QuizCertificateScenarioIT`, `CertificateScenarioIT`, `NotificationScenari
 | 4 | Yönetici: `/admin` → "Platform raporu" (`/admin/reports`) | Rol/durum sayıları, tamamlanma, sertifika, en çok kayıt alan kurslar | Sayılar modüllerin istatistik servislerinden (`admin` başka modülün tablosuna erişmez) |
 
 Test: `InstructorAnalyticsIT`, `InstructorAnalyticsScenarioIT`, `PlatformReportIT`.
+
+## Ek gösterimler (isteğe bağlı, beş senaryonun dışında)
+
+Soru gelirse ya da süre kalırsa:
+
+| # | Adım | Gösterilen | Mimari nokta |
+|---|---|---|---|
+| E1 | Herhangi bir hesapla başlıktaki ada tıkla → "Profilim" (`/profile`): ad soyad ve kısa biyografi → "Kaydet" | "Profiliniz güncellendi."; başlıktaki ad hemen değişir. E-posta ve hesap türü yalnız gösterilir | `PUT /api/me`; istekte `email` ya da `role` gelirse 400 ve alan hatası (sözleşmedeki gibi, #116) |
+| E2 | Çıkış → giriş sayfasında "Parolamı unuttum" (`/forgot-password`) → e-posta. Bağlantıyı backend logundan al: `docker compose logs backend \| grep "Parola yenileme bağlantısı"` → `/reset-password?token=…` → yeni parola → yeni parolayla giriş. Aynı bağlantıyı ikinci kez aç | Kayıtlı olsun olmasın aynı mesaj; bağlantı 30 dk geçerli. Yeni parolayla giriş olur, eski parola 401. İkinci kullanımda "Bağlantı geçersiz ya da süresi dolmuş" ve "Yeni bağlantı iste" | Varlık sızmaz (her e-postaya 202). Token veritabanında yalnız SHA-256 özetiyle, tek kullanımlık (koşullu güncelleme) (#115). E-posta gönderilmez: bağlantı yalnız `dev` profilinde log'a yazılır |
+| E3 | Tarayıcıyı 360 px genişliğe daralt (geliştirici araçları → cihaz görünümü): katalog, oynatıcı, zil | Yatay kaydırma yok; düğmeler ve bağlantılar ≥ 44 px; "Menü" açılınca zil "Bildirimler" yazısıyla menüde | NFR-07 (mobil); ölçümler #321'de |
+
+Test: `ProfileApiIT`, `PasswordResetIT` (E1, E2); E3 manuel (#71, bug bash #68).
 
 ---
 

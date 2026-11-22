@@ -10,12 +10,31 @@ Yazılım Mimarisi dersi için online kurs platformu. Eğitmenler kurs → böl�
 | Çalıştırma | Docker Compose |
 | CI | GitHub Actions |
 
+## Özellikler
+
+| Rol | Ne yapabilir |
+|---|---|
+| Ziyaretçi | Yayımlanmış kursları arar ve süzer (kategori, seviye), kurs ayrıntısını ve değerlendirmeleri görür, kayıt olur, sertifikayı doğrulama koduyla girişsiz doğrular (`/verify/{kod}`), parolasını sıfırlar |
+| Kursiyer | Kursa kaydolur; ders oynatıcıda video izler (ileri sarma), PDF ve doküman açar; dersi tamamlandı işaretler (bölüm ve kurs ilerleme çubukları); kaldığı yerden devam eder; bölüm sınavlarını çözer (puan, geçti/kaldı, tekrar deneme, deneme geçmişi); zorunlu dersler ve sınavlar bitince sertifikasını görür ve yazdırır; kursa puan ve yorum verir |
+| Eğitmen | Kurs oluşturur (kategori, seviye, öğrenme hedefleri, kapak); bölüm ve ders ekler, sıralar, içerik yükler (video, PDF, doküman) ve önizler; soru bankası ve bölüm sınavı kurar; kursu onaya gönderir ya da yayından kaldırır; kurs analitiğini görür (kayıt, ilerleme, tamamlanma, sınav başarısı, puan dağılımı, kursiyer listesi) |
+| Yönetici | Kursları inceler, onaylar ya da gerekçeyle reddeder, yayından kaldırır; yorumları gizler ve geri açar; şikâyetleri sonuçlandırır; kullanıcıları (rol, pasifleştirme) ve kategorileri yönetir; platform raporunu görür |
+| Herkes (giriş yapmış) | Bildirim zili (okunmamış sayısı, liste, okundu işaretleme), profil (ad soyad, kısa biyografi) |
+
+Mimari: modüler monolit (10 modül, sınırlar ArchUnit testleriyle CI'da); State, Strategy, Factory Method, Observer ve DTO + Mapper desenleri. Ayrıntı: [docs/architecture.md](docs/architecture.md), [docs/solid.md](docs/solid.md), diyagramlar [docs/README.md](docs/README.md)'de.
+
+**Demo:** beş senaryo adım adım ve her adımda gösterilen mimari nokta: [docs/demo.md](docs/demo.md). Hesaplar aşağıda (› Demo hesapları).
+
+### Ekran görüntüleri
+
+⟨24.11 kod dondurmasından sonra `docs/screenshots/` altına eklenecek (#72): katalog, kurs detayı, oynatıcı, sınav sonucu, sertifika, eğitmen analitiği, yönetici kurs onayı, bildirim zili.⟩
+
 ## Klasör yapısı
 
 ```
 backend/    Spring Boot uygulaması (modül bazlı paketler: auth, course, content, enrollment, progress, quiz, certificate, review, notification, admin, common)
 frontend/   Next.js uygulaması (src/lib/api: API client katmanı, src/components/layout: ortak layout)
-docs/       Diyagramlar, OpenAPI sözleşmesi, mimari rapor
+docs/       Diyagramlar, OpenAPI sözleşmesi, mimari, test planı ve raporu, demo senaryosu (dizin: docs/README.md)
+rapor/      Proje raporu bölümleri (Word şablonunda birleştirilecek)
 scripts/    GitHub kurulum script'leri (etiket, milestone, issue, board)
 ```
 
@@ -26,6 +45,8 @@ Gereken: Docker Desktop.
 ```bash
 docker compose up --build
 ```
+
+İlk build temiz makinede uzun sürer (~22 dk; Maven ve npm bağımlılıkları iner), sonraki build'ler önbellekle saniyeler içinde biter. Temiz kurulumda beş senaryo 21.11.2026'da baştan sona denendi (#70).
 
 | Servis | Adres |
 |---|---|
@@ -54,7 +75,9 @@ Bütün hesapların parolası: **`Demo1234!`** (yalnız yerel demo için).
 | Kursiyer | `deniz.arslan@miniudemy.dev` | Python %0 (yeni kayıt) |
 | Kursiyer | `selin.koc@miniudemy.dev` | Java %50, Python'a kayıtlı değil |
 
-"Sıfırdan Python": 3 bölüm, 6 ders (3 PDF, 1 doküman, 2 video), 4 soruluk soru bankası, 2 zorunlu bölüm sınavı, 3 değerlendirme. Video derslerinin dosyası yok; demoda eğitmen hesabıyla yükleme ucundan (MP4/WebM) eklenir. Seed 15 bildirim de yazar (kayıt → eğitmene, onay/red → eğitmene, sınav sonucu ve sertifika → kursiyere); son 7 günün 5 bildirimi okunmamış. Bildirim listesi ekranı #125 ile gelecek.
+**Parolamı unuttum (yalnız `dev`):** e-posta gönderilmez (#115). "Parolamı unuttum" sayfasından istenen bağlantı backend loguna yazılır: `docker compose logs backend | grep "Parola yenileme bağlantısı"`. Bağlantı 30 dakika geçerli ve tek kullanımlık. `prod` profilinde bağlantı hiçbir yere yazılmaz.
+
+"Sıfırdan Python": 3 bölüm, 6 ders (3 PDF, 1 doküman, 2 video), 4 soruluk soru bankası, 2 zorunlu bölüm sınavı, 3 değerlendirme. Video derslerinin dosyası yok; demoda eğitmen hesabıyla yükleme ucundan (MP4/WebM) eklenir. Seed 15 bildirim de yazar (kayıt → eğitmene, onay/red → eğitmene, sınav sonucu ve sertifika → kursiyere); son 7 günün 5 bildirimi okunmamış ve üst menüdeki zilde görünür.
 
 ## Geliştirme ortamı (hot reload)
 

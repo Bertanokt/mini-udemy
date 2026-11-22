@@ -17,7 +17,7 @@
 .locked { border-color: var(--err); }
 .pager { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin: 24px 0 16px; }
 .button { display: inline-block; padding: 8px 16px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: inherit; cursor: pointer; font: inherit; text-decoration: none; }
-.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
 
 /* Bölüm sınavları (#304) */
 .quizzes { list-style: none; margin: 0; padding: 0 0 8px; }
@@ -42,4 +42,13 @@
   .listToggle { display: block; width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; background: transparent; color: inherit; font: inherit; cursor: pointer; text-align: left; }
   .list { display: none; }
   .listOpen { display: block; margin-top: 8px; border: 1px solid var(--border); border-radius: 8px; }
+}
+
+/* Dokunma hedefi (#71): bağlantı olarak kullanılan düğmeler de dar ekranda 44 px. */
+@media (max-width: 768px), (pointer: coarse) {
+  .button {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
 }

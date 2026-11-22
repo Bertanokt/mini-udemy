@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ComplaintList } from "./ComplaintList";
+import { Loading } from "@/components/common/Loading";
 
 export const metadata: Metadata = {
   title: "Şikâyetler · Mini Udemy",
@@ -12,7 +13,7 @@ export const instant = false;
 export default function ComplaintsPage() {
   return (
     // Sayfa numarası URL'den okunduğu için istemcide çizilir.
-    <Suspense fallback={<p className="auth-status">Şikâyetler yükleniyor…</p>}>
+    <Suspense fallback={<Loading text="Şikâyetler yükleniyor…" />}>
       <ComplaintList />
     </Suspense>
   );

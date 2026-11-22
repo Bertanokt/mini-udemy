@@ -4,6 +4,8 @@ import static org.hamcrest.Matchers.anEmptyMap;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.willThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -32,10 +34,12 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.miniudemy.auth.domain.Role;
 import com.miniudemy.auth.domain.User;
+import com.miniudemy.auth.dto.PasswordResetConfirmRequest;
 import com.miniudemy.auth.mapper.UserMapperImpl;
 import com.miniudemy.auth.repository.UserRepository;
 import com.miniudemy.auth.service.AccountLookupService;
 import com.miniudemy.auth.service.AuthService;
+import com.miniudemy.auth.service.PasswordResetService;
 import com.miniudemy.common.security.JwtConfig;
 import com.miniudemy.common.security.SecurityConfig;
 import com.miniudemy.common.security.SecurityMessages;
@@ -67,6 +71,9 @@ class AuthControllerTest {
 
     @MockitoBean
     private UserRepository userRepository;
+
+    @MockitoBean
+    private PasswordResetService passwordResetService;
 
     private User ayse;
 
@@ -220,6 +227,54 @@ class AuthControllerTest {
                 .andExpect(content().json("""
                         {"status": 409, "message": "Bu e-posta adresi zaten kayıtlı.",
                          "errors": {"email": "Bu e-posta adresi zaten kayıtlı."}}""", true));
+    }
+
+    // --- Parola yenileme (#115): uç sözleşmesi; kurallar PasswordResetServiceTest ve PasswordResetIT'te ---
+
+    @Test
+    void passwordResetRequest_anyValidEmail_returns202WithoutBody_withoutToken() throws Exception {
+        for (String email : java.util.List.of(EMAIL, "kayitli.degil@example.com")) {
+            mockMvc.perform(json("/api/auth/password-reset/request", java.util.Map.of("email", email)))
+                    .andExpect(status().isAccepted())
+                    .andExpect(content().string(""));
+            then(passwordResetService).should().requestReset(email);
+        }
+    }
+
+    @Test
+    void passwordResetRequest_withInvalidEmail_returns400FieldError() throws Exception {
+        mockMvc.perform(json("/api/auth/password-reset/request", java.util.Map.of("email", "e-posta-degil")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.email").value("Geçerli bir e-posta adresi girin."));
+        then(passwordResetService).shouldHaveNoInteractions();
+    }
+
+    @Test
+    void passwordResetConfirm_valid_returns204() throws Exception {
+        mockMvc.perform(json("/api/auth/password-reset/confirm",
+                        java.util.Map.of("token", "abc", "newPassword", "YeniGucluParola456")))
+                .andExpect(status().isNoContent());
+        then(passwordResetService).should()
+                .confirmReset(new PasswordResetConfirmRequest("abc", "YeniGucluParola456"));
+    }
+
+    @Test
+    void passwordResetConfirm_shortPassword_returns400_andInvalidToken_returns400WithTokenError() throws Exception {
+        mockMvc.perform(json("/api/auth/password-reset/confirm",
+                        java.util.Map.of("token", "abc", "newPassword", "kisa")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.newPassword").value("Parola en az 8 karakter olmalıdır."));
+
+        willThrow(com.miniudemy.common.exception.BadRequestException.forField("token", "Bağlantı geçersiz."))
+                .given(passwordResetService).confirmReset(any());
+        mockMvc.perform(json("/api/auth/password-reset/confirm",
+                        java.util.Map.of("token", "eski", "newPassword", "YeniGucluParola456")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.token").value("Bağlantı geçersiz."));
+    }
+
+    private RequestBuilder json(String path, java.util.Map<String, ?> body) throws Exception {
+        return post(path).contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(body));
     }
 
     private RequestBuilder register(String fullName, String email, String password, String role) throws Exception {

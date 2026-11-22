@@ -12,22 +12,22 @@ export default function Page() {
       <h1>Yönetici paneli</h1>
       <ul>
         <li>
-          <Link href="/admin/courses">Kurs onayı</Link>
+          <Link className="touch-link" href="/admin/courses">Kurs onayı</Link>
         </li>
         <li>
-          <Link href="/admin/reviews">Yorum moderasyonu</Link>
+          <Link className="touch-link" href="/admin/reviews">Yorum moderasyonu</Link>
         </li>
         <li>
-          <Link href="/admin/categories">Kategori yönetimi</Link>
+          <Link className="touch-link" href="/admin/categories">Kategori yönetimi</Link>
         </li>
         <li>
-          <Link href="/admin/users">Kullanıcı yönetimi</Link>
+          <Link className="touch-link" href="/admin/users">Kullanıcı yönetimi</Link>
         </li>
         <li>
-          <Link href="/admin/complaints">Şikâyetler</Link>
+          <Link className="touch-link" href="/admin/complaints">Şikâyetler</Link>
         </li>
         <li>
-          <Link href="/admin/reports">Platform raporu</Link>
+          <Link className="touch-link" href="/admin/reports">Platform raporu</Link>
         </li>
       </ul>
       <p>Diğer panel bölümleri yakında.</p>
