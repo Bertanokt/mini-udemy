@@ -1,5 +1,5 @@
-.bar { height: 8px; border-radius: 999px; background: var(--border); overflow: hidden; }
-.small { height: 4px; }
-.fill { height: 100%; background: var(--accent); transition: width 0.3s ease; }
+.bar { height: 8px; border-radius: var(--radius-pill); background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--border); overflow: hidden; }
+.small { height: 5px; }
+.fill { height: 100%; border-radius: var(--radius-pill); background: linear-gradient(90deg, var(--accent), var(--accent-hover)); transition: width 0.3s ease; }
 .resume { display: flex; flex-direction: column; gap: 6px; }
-.resumeMeta { color: var(--muted); margin: 0; font-size: 0.9rem; }
+.resumeMeta { color: var(--muted); margin: 0; font-size: var(--text-sm); }

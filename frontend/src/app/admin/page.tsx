@@ -10,7 +10,7 @@ export default function Page() {
   return (
     <section className="placeholder-page">
       <h1>Yönetici paneli</h1>
-      <ul>
+      <ul className="admin-menu">
         <li>
           <Link className="touch-link" href="/admin/courses">Kurs onayı</Link>
         </li>

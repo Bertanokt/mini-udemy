@@ -18,11 +18,14 @@
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
   cursor: pointer;
+  color: var(--muted);
+  transition: background-color 0.15s, color 0.15s;
 }
 
 .trigger:hover,
 .trigger[aria-expanded="true"] {
-  border-color: var(--border);
+  color: var(--fg);
+  background: var(--surface-2);
 }
 
 /* Geniş ekranda yalnız ikon; metin dar ekrandaki menüde görünür. */
@@ -39,7 +42,8 @@
   padding: 0 5px;
   border-radius: 10px;
   background: var(--err);
-  color: var(--bg);
+  color: var(--accent-fg);
+  box-shadow: 0 0 0 2px var(--surface);
   font-size: 0.75rem;
   font-weight: 700;
   line-height: 20px;
@@ -56,9 +60,9 @@
   overflow-y: auto;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  box-shadow: 0 8px 24px rgb(0 0 0 / 0.15);
-  padding: 12px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-3);
 }
 
 .panelHeader {
@@ -70,18 +74,21 @@
 }
 
 .panelTitle {
-  font-size: 1rem;
+  font-size: var(--text-md);
+  font-weight: 700;
   margin: 0;
 }
 
 .readAll,
 .more {
   font: inherit;
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
+  font-weight: 600;
   color: var(--accent);
   background: none;
   border: none;
-  padding: 6px 4px;
+  border-radius: var(--radius-sm);
+  padding: 6px 8px;
   cursor: pointer;
 }
 
@@ -140,6 +147,7 @@
 
 .unread {
   color: var(--fg);
+  background: color-mix(in srgb, var(--accent-soft) 55%, transparent);
 }
 
 .unread .itemTitle {
