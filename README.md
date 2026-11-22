@@ -65,19 +65,22 @@ Bütün hesapların parolası: **`Demo1234!`** (yalnız yerel demo için).
 
 | Rol | E-posta | Ne görülür |
 |---|---|---|
-| Yönetici | `admin@miniudemy.dev` | Onay kuyruğunda "SQL ve Veritabanları" (İncelemede) |
-| Eğitmen | `mehmet.kaya@miniudemy.dev` | "Sıfırdan Python" (Yayımlandı), "SQL ve Veritabanları" (İncelemede), "Python 2 ile Programlama (eski)" (Yayından kaldırıldı) |
-| Eğitmen | `zeynep.ak@miniudemy.dev` | "Java ile Nesne Yönelimli Programlama" (Yayımlandı), "Web Geliştirmeye Giriş" (Taslak, red gerekçesiyle) |
-| Kursiyer | `ayse.yilmaz@miniudemy.dev` | Python %100 + sertifika (`K7Q2-M9XA-4T`), Java %0 |
-| Kursiyer | `can.demir@miniudemy.dev` | Python %66,67, giriş sınavını geçti |
-| Kursiyer | `elif.sahin@miniudemy.dev` | Python %50, giriş sınavından kaldı |
-| Kursiyer | `burak.celik@miniudemy.dev` | Python %16,67 |
+| Yönetici | `admin@miniudemy.dev` | Onay kuyruğunda "SQL ve Veritabanları" (İncelemede); şikâyetlerde Selin'in açık şikâyeti |
+| Eğitmen | `mehmet.kaya@miniudemy.dev` | "Sıfırdan Python" ve "Pandas ile Veri Analizine Giriş" (Yayımlandı), "SQL ve Veritabanları" (İncelemede), "Python 2 ile Programlama (eski)" (Yayından kaldırıldı) |
+| Eğitmen | `zeynep.ak@miniudemy.dev` | "Java ile Nesne Yönelimli Programlama", "Arayüz Tasarımının Temelleri", "Git ile Sürüm Kontrolü" (Yayımlandı), "Web Geliştirmeye Giriş" (Taslak, red gerekçesiyle) |
+| Eğitmen | `ece.yildiz@miniudemy.dev` | "İş İngilizcesi: E-posta ve Toplantılar", "Scrum ile Çevik Proje Yönetimi" (Yayımlandı) |
+| Kursiyer | `ayse.yilmaz@miniudemy.dev` | Python %100 + sertifika (`K7Q2-M9XA-4T`), Java %0, Scrum %33,33 |
+| Kursiyer | `can.demir@miniudemy.dev` | Python %66,67 (giriş sınavını geçti), Pandas %44,44 (sınavı geçti) |
+| Kursiyer | `elif.sahin@miniudemy.dev` | Python %50 (giriş sınavından kaldı), Arayüz Tasarımı %22,22 |
+| Kursiyer | `burak.celik@miniudemy.dev` | Python %16,67, Git %55,56 (sınavından kaldı) |
 | Kursiyer | `deniz.arslan@miniudemy.dev` | Python %0 (yeni kayıt) |
-| Kursiyer | `selin.koc@miniudemy.dev` | Java %50, Python'a kayıtlı değil |
+| Kursiyer | `selin.koc@miniudemy.dev` | Java %50, Pandas %33,33, İş İngilizcesi %0; Python'a kayıtlı değil |
 
 **Parolamı unuttum (yalnız `dev`):** e-posta gönderilmez (#115). "Parolamı unuttum" sayfasından istenen bağlantı backend loguna yazılır: `docker compose logs backend | grep "Parola yenileme bağlantısı"`. Bağlantı 30 dakika geçerli ve tek kullanımlık. `prod` profilinde bağlantı hiçbir yere yazılmaz.
 
-"Sıfırdan Python": 3 bölüm, 6 ders (3 PDF, 1 doküman, 2 video), 4 soruluk soru bankası, 2 zorunlu bölüm sınavı, 3 değerlendirme. Video derslerinin dosyası yok; demoda eğitmen hesabıyla yükleme ucundan (MP4/WebM) eklenir. Seed 15 bildirim de yazar (kayıt → eğitmene, onay/red → eğitmene, sınav sonucu ve sertifika → kursiyere); son 7 günün 5 bildirimi okunmamış ve üst menüdeki zilde görünür.
+**İçerik:** 10 kurs (7 yayımlanmış; birer tane incelemede, reddedilmiş taslak ve yayından kaldırılmış), 5 kategori. Her kursta 3–4 bölüm, bölüm başına 3–4 ders, en az iki video ders (720p, 35 sn), PDF ders notları, bir doküman (DOCX) ve en az bir zorunlu bölüm sınavı (4–5 soru). Toplam 94 ders, 11 sınav, 10 değerlendirme, 1 açık şikâyet. "Sıfırdan Python" 4 bölüm ve 12 derstir, 3 değerlendirmesi var (ortalama 4,3). Seed 28 bildirim de yazar (kayıt → eğitmene, onay/red → eğitmene, sınav sonucu ve sertifika → kursiyere); son 7 günün 11 bildirimi okunmamış ve üst menüdeki zilde görünür.
+
+Kapak görselleri, video dersler, PDF ve DOCX dosyaları ile `demo-seed.sql` [`scripts/seed-content/`](scripts/seed-content/README.md) ile üretilir (Chrome, ffmpeg, python3); dosyalar repoda hazır olduğu için demo için betiği çalıştırmak gerekmez.
 
 ## Geliştirme ortamı (hot reload)
 
