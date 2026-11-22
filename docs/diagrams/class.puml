@@ -373,6 +373,7 @@ package "com.miniudemy.certificate" as certificate {
   }
   package "certificate.service" {
     class CertificateIssuingService
+    class CertificateQueryService
     class CertificateStatsService
     class VerificationCodeGenerator
   }
