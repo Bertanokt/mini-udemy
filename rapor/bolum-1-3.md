@@ -2,7 +2,7 @@
 
 Hocanın Proje Yazım Şablonu'nun 1–3. bölümlerinin içeriği (#102). Word dosyasında birleştirme #69'da yapılır; bu dosya metnin kaynağıdır. Ayrıntılı tablolar repodaki dokümanlarda; burada rapora girecek özetleri var. Bölüm 4 (mimari, desenler, SOLID, API): #103; bölüm 5–8: [`bolum-5-8.md`](bolum-5-8.md) (#104, taslak PR #287; merge edilene kadar bağlantı `main`'de açılmaz).
 
-**Veri tarihi:** 21.11.2026, `main` @ `2c0996e`. ⟨…⟩ ile işaretli yerler test raporu (#99), bug bash (#68), demo provası (#106), diyagram–kod tutarlılık kontrolünün sonu (#97) ve ekran görüntüleri bitince doldurulacak; son güncelleme 01.12.2026'dan önce.
+**Veri tarihi:** 21.11.2026, `main` @ `2c0996e`. ⟨…⟩ ile işaretli yerler test raporu (#99), bug bash (#68), demo provası (#106) ve ekran görüntüleri bitince doldurulacak; son güncelleme 01.12.2026'dan önce.
 
 **Şablon numaraları:** 3.2, 3.3.1–3.3.8, 3.4.1, 3.4.5 ve 3.4.7 issue'lardaki şablon atıflarından (#77, #78, #79, #87, #88) alındı. 3.4.2, 3.4.3, 3.4.4 ve 3.4.6'nın sırası tahmindir; Word şablonuyla birleştirirken (#69) kontrol edilecek.
 
@@ -221,7 +221,7 @@ Genel bakış diyagramı 10 modülün domain ve service sınıflarını ve modü
 | Factory Method | [`class-factory.png`](../docs/diagrams/class-factory.png) | `content` — `LessonContentFactory` ve VIDEO, PDF, DOCUMENT fabrikaları | ADR-011 |
 | DTO + Mapper | [`class-dto-mapper.png`](../docs/diagrams/class-dto-mapper.png) | Her modülün `dto` ve `mapper` paketi (MapStruct) | ADR-006 |
 
-*Tutarlılık:* diyagramlar `main`'deki koddan çıkarıldı (#51, PR #283) ve PR'da diyagram–kod tablosuyla verildi. #97 son kontrolünde (21.11) kodun `domain`, `service` ve `listener` sınıfları ile diyagramdaki 103 metot adı betikle karşılaştırıldı; tek eksik `CertificateQueryService` (#297), PR #316 ile ekleniyor ⟨PR #316 merge edilince güncellenecek⟩.
+*Tutarlılık:* diyagramlar `main`'deki koddan çıkarıldı (#51, PR #283) ve PR'da diyagram–kod tablosuyla verildi. #97 son kontrolünde (21.11) kodun `domain`, `service` ve `listener` sınıfları ile diyagramdaki 103 metot adı betikle karşılaştırıldı; tek eksik `CertificateQueryService` (#297) idi; PR #316 ile 22.11'de eklendi. #97 bu sonuçla kapandı.
 
 #### 3.4.4 Dinamik model: sekans diyagramları
 
@@ -243,7 +243,7 @@ Sistem bağlamı (C4 seviye 1) üç kullanıcı rolünü ve Mini Udemy'yi; conta
 
 ![C4 — container](../docs/diagrams/c4-container.png)
 
-*Tutarlılık (#97, 19.11 ve 21.11):* container'lar ve ilişkiler `docker-compose.yml` ile aynı. Veritabanı açıklamasında değerlendirme, sertifika, bildirim ve şikâyet tabloları eksikti; PR #316 ile ekleniyor ⟨PR #316 merge edilince güncellenecek⟩.
+*Tutarlılık (#97, 19.11 ve 21.11):* container'lar ve ilişkiler `docker-compose.yml` ile aynı. Veritabanı açıklamasında değerlendirme, sertifika, bildirim ve şikâyet tabloları eksikti; PR #316 ile 22.11'de eklendi.
 
 #### 3.4.6 Veri modeli: ER diyagramı
 
@@ -259,7 +259,7 @@ Veritabanı şeması yalnız Flyway migration'larıyla değişir (ADR-003). ER d
 | Sınav | `questions`, `options`, `quizzes`, `quiz_questions`, `quiz_attempts`, `attempt_answers` |
 | Sertifika, yorum, bildirim, şikâyet | `certificates`, `reviews`, `notifications`, `complaints` |
 
-*Tutarlılık (#97, 19.11 ve 21.11):* migration'daki her tablo tablo, kolon, tip ve NOT NULL düzeyinde betikle karşılaştırıldı; fark yok. 21.11 kontrolünde `complaints` (#144) dahil 19 tablo birebir aynı. `password_reset_tokens` migration'ı o kontrolden sonra geldi ⟨#97: yeniden kontrol⟩.
+*Tutarlılık (#97, 19.11–22.11):* migration'daki her tablo tablo, kolon, tip ve NOT NULL düzeyinde betikle karşılaştırıldı; fark yok. Son kontrolde (22.11) `password_reset_tokens` (#115) dahil 20 tablonun 20'si birebir aynı.
 
 #### 3.4.7 Kullanıcı arayüzü
 
