@@ -1,7 +1,5 @@
 # Bireysel teknik katkı — Bertan (@Bertanokt), Yazılım Mimarı
 
-<!-- TASLAK: "✍️" ile başlayan satırları kendi cümlelerinle yaz ve sil. Toplam en fazla 1 sayfa. -->
-
 ## Geliştirdiğim modüller ve yaptığım işler
 
 - **İskelet, CI, backlog ve kurallar** — [`479fc03`](https://github.com/Bertanokt/mini-udemy/commit/479fc0362aafa99260e881d1d9c8adfcd20727ff), [`5eada73`](https://github.com/Bertanokt/mini-udemy/commit/5eada732421f2f9cd5d3785164a989f33a2b4dab), [`f483d28`](https://github.com/Bertanokt/mini-udemy/commit/f483d2854a1bd96790c615c2b408543f0fa7e014), [`cc49918`](https://github.com/Bertanokt/mini-udemy/commit/cc4991844a78254ce02e298f914660bce24d299c), [`9c849ba`](https://github.com/Bertanokt/mini-udemy/commit/9c849ba391fe6ce9e6cdb632d8742d910fb5b90a)
@@ -22,28 +20,20 @@
 
 ## Aldığım mimari kararlar ve nedenleri
 
-- **Modüler monolit (ADR-001):**
-  ✍️ Neden mikroservis ya da klasik katmanlı monolit değil? (ADR-001'deki alternatifler)
+- **Modüler monolit (ADR-001):** Dört kişilik ekip ve beş haftalık süre için mikroservislerin dağıtım ve servisler arası iletişim maliyeti fayda getirmezdi. Modüler monoliti seçtim; modül sınırlarını ArchUnit testleriyle koruyarak ileride bir modülü ayırma imkânını açık tuttum.
   - [ADR-001](https://github.com/Bertanokt/mini-udemy/blob/2c0996e1e9e6f1416d0103f427e3b3223d55392c/docs/adr/0001-moduler-monolit.md), [#149](https://github.com/Bertanokt/mini-udemy/pull/149)
-- **Modüller arası iletişim yalnız service arayüzü ve domain olaylarıyla:**
-  ✍️ Bir modül başka modülün repository'sine neden erişmiyor? Bunun faydası ne?
-- **Paketleme modül bazlı (`com.miniudemy.<modül>.*`):**
-  ✍️ Katmanlara göre değil de modüllere göre paketlemenin nedeni
-- **Profil ucu `/api/me`:**
-  ✍️ Neden `/api/users/me` değil (#154)
-- ✍️ (varsa) Flyway, zaman damgalı migration adları, backlog'un script ile tutulması gibi başka bir karar
+- **State ve Factory Method (ADR-010, ADR-011):** Kurs durumlarına göre hangi işlemin yapılabileceğini if/else zincirleri yerine durum sınıflarına taşıdım ve 4 durum × 6 işlemin 24 birleşimini testle sabitledim. İçerik türlerinde Factory Method sayesinde yeni bir tür eklemek, mevcut koda dokunmadan yeni bir fabrika yazmaya indi.
   - [ADR-010](https://github.com/Bertanokt/mini-udemy/blob/2c0996e1e9e6f1416d0103f427e3b3223d55392c/docs/adr/0010-state-kurs-durumu.md), [#231](https://github.com/Bertanokt/mini-udemy/pull/231) · [ADR-011](https://github.com/Bertanokt/mini-udemy/blob/2c0996e1e9e6f1416d0103f427e3b3223d55392c/docs/adr/0011-factory-method-icerik-turleri.md), [#237](https://github.com/Bertanokt/mini-udemy/pull/237)
+- **Derse özel içerik token'ı (ADR-012):** Tarayıcının `<video>` isteğine Authorization başlığı ekleyemediğini fark edince, cookie'ye geçip CSRF kararını geri açmak yerine yalnız o derse ve 5 dakikaya bağlı bir içerik token'ı seçtim. Böylece videoda ileri sarma çalışmaya devam etti.
   - [ADR-012](https://github.com/Bertanokt/mini-udemy/blob/2c0996e1e9e6f1416d0103f427e3b3223d55392c/docs/adr/0012-icerik-token.md), [#260](https://github.com/Bertanokt/mini-udemy/pull/260)
 
 ## Karşılaştığım teknik problemler
 
-- ✍️ Örnek: takvimin gerisinde kalmak ve 11.11'de PR'ların review beklenmeden merge edilmesi; bundan sonra ne değişecek
-- ✍️ Örnek: ekip üyelerinin repo erişimi (süresi dolan davet), commit'lerin doğru hesaba yazılması
-- ✍️ Kendi karşılaştığın teknik bir sorun ve nasıl çözdüğün
+- **Dosya silmede veri kaybı:** Birim testleri geçiyordu, ama gerçek PostgreSQL'de denerken kapakta kullanılan bir dosyanın veritabanı kaydı korunurken diskten silindiğini gördüm. Sebebi JPA'nın silme komutunu işlem sonunda göndermesiydi. Önce bu durumu yakalayan testi yazdım, sonra silmeyi önce veritabanına gönderip reddedilirse diske dokunmayacak şekilde düzelttim. Buradan, taklit nesnelerle yazılan testlerin gerçek ortam denemesinin yerini tutmadığını öğrendim.
   - [#201](https://github.com/Bertanokt/mini-udemy/pull/201), [`LocalDiskStorageService.delete`](https://github.com/Bertanokt/mini-udemy/blob/2c0996e1e9e6f1416d0103f427e3b3223d55392c/backend/src/main/java/com/miniudemy/content/service/LocalDiskStorageService.java#L106), [#265](https://github.com/Bertanokt/mini-udemy/pull/265)
+- **Eşzamanlı ders tamamlama:** Aynı ders için gelen iki paralel istek tekillik hatasıyla 500'e düşebiliyordu. Tek bir atomik SQL komutuyla (ON CONFLICT DO NOTHING) çözdüm ve paralel isteklerle gerçek veritabanında doğruladım; aynı kalıbı sertifika oluşturmada da kullandık.
   - [#236](https://github.com/Bertanokt/mini-udemy/pull/236), [`LessonProgressRepository.insertIfAbsent`](https://github.com/Bertanokt/mini-udemy/blob/2c0996e1e9e6f1416d0103f427e3b3223d55392c/backend/src/main/java/com/miniudemy/progress/repository/LessonProgressRepository.java#L28)
-  - [#260](https://github.com/Bertanokt/mini-udemy/pull/260), [ADR-012](https://github.com/Bertanokt/mini-udemy/blob/2c0996e1e9e6f1416d0103f427e3b3223d55392c/docs/adr/0012-icerik-token.md)
 
 ## Araç kullanımı
 
-✍️ Commit'lerimde `Co-Authored-By: Claude` satırı var: Claude Code'u neyi hazırlamak için kullandığını ve kararların / son kontrolün kimde olduğunu bir cümleyle yaz.
+Kod ve doküman taslaklarını Claude Code ile ürettim; planları, mimari kararları ve merge kararlarını ben verdim, her PR'ı testler ve gerçek ortam denemesiyle kontrol ettim.
