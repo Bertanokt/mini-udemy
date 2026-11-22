@@ -61,23 +61,25 @@ class DemoSeedIT extends IntegrationTestBase {
     void seed_createsTheAccountsAndCoursesOfEveryStatus_andRunsOnlyOnce() {
         assertThat(jdbc.queryForList("SELECT role, count(*) AS n FROM users GROUP BY role ORDER BY role"))
                 .extracting(r -> r.get("role") + "=" + r.get("n"))
-                .containsExactly("ADMIN=1", "INSTRUCTOR=2", "STUDENT=6");
+                .containsExactly("ADMIN=1", "INSTRUCTOR=3", "STUDENT=6");
         assertThat(jdbc.queryForList("SELECT status FROM courses", String.class))
                 .contains("DRAFT", "IN_REVIEW", "PUBLISHED", "UNPUBLISHED");
         assertThat(count("SELECT count(*) FROM certificates")).isEqualTo(1);
-        assertThat(count("SELECT count(*) FROM reviews")).isEqualTo(4);
-        assertThat(count("SELECT count(*) FROM quizzes")).isEqualTo(2);
+        assertThat(count("SELECT count(*) FROM reviews")).isEqualTo(10);
+        assertThat(count("SELECT count(*) FROM quizzes")).isEqualTo(11);
+        assertThat(count("SELECT count(*) FROM complaints WHERE status = 'OPEN'")).isEqualTo(1);
 
         // Veri varken ikinci çalıştırma hiçbir şeye dokunmaz.
         assertThat(runner.seed()).isFalse();
-        assertThat(count("SELECT count(*) FROM users")).isEqualTo(9);
+        assertThat(count("SELECT count(*) FROM users")).isEqualTo(10);
     }
 
     @Test
     void everyAccount_logsInWithTheReadmePassword() {
         for (String email : List.of("admin@miniudemy.dev", "mehmet.kaya@miniudemy.dev", "zeynep.ak@miniudemy.dev",
                 "ayse.yilmaz@miniudemy.dev", "can.demir@miniudemy.dev", "elif.sahin@miniudemy.dev",
-                "burak.celik@miniudemy.dev", "deniz.arslan@miniudemy.dev", "selin.koc@miniudemy.dev")) {
+                "burak.celik@miniudemy.dev", "deniz.arslan@miniudemy.dev", "selin.koc@miniudemy.dev",
+                "ece.yildiz@miniudemy.dev")) {
             assertThat(login(email, DemoSeedRunner.PASSWORD)).as(email).isNotBlank();
         }
     }
@@ -88,11 +90,12 @@ class DemoSeedIT extends IntegrationTestBase {
         assertThat(python.get("totalElements").asLong()).isEqualTo(1); // "Python 2 (eski)" yayından kaldırılmış
         JsonNode card = python.get("content").get(0);
         assertThat(card.get("title").asText()).isEqualTo("Sıfırdan Python");
-        assertThat(card.get("lessonCount").asInt()).isEqualTo(6);
+        assertThat(card.get("lessonCount").asInt()).isEqualTo(12);
         assertThat(card.get("reviewCount").asInt()).isEqualTo(3);
         assertThat(card.get("averageRating").asDouble()).isEqualTo(4.3);
 
-        assertThat(get("/api/courses", null).getBody().get("totalElements").asLong()).isEqualTo(2);
+        assertThat(get("/api/courses", null).getBody().get("totalElements").asLong()).isEqualTo(7);
+        assertThat(count("SELECT count(*) FROM courses WHERE status = 'PUBLISHED' AND cover_file_id IS NULL")).isZero();
         ResponseEntity<byte[]> cover = download(card.get("coverUrl").asText(), null, null);
         assertThat(cover.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(cover.getHeaders().getContentType()).hasToString("image/png");
@@ -128,10 +131,11 @@ class DemoSeedIT extends IntegrationTestBase {
         assertThat(jdbc.queryForList("""
                 SELECT u.email || '=' || count(*) FROM notifications n JOIN users u ON u.id = n.user_id
                 GROUP BY u.email ORDER BY u.email
-                """, String.class)).containsExactly("ayse.yilmaz@miniudemy.dev=3", "can.demir@miniudemy.dev=1",
-                "elif.sahin@miniudemy.dev=1", "mehmet.kaya@miniudemy.dev=6", "zeynep.ak@miniudemy.dev=4");
-        // Son 7 günün bildirimleri okunmamış: Burak ve Deniz'in kaydı, Ayşe'nin Java kaydı, red, Elif'in sınavı.
-        assertThat(count("SELECT count(*) FROM notifications WHERE read_at IS NULL")).isEqualTo(5);
+                """, String.class)).containsExactly("ayse.yilmaz@miniudemy.dev=3", "burak.celik@miniudemy.dev=1", "can.demir@miniudemy.dev=2",
+                "ece.yildiz@miniudemy.dev=4", "elif.sahin@miniudemy.dev=1", "mehmet.kaya@miniudemy.dev=9",
+                "zeynep.ak@miniudemy.dev=8");
+        // Son 7 günün bildirimleri okunmamış: 7 kayıt, red, Elif'in, Can'in ve Burak'ın sınavı.
+        assertThat(count("SELECT count(*) FROM notifications WHERE read_at IS NULL")).isEqualTo(11);
 
         long python = count("SELECT id FROM courses WHERE title = 'Sıfırdan Python'");
         long giris = count("SELECT id FROM quizzes WHERE title = 'Giriş sınavı'");
@@ -141,9 +145,10 @@ class DemoSeedIT extends IntegrationTestBase {
         assertThat(notification("zeynep.ak@miniudemy.dev", NotificationType.COURSE_REJECTED))
                 .containsExactly(NotificationMessages.courseRejected(web, reason));
         assertThat(notification("mehmet.kaya@miniudemy.dev", NotificationType.COURSE_APPROVED))
-                .containsExactly(NotificationMessages.courseApproved(python, "Sıfırdan Python"));
+                .hasSize(2)
+                .contains(NotificationMessages.courseApproved(python, "Sıfırdan Python"));
         assertThat(notification("mehmet.kaya@miniudemy.dev", NotificationType.ENROLLMENT_CREATED))
-                .hasSize(5)
+                .hasSize(7)
                 .contains(NotificationMessages.enrollmentCreated(python, "Sıfırdan Python", "Deniz Arslan"));
         assertThat(notification("elif.sahin@miniudemy.dev", NotificationType.QUIZ_COMPLETED))
                 .containsExactly(NotificationMessages.quizCompleted(giris, "Sıfırdan Python", false));
@@ -173,6 +178,24 @@ class DemoSeedIT extends IntegrationTestBase {
         assertThat(pdf.getHeaders().getContentType()).hasToString("application/pdf");
         assertThat(pdf.getBody()).isEqualTo(new ClassPathResource("seed/files/" + key).getContentAsByteArray());
         assertThat(count("SELECT count(*) FROM stored_files WHERE size_bytes = 0")).isZero();
+        assertThat(count("SELECT count(*) FROM lessons WHERE content_file_id IS NULL")).isZero();
+    }
+
+    @Test
+    void seedVideos_arePlayableMp4_andSeekableWithRange() {
+        String token = login("ayse.yilmaz@miniudemy.dev", DemoSeedRunner.PASSWORD);
+        long lessonId = count("SELECT id FROM lessons WHERE title = 'İlk Program' AND content_type = 'VIDEO'");
+
+        ResponseEntity<byte[]> part = download("/api/lessons/" + lessonId + "/content", token, "bytes=1000-1999");
+
+        assertThat(part.getStatusCode()).isEqualTo(HttpStatus.PARTIAL_CONTENT);
+        assertThat(part.getHeaders().getContentType()).hasToString("video/mp4");
+        assertThat(part.getBody()).hasSize(1000);
+        // Her kursta en az iki video ders (seed içeriği kuralı, scripts/seed-content).
+        assertThat(count("""
+                SELECT count(*) FROM courses co WHERE (SELECT count(*) FROM lessons l JOIN sections s ON s.id = l.section_id
+                WHERE s.course_id = co.id AND l.content_type = 'VIDEO') < 2
+                """)).isZero();
     }
 
     @Test
