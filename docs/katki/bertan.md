@@ -36,4 +36,4 @@
 
 ## Araç kullanımı
 
-Kod ve doküman taslaklarını Claude Code ile ürettim; planları, mimari kararları ve merge kararlarını ben verdim, her PR'ı testler ve gerçek ortam denemesiyle kontrol ettim.
+Kod ve doküman taslaklarını Claude Code ile ürettim; planları, mimari kararları ve merge kararlarını ben verdim, kod PR'larını testlerle, kritik olanları ayrıca gerçek veritabanı ve tarayıcı denemesiyle kontrol ettim.
