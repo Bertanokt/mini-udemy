@@ -3425,7 +3425,7 @@ components:
           example: 3
     CourseStatsResponse:
       type: object
-      required: [courseId, enrollmentCount, averageProgressPercent, completionRate, quizzes, rating]
+      required: [courseId, enrollmentCount, averageProgressPercent, completionRate, progressDistribution, quizzes, rating]
       properties:
         courseId:
           type: integer
@@ -3437,6 +3437,28 @@ components:
         completionRate:
           type: number
           description: "%100 ilerlemeye ulaşan kursiyerlerin oranı (yüzde)."
+        progressDistribution:
+          type: array
+          description: >-
+            İlerleme dağılımı; bütün kursun kayıtlarından hesaplanır (kursiyer listesinin sayfasından değil).
+            Her zaman beş kova, sırayla 0–24, 25–49, 50–74, 75–99, 100; ilerleme kaydı olmayan kayıt %0 sayılır
+            (0–24 kovası). Kovaların toplamı enrollmentCount'a eşittir.
+          minItems: 5
+          maxItems: 5
+          items:
+            type: object
+            required: [minPercent, maxPercent, count]
+            properties:
+              minPercent:
+                type: integer
+                description: Kovanın alt sınırı (dahil).
+              maxPercent:
+                type: integer
+                description: Kovanın üst sınırı (dahil).
+              count:
+                type: integer
+                format: int64
+                description: Yüzdesi bu aralıkta olan kayıt sayısı.
         quizzes:
           type: array
           items:

@@ -36,6 +36,7 @@ import com.miniudemy.common.security.JwtConfig;
 import com.miniudemy.common.security.JwtService;
 import com.miniudemy.common.security.SecurityConfig;
 import com.miniudemy.course.dto.CourseStatsResponse;
+import com.miniudemy.course.dto.CourseStatsResponse.ProgressBucket;
 import com.miniudemy.course.dto.CourseStatsResponse.QuizStats;
 import com.miniudemy.course.dto.CourseStatsResponse.RatingStats;
 import com.miniudemy.course.dto.CourseStudentPage;
@@ -71,6 +72,8 @@ class InstructorCourseAnalyticsControllerTest {
     @Test
     void stats_asOwnerInstructor_returns200WithAllFields() throws Exception {
         given(analytics.getStats(5L, 7L)).willReturn(new CourseStatsResponse(5L, 3, 50.0, 33.33,
+                List.of(new ProgressBucket(0, 24, 1), new ProgressBucket(25, 49, 0), new ProgressBucket(50, 74, 1),
+                        new ProgressBucket(75, 99, 0), new ProgressBucket(100, 100, 1)),
                 List.of(new QuizStats(1L, "Giriş sınavı", 2, 50.0)),
                 new RatingStats(4.5, 2, Map.of("4", 1L, "5", 1L))));
 
@@ -80,6 +83,13 @@ class InstructorCourseAnalyticsControllerTest {
                 .andExpect(jsonPath("$.enrollmentCount").value(3))
                 .andExpect(jsonPath("$.averageProgressPercent").value(50.0))
                 .andExpect(jsonPath("$.completionRate").value(33.33))
+                .andExpect(jsonPath("$.progressDistribution.length()").value(5))
+                .andExpect(jsonPath("$.progressDistribution[0].minPercent").value(0))
+                .andExpect(jsonPath("$.progressDistribution[0].maxPercent").value(24))
+                .andExpect(jsonPath("$.progressDistribution[0].count").value(1))
+                .andExpect(jsonPath("$.progressDistribution[4].minPercent").value(100))
+                .andExpect(jsonPath("$.progressDistribution[4].maxPercent").value(100))
+                .andExpect(jsonPath("$.progressDistribution[4].count").value(1))
                 .andExpect(jsonPath("$.quizzes[0].quizId").value(1))
                 .andExpect(jsonPath("$.quizzes[0].title").value("Giriş sınavı"))
                 .andExpect(jsonPath("$.quizzes[0].attemptCount").value(2))

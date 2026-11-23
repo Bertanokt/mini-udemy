@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.miniudemy.auth.dto.UserSummary;
 import com.miniudemy.auth.service.UserDirectoryService;
 import com.miniudemy.course.dto.CourseStatsResponse;
+import com.miniudemy.course.dto.CourseStatsResponse.ProgressBucket;
 import com.miniudemy.course.dto.CourseStatsResponse.QuizStats;
 import com.miniudemy.course.dto.CourseStatsResponse.RatingStats;
 import com.miniudemy.course.dto.CourseStudentPage;
@@ -18,6 +19,7 @@ import com.miniudemy.course.dto.CourseStudentResponse;
 import com.miniudemy.course.dto.QuizBestResult;
 import com.miniudemy.course.dto.RosterEntry;
 import com.miniudemy.course.mapper.CourseAnalyticsMapper;
+import com.miniudemy.course.service.CourseProgressStats.ProgressDistribution;
 import com.miniudemy.course.service.CourseProgressStats.ProgressTotals;
 import com.miniudemy.course.service.CourseRoster.RosterPage;
 
@@ -31,6 +33,8 @@ import com.miniudemy.course.service.CourseRoster.RosterPage;
  *   <li>Ortalama ilerleme = kayıtlıların kurs yüzdelerinin toplamı / kayıtlı sayısı; ilerleme satırı olmayan kayıt
  *       %0 sayılır, kayıtlı yoksa 0.</li>
  *   <li>Tamamlanma oranı = yüzdesi %100 olan kayıtlı / kayıtlı × 100; kayıtlı yoksa 0.</li>
+ *   <li>İlerleme dağılımı bütün kayıtlardan beş kovaya (0–24, 25–49, 50–74, 75–99, 100) sayılır; ilerleme satırı olmayan
+ *       kayıt 0 kovasındadır, kovaların toplamı kayıtlı sayısıdır.</li>
  *   <li>Sınav başarı oranı = geçen deneme / tüm denemeler × 100 (her kursiyerin her denemesi sayılır); deneme yoksa 0.</li>
  * </ul>
  */
@@ -71,8 +75,14 @@ public class CourseAnalyticsService {
                 .map(q -> mapper.toQuizStats(q, percentOf(q.passedCount(), q.attemptCount())))
                 .toList();
         return mapper.toStats(courseId, enrolled, average(totals.percentSum(), enrolled),
-                percentOf(totals.completedCount(), enrolled), quizzes,
+                percentOf(totals.completedCount(), enrolled), buckets(progressStats.distribution(courseId)), quizzes,
                 ratingStats(courseId));
+    }
+
+    private static List<ProgressBucket> buckets(ProgressDistribution d) {
+        return List.of(new ProgressBucket(0, 24, d.below25()), new ProgressBucket(25, 49, d.from25()),
+                new ProgressBucket(50, 74, d.from50()), new ProgressBucket(75, 99, d.from75()),
+                new ProgressBucket(100, 100, d.completed()));
     }
 
     /**

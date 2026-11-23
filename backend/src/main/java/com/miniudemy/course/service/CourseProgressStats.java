@@ -16,4 +16,14 @@ public interface CourseProgressStats {
 
     record ProgressTotals(BigDecimal percentSum, long completedCount) {
     }
+
+    /**
+     * Kursa kayıtlı herkesin kurs yüzdesine göre dağılımı (bütün kayıtlar, sayfa değil). İlerleme satırı olmayan kayıt
+     * 0 kovasına girer; beş kovanın toplamı kayıt sayısına eşittir, kaydı olmayan kursta hepsi 0.
+     */
+    ProgressDistribution distribution(Long courseId);
+
+    /** Kovalar: yüzde &lt; 25, [25, 50), [50, 75), [75, 100), 100 (yüzde 100'e ulaşanlar). */
+    record ProgressDistribution(long below25, long from25, long from50, long from75, long completed) {
+    }
 }

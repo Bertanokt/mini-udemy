@@ -12,8 +12,16 @@ public record CourseStatsResponse(
         long enrollmentCount,
         double averageProgressPercent,
         double completionRate,
+        List<ProgressBucket> progressDistribution,
         List<QuizStats> quizzes,
         RatingStats rating) {
+
+    /**
+     * Bütün kursun kayıtlarından ilerleme kovası: yüzdesi {@code minPercent}–{@code maxPercent} (dahil) aralığında olan
+     * kayıt sayısı. Kovalar 0–24, 25–49, 50–74, 75–99, 100; toplam {@code enrollmentCount}'a eşittir.
+     */
+    public record ProgressBucket(int minPercent, int maxPercent, long count) {
+    }
 
     /** {@code passRate}: geçen denemelerin tüm denemelere oranı (yüzde); deneme yoksa 0. */
     public record QuizStats(Long quizId, String title, long attemptCount, double passRate) {
