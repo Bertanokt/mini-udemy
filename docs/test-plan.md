@@ -173,7 +173,7 @@ Her madde `docker compose down -v && docker compose up --build` ile ayağa kalka
 **Yönetici** (`admin`)
 - [ ] Kurs onayı: İncelemede listesi ("SQL ve Veritabanları"); "İncele" → içerik açılır, içeriksiz ders işaretli; onay, gerekçeli red (gerekçesiz hata), yayından kaldırma; liste hemen güncellenir, eğitmene bildirim.
 - [ ] Yorum moderasyonu: gizle (gerekçe zorunlu) → kurs sayfasında ortalama 4,3 → 4,0; geri aç → 4,3.
-- [ ] Şikâyetler: önceden `POST /api/complaints` ile oluşturulan şikâyet listede; "İncelendi" / "Reddet".
+- [ ] Şikâyetler: seed'deki açık şikâyet listede (Selin, "Java ile Nesne Yönelimli Programlama"; #337); "İncelendi" / "Reddet" durumu değiştirir; kurs bağlantısı inceleme ekranına gider. İkinci bir şikâyet için `POST /api/complaints` (`docs/demo.md` › 6d).
 - [ ] Kullanıcılar (rol, pasifleştirme; pasif hesap giriş yapamaz), kategoriler, platform raporu (sayılar seed ile tutarlı).
 
 **Yetki**

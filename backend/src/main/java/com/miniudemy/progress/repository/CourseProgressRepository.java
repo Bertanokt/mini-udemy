@@ -51,6 +51,34 @@ public interface CourseProgressRepository extends JpaRepository<CourseProgress, 
         long getCompletedCount();
     }
 
+    /**
+     * Verilen kayıtların yüzde kovaları tek sorguda: 25 / 50 / 75'in altı ve 100. 0 kovası (yüzde &lt; 25) satırı
+     * olmayan kayıtları da içereceği için servis tarafında kayıt sayısından hesaplanır; burada yalnız satırı olanlar
+     * sayılır.
+     */
+    @Query("select coalesce(sum(case when cp.progressPercent < 25 then 1 else 0 end), 0) as below25, "
+            + "coalesce(sum(case when cp.progressPercent >= 25 and cp.progressPercent < 50 then 1 else 0 end), 0) "
+            + "as from25, "
+            + "coalesce(sum(case when cp.progressPercent >= 50 and cp.progressPercent < 75 then 1 else 0 end), 0) "
+            + "as from50, "
+            + "coalesce(sum(case when cp.progressPercent >= 75 and cp.progressPercent < 100 then 1 else 0 end), 0) "
+            + "as from75, "
+            + "coalesce(sum(case when cp.progressPercent >= 100 then 1 else 0 end), 0) as completed "
+            + "from CourseProgress cp where cp.enrollmentId in :enrollmentIds")
+    ProgressBucketsRow bucketsByEnrollmentIds(@Param("enrollmentIds") Collection<Long> enrollmentIds);
+
+    interface ProgressBucketsRow {
+        long getBelow25();
+
+        long getFrom25();
+
+        long getFrom50();
+
+        long getFrom75();
+
+        long getCompleted();
+    }
+
     Optional<CourseProgress> findByEnrollmentId(Long enrollmentId);
 
     List<CourseProgress> findAllByEnrollmentIdIn(Collection<Long> enrollmentIds);
