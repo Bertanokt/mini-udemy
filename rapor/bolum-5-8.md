@@ -130,7 +130,7 @@ Tam tablo `docs/plan.md` › 6'da. Gerçekleşen ve sonucu belli olan riskler:
 | R1 | Takvim kayması | **Gerçekleşti.** İlk PR 11.11'de. 17.11'de feature freeze kararı: §3'te adı geçen hiçbir iş kesilmedi, P2'ler "İnce" kapsama alındı, 3 iş kesildi (#73, #88, #185). |
 | R2 | Kritik yol bağımlılığı (auth zinciri) | Giderildi: auth zinciri 13–17.11'de kapandı. |
 | R3, R10 | Üyenin müsait olmaması, alan rolünde iş yükü | Gerçekleşti; işler devredildi. Sedat 15.11'de döndü ve toplam 23 issue kapattı. |
-| R5 | Testlerin yetişmemesi | Önlendi: `main`'de 1194 test, servis katmanında satır coverage'ı %98,4 (hedef %70). |
+| R5 | Testlerin yetişmemesi | Önlendi: `main`'de 1194 test, servis katmanında satır coverage'ı %98,2 (hedef %70). |
 | R6 | Review'sız merge, doküman–kod tutarsızlığı | İki kez gerçekleşti: ilk 4 PR onaysız birleşti; 21.11'de iki dalgada 19 PR hızlı kontrol beklenmeden merge edildi ve merge sonrası kontrol edildi (3'ünde doküman ve kanıt eksiği bulundu, 16'sı temizdi). İzlenebilirlik matrisi (#98) ve diyagram–kod kontrolü (#97, 9 diyagramın 9'u; bileşen diyagramı CI'da `ComponentDiagramTest` ile) yapıldı. |
 | R7 | Giriş ve parola yenileme denemelerinde sınır yok | Kabul edildi (yerel demo, kapsam dışı); bölüm 8.3'te gelecek çalışma. Parola yenilemede varlık sızmıyor (her e-postaya aynı 202), token yalnız özetiyle saklanıyor ve tek kullanımlık (#115) |
 | R8 | Demo günü ortamın çalışmaması | 21.11'de temiz kurulumda (`docker compose down -v` + `up --build`) beş senaryo ekranda yüründü (#70); eksik çıkan ekranlar aynı gün tamamlandı. İlk build ~22 dk sürdüğü için sunum günü image'lar önceden build edilecek. ⟨Demo provası (#106) sonucu⟩ |
@@ -270,7 +270,7 @@ Plan: [`docs/test-plan.md`](../docs/test-plan.md) (#92). Rapor: `docs/test-repor
 
 **Kapsam.**
 
-- Servis katmanında satır coverage'ı **%98,4**, dal coverage'ı **%93,9** (hedef %70); genel %96,1 (JaCoCo).
+- Servis katmanında satır coverage'ı **%98,2**, dal coverage'ı **%93,3** (hedef %70); genel %96,3 (JaCoCo, 23.11).
 - Otomatik testi olan gereksinim: FR 43/44, NFR 16/19. Testi olmayan tek FR: FR-29 akreditasyon ibaresi (ön yüzde sabit metin; ön yüz test aracı olmadığı için bug bash'te elle kontrol).
 - Proje tanımı Bölüm 6'nın dört kritik durumu (kayıtsız erişim, mükerrer kayıt, yetkisiz düzenleme, yanlış ilerleme hesabı) uçtan uca testli (`Bolum6CriticalCasesIT`).
 - Erişim matrisi testi (`AccessMatrixIT`, 122 kontrol): OpenAPI'deki her ucun rol bilgisinin koddaki yetki kuralıyla aynı olduğu denetlenir; gövdesiz uçlarda girişsiz istek 401, yanlış rol 403 alır.
@@ -305,7 +305,7 @@ Plan: [`docs/test-plan.md`](../docs/test-plan.md) (#92). Rapor: `docs/test-repor
 | Beş demo senaryosu (kurs yayımlama, kayıt ve öğrenme, kaldığı yerden devam, sınav ve sertifika, eğitmen analitiği) | Beşi de uçtan uca testli ve 21.11'de temiz kurulumda ekranda yüründü (#70). Bildirimler artık zille ekranda (#136). Ekranı olmayan yalnız puan filtresi (#305) ve şikâyet oluşturma; API ile gösteriliyor (7.4). |
 | Tasarım desenleri: State, Strategy, Factory Method, Observer, DTO + Mapper | Beşi de kodda; sınıf diyagramlarında (#51) ve SOLID dokümanında (#95) gösterildi. |
 | Modüler monolit, modül sınırları | 10 modül; sınırlar ArchUnit testleriyle CI'da denetleniyor, ihlal yok. |
-| Test hedefleri (test planı › 7) | Servis coverage'ı %98,4 (hedef %70); Bölüm 6 testleri ve erişim matrisi yeşil. ⟨Bug bash ve demo provası sonucu⟩ |
+| Test hedefleri (test planı › 7) | Servis coverage'ı %98,2 (hedef %70); Bölüm 6 testleri ve erişim matrisi yeşil. ⟨Bug bash ve demo provası sonucu⟩ |
 | Tek komutla kurulum (NFR-16) | `docker compose up --build`; seed verisi otomatik. Temiz kurulumda denendi (21.11, #70); ilk build ~22 dk, önbellekle 18 sn. ⟨Demo provası, #106⟩ |
 
 ### 8.2 Kısıtlar
@@ -334,7 +334,7 @@ Plan: [`docs/test-plan.md`](../docs/test-plan.md) (#92). Rapor: `docs/test-repor
 
 **Hızlı kontrolün zamanı.** 21.11'de 19 PR hızlı kontrol beklenmeden merge edildi. Sonradan hepsine bakıldı: 16'sı temizdi, 3'ünde doküman ve kanıt eksiği vardı; ikisi tarayıcıda hiç denenmemişti. Ekip hız için kontrolü atlamayı seçti ve çoğu durumda haklı çıktı; ama eksikler yine de ayrı bir iş olarak geri döndü. Kontrolün merge'den önce yapılması, eksikleri PR'ı açanın bağlamı tazeyken düzeltmeyi sağlıyor.
 
-**Coverage tek başına yetmez.** Servis katmanında satır coverage'ı %98,4; buna rağmen kırmızı kontrol 4 test açığı buldu (#56, #44, #145, #137). En çarpıcısı #137: bildirim dinleyicisi geri alınan işlemde de bildirim yazacak şekilde bozulduğunda 1054 testin hepsi yeşil kaldı. Coverage bir satırın çalıştığını gösterir, testin o satırın yanlış davranışını yakalayacağını göstermez. Bu yüzden test issue'larında kodu bilerek bozup testin kırmızıya düştüğünü görmek kalıcı bir alışkanlık oldu; diğer üyeler de kendi PR'larında uyguladı (#303, #315, #322, #326).
+**Coverage tek başına yetmez.** Servis katmanında satır coverage'ı %98,2; buna rağmen kırmızı kontrol 4 test açığı buldu (#56, #44, #145, #137). En çarpıcısı #137: bildirim dinleyicisi geri alınan işlemde de bildirim yazacak şekilde bozulduğunda 1054 testin hepsi yeşil kaldı. Coverage bir satırın çalıştığını gösterir, testin o satırın yanlış davranışını yakalayacağını göstermez. Bu yüzden test issue'larında kodu bilerek bozup testin kırmızıya düştüğünü görmek kalıcı bir alışkanlık oldu; diğer üyeler de kendi PR'larında uyguladı (#303, #315, #322, #326).
 
 **Testle korunan dokümanlar.** Erişim matrisi testi rolleri OpenAPI'den, bileşen diyagramı testi okları diyagram dosyasından okuyor. Böylece "doküman kodla aynı mı?" sorusu bir kerelik kontrol olmaktan çıkıp her CI'da tekrar ediliyor. Elle kontrol edilen diyagramlarda (sınıf, C4) ise kodla aradaki fark ancak #97'de bulundu. Ders: kodla eşitlenmesi gereken her doküman için mümkünse bir test.
 
