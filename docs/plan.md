@@ -1,7 +1,7 @@
 # Proje planı: Gantt, görev dağılımı, risk analizi
 
 Proje raporu şablonunun 6. bölümü (#82). Planlanan takvim `CONTRIBUTING.md` › Sprint'teki milestone'lardan, görev sayıları GitHub'daki issue'lardan alındı.
-**Veri tarihi:** 16.11.2026 14:10 (İstanbul saati); risk tablosu ve freeze kararı (bölüm 6) 17.11.2026'da, Gantt'ın gerçekleşen kısmı ve bölüm 8 21.11.2026'da güncellendi (#104). Rapordaki özeti: [`../rapor/bolum-5-8.md`](../rapor/bolum-5-8.md) › 6.
+**Veri tarihi:** 16.11.2026 14:10 (İstanbul saati); risk tablosu ve freeze kararı (bölüm 6) 17.11.2026'da, Gantt'ın gerçekleşen kısmı 21.11, bölüm 8 23.11.2026'da güncellendi (#104). Rapordaki özeti: [`../rapor/bolum-5-8.md`](../rapor/bolum-5-8.md) › 6.
 
 ## 1. Takvim özeti
 
@@ -143,19 +143,19 @@ Projede ücretli yazılım lisansı kullanılmıyor; **ürünün lisans maliyeti
 
 Geliştirme aracı olarak kullanılan Claude Code ücretli bir abonelik gerektirir; ürünün çalışması için gerekli değildir ve ürünün lisans maliyetine dahil değildir.
 
-## 8. Planlanan ve gerçekleşen (21.11.2026 akşamı)
+## 8. Planlanan ve gerçekleşen (23.11.2026)
 
-Kapanan: GitHub'da "completed" kapanan issue; "not planned" kapatılanlar (6) sayılmaz. Parantez içinde 16.11 değeri.
+Kapanan: GitHub'da "completed" kapanan issue; "not planned" kapatılanlar (8) sayılmaz. Parantez içinde 16.11 değeri.
 
-| Milestone | Planlanan bitiş | Issue | Kapanan | Açık (21.11) |
+| Milestone | Planlanan bitiş | Issue | Kapanan | Açık (23.11) |
 |---|---|---|---|---|
 | Hafta 1 | 27.10 | 26 | 26 (19) | – |
 | Hafta 2 | 03.11 | 32 | 32 (5) | – |
 | Hafta 3 | 10.11 | 33 | 33 (4) | – |
-| Hafta 4 | 17.11 | 31 | 30 (1) | #66 OpenAPI eşitleme |
-| Hafta 5 | 24.11 | 18 | 12 (0) | #68 bug bash, #72 README, #97 (PR #316), #99, #101, #257 |
-| Sunum | 01.12 | 7 | 0 (0) | Başlamadı |
-| Milestone'suz | – | 7 | 6 | #305 puan filtresi |
-| **Toplam** | | **154** | **139 (29)** | |
+| Hafta 4 | 17.11 | 30 | 30 (1) | – (#66 kapsam dışı) |
+| Hafta 5 | 24.11 | 18 | 14 (0) | #68 bug bash, #72 README, #99 test raporu, #101 bu hafta raporu |
+| Sunum | 01.12 | 7 | 1 (0) | #69, #102, #104–#107 |
+| Milestone'suz | – | 7 | 6 | #305 puan filtresi (PR #342) |
+| **Toplam** | | **153** | **142 (29)** | |
 
-Merge edilen PR: 157 (Bertan 58, Eray 39, Veronika 33, Sedat 27); hepsi 11.11–21.11 arasında, en yoğun gün 17.11 (32 PR). Ayrıntılar haftalık raporlarda: [`progress/`](progress/).
+Merge edilen PR: 174 (Bertan 63, Veronika 41, Eray 40, Sedat 30); hepsi 11.11–23.11 arasında, en yoğun gün 17.11 (32 PR). Ayrıntılar haftalık raporlarda: [`progress/`](progress/).

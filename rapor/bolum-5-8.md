@@ -2,7 +2,7 @@
 
 Hocanın Proje Yazım Şablonu'nun 5–8. bölümlerinin içeriği (#104). Word dosyasında birleştirme #69'da yapılır; bu dosya metnin kaynağıdır. Ayrıntılı tablolar repodaki dokümanlarda; burada rapora girecek özetleri var.
 
-**Veri tarihi:** 21.11.2026 akşamı, #328 sonrası (ilk taslak 19.11). ⟨…⟩ ile işaretli yerler bug bash (#68), test raporu (#99) ve demo provası (#106) bitince doldurulacak; son güncelleme 01.12.2026'dan önce.
+**Veri tarihi:** 23.11.2026 (ilk taslak 19.11). ⟨…⟩ ile işaretli yerler bug bash (#68), test raporu (#99) ve demo provası (#106) bitince doldurulacak; son güncelleme 01.12.2026'dan önce.
 
 ---
 
@@ -55,7 +55,7 @@ Kaynak: [`docs/plan.md`](../docs/plan.md) (#82). Bu bölüm o dokümanın gerçe
 | Faz | Planlanan | Gerçekleşen (21.11.2026) |
 |---|---|---|
 | Analiz ve tasarım (Hafta 1) | 21–27.10 | Gereksinimler, use-case'ler, ER, OpenAPI ve mimari kurallar repo iskeletiyle birlikte 15–24.10'da hazırlandı; PR'larla `main`'e girişi 11–14.11 |
-| Geliştirme (Hafta 2–4) | 28.10–17.11 | Kod 11–21.11 arasında geldi (157 PR; en yoğun gün 17.11, 32 PR). Feature freeze 17.11'de uygulandı; P2 işler "İnce" kapsamla sürdü, eksik ekranlar 20–21.11'de tamamlandı |
+| Geliştirme (Hafta 2–4) | 28.10–17.11 | Kod 11–23.11 arasında geldi (174 PR; en yoğun gün 17.11, 32 PR). Feature freeze 17.11'de uygulandı; P2 işler "İnce" kapsamla sürdü, eksik ekranlar 20–21.11'de tamamlandı |
 | Test ve kararlılık (Hafta 5) | 18–24.11 | Senaryo testleri, Bölüm 6 testleri, erişim matrisi, seed verisi ve izlenebilirlik matrisi 17–19.11'de; beş senaryonun temiz kurulumda ekranda yürünmesi 21.11'de (#70); bug bash ve test raporu ⟨24.11⟩ |
 | Sunum hazırlığı | 25.11–01.12 | ⟨Word raporu, slaytlar, demo provası⟩ |
 
@@ -92,18 +92,18 @@ gantt
 
 ### 6.3 Planlanan ve gerçekleşen iş
 
-| Milestone | Issue | Kapanan (21.11) | Kapanan (16.11) |
+| Milestone | Issue | Kapanan (23.11) | Kapanan (16.11) |
 |---|---|---|---|
 | Hafta 1 | 26 | 26 | 19 |
 | Hafta 2 | 32 | 32 | 5 |
 | Hafta 3 | 33 | 33 | 4 |
-| Hafta 4 | 31 | 30 | 1 |
-| Hafta 5 | 18 | 12 | 0 |
-| Sunum | 7 | 0 | 0 |
+| Hafta 4 | 30 | 30 | 1 |
+| Hafta 5 | 18 | 14 | 0 |
+| Sunum | 7 | 1 | 0 |
 | Milestone'suz (demo yürüyüşünde açılanlar) | 7 | 6 | – |
-| **Toplam** | **154** | **139 (%90)** | **29** |
+| **Toplam** | **153** | **142 (%93)** | **29** |
 
-"Not planned" kapatılan 6 issue (kapsamdan çıkarılanlar) sayılmaz. Açık işlerin listesi `docs/plan.md` › 8'de.
+"Not planned" kapatılan 8 issue (kapsamdan çıkarılanlar) sayılmaz. Açık işlerin listesi `docs/plan.md` › 8'de.
 
 ### 6.4 Görev dağılımı
 
@@ -111,11 +111,11 @@ Roller `CONTRIBUTING.md` › Roller tablosundan; her issue'nun tek rol etiketi v
 
 | Üye | Rol | Kapanan issue (atanan) | Merge edilen PR | `main`'deki commit |
 |---|---|---|---|---|
-| Bertan | Yazılım Mimarı | 43 / 43 | 58 | 65 |
-| Eray | Veri ve Entegrasyon | 39 / 41 | 39 | 39 |
-| Veronika | Kalite ve Süreç | 28 / 30 | 33 | 33 |
-| Sedat | Alan Tasarımcısı | 23 / 25 | 27 | 27 |
-| Atanmamış | – | 6 / 15 | – | – |
+| Bertan | Yazılım Mimarı | 43 / 43 | 63 | 70 |
+| Eray | Veri ve Entegrasyon | 40 / 41 | 40 | 40 |
+| Veronika | Kalite ve Süreç | 29 / 32 | 41 | 41 |
+| Sedat | Alan Tasarımcısı | 23 / 26 | 30 | 30 |
+| Atanmamış | – | 7 / 11 | – | – |
 
 **Git geçmişiyle tutarlılık.** `main` "Squash and merge" ile birleştirildiği için her PR tek commit'tir; PR ve commit sayıları bu yüzden birebir aynı. Tek fark Bertan'ın 7 commit'i: repo iskeleti ve backlog, PR kuralı konmadan önce (15–24.10) doğrudan `main`'e yazıldı. Komut: `git log --format='%an' main | sort | uniq -c`. ⟨Sayılar 01.12'de son kez alınacak.⟩
 
@@ -130,7 +130,7 @@ Tam tablo `docs/plan.md` › 6'da. Gerçekleşen ve sonucu belli olan riskler:
 | R1 | Takvim kayması | **Gerçekleşti.** İlk PR 11.11'de. 17.11'de feature freeze kararı: §3'te adı geçen hiçbir iş kesilmedi, P2'ler "İnce" kapsama alındı, 3 iş kesildi (#73, #88, #185). |
 | R2 | Kritik yol bağımlılığı (auth zinciri) | Giderildi: auth zinciri 13–17.11'de kapandı. |
 | R3, R10 | Üyenin müsait olmaması, alan rolünde iş yükü | Gerçekleşti; işler devredildi. Sedat 15.11'de döndü ve toplam 23 issue kapattı. |
-| R5 | Testlerin yetişmemesi | Önlendi: `main`'de 1188 test, servis katmanında satır coverage'ı %98,4 (hedef %70). |
+| R5 | Testlerin yetişmemesi | Önlendi: `main`'de 1194 test, servis katmanında satır coverage'ı %98,4 (hedef %70). |
 | R6 | Review'sız merge, doküman–kod tutarsızlığı | İki kez gerçekleşti: ilk 4 PR onaysız birleşti; 21.11'de iki dalgada 19 PR hızlı kontrol beklenmeden merge edildi ve merge sonrası kontrol edildi (3'ünde doküman ve kanıt eksiği bulundu, 16'sı temizdi). İzlenebilirlik matrisi (#98) ve diyagram–kod kontrolü (#97, 9 diyagramın 9'u; bileşen diyagramı CI'da `ComponentDiagramTest` ile) yapıldı. |
 | R7 | Giriş ve parola yenileme denemelerinde sınır yok | Kabul edildi (yerel demo, kapsam dışı); bölüm 8.3'te gelecek çalışma. Parola yenilemede varlık sızmıyor (her e-postaya aynı 202), token yalnız özetiyle saklanıyor ve tek kullanımlık (#115) |
 | R8 | Demo günü ortamın çalışmaması | 21.11'de temiz kurulumda (`docker compose down -v` + `up --build`) beş senaryo ekranda yüründü (#70); eksik çıkan ekranlar aynı gün tamamlandı. İlk build ~22 dk sürdüğü için sunum günü image'lar önceden build edilecek. ⟨Demo provası (#106) sonucu⟩ |
@@ -260,12 +260,12 @@ Plan: [`docs/test-plan.md`](../docs/test-plan.md) (#92). Rapor: `docs/test-repor
 
 **Test seviyeleri.**
 
-| Seviye | Araç | Sayı (21.11) |
+| Seviye | Araç | Sayı (23.11) |
 |---|---|---|
-| Birim | JUnit 5, Mockito, AssertJ | 993 |
+| Birim | JUnit 5, Mockito, AssertJ | 997 |
 | Mimari | ArchUnit | 13 |
-| Entegrasyon | Spring Boot Test + Testcontainers (gerçek PostgreSQL 17, gerçek HTTP) | 182 |
-| **Toplam** | | **1188**, hepsi CI'da yeşil |
+| Entegrasyon | Spring Boot Test + Testcontainers (gerçek PostgreSQL 17, gerçek HTTP) | 184 |
+| **Toplam** | | **1194**, hepsi CI'da yeşil |
 | Manuel | Tarayıcı, kontrol listesi (bug bash #68) | ⟨sonuç⟩ |
 
 **Kapsam.**
@@ -289,7 +289,7 @@ Plan: [`docs/test-plan.md`](../docs/test-plan.md) (#92). Rapor: `docs/test-repor
 | Yedekleme | Veritabanı `pg_dump` ile, yüklenen dosyalar depolama klasörünün kopyalanmasıyla. Gerçek kullanımda günlük yedek ve geri yükleme denemesi. |
 | İzleme | Spring Boot Actuator sağlık ucu (`/actuator/health`); hatalar sunucu loguna yazılır, kullanıcıya iç ayrıntı gösterilmez. |
 | Hata yönetimi | Hata GitHub'da `bug` etiketli issue olarak açılır, önceliği verilir, `fix/#<no>-...` dalında testle birlikte düzeltilir. |
-| Kalite güvencesi | Her değişiklik CI'dan (1188 test, ArchUnit kuralları, frontend lint + build) ve hızlı kontrolden geçer. |
+| Kalite güvencesi | Her değişiklik CI'dan (1194 test, ArchUnit kuralları, frontend lint + build) ve hızlı kontrolden geçer. |
 | Dokümantasyon | OpenAPI, diyagramlar ve ADR'ler kodla aynı PR'da güncellenir. |
 | Güvenlik | Üretimde JWT anahtarı yalnız ortam değişkeninden (`JWT_SECRET`) okunur; tanımlı değilse ya da 32 bayttan kısaysa uygulama açılmaz. Repodaki anahtarlar yalnız geliştirme ve test profillerinde. Bağımlılık güvenlik uyarıları (GitHub) takip edilir. |
 
@@ -328,9 +328,16 @@ Plan: [`docs/test-plan.md`](../docs/test-plan.md) (#92). Rapor: `docs/test-repor
 
 ### 8.4 Tartışma
 
-⟨Sunumdan önce ekipçe yazılacak. Önerilen başlıklar:⟩
+⟨Taslak (Veronika, 23.11); ekip sunumdan önce kendi gözlemlerini ekleyecek.⟩
 
-- Sıkı PR kuralları (kanıt tablosu, hızlı kontrol, doküman–kod uyumu) geç başlayan bir projede hızı düşürdü mü, yoksa hataları erken yakalayarak kazandırdı mı? Örnek: ilk PR'larda sözleşme ile ER arasındaki alan uzunluğu farkı review'da yakalandı.
-- Hızlı kontrolün merge'den önce yapılması: 21.11'de 19 PR kontrolsüz merge edildi; sonradan bakıldığında 3'ünde doküman ve kanıt eksiği vardı. Hız ile güvence arasındaki denge.
-- Kırmızı kontrol, "yeşil" testlerin bir kısmının hatayı yakalamadığını gösterdi (4 açık). Coverage yüksek olsa bile testin doğru şeyi denetlediği ayrıca kanıtlanmalı.
-- Yapay zekâ desteği (Claude Code) iş üretimini hızlandırdı; buna karşı "her teknik iddia kodla karşılaştırılır" kuralı ve katkı notları, üyelerin kendi kodunu anlayıp anlatabilmesi için gerekli oldu.
+**Geç başlangıç ve sıkı kurallar.** Kod PR'ları 11.11'de başladı; dört haftalık iş yaklaşık on güne sığdı. Bu baskıda her PR'da kanıt tablosu, "Ne / Neden" ve hızlı kontrol istemek ilk bakışta yavaşlatıcı görünüyordu. Ama kurallar hataları merge'den önce yakaladı: ilk PR'larda API sözleşmesi ile ER arasındaki alan uzunluğu farkı, sonra yayımlanmamış kursun yorumunun şikâyet edilebilmesi (#292 → #294) ve rapor bölümleri arasındaki sayı farkları. Bunlar demo günü ya da raporda ortaya çıksaydı düzeltmek daha pahalı olurdu.
+
+**Hızlı kontrolün zamanı.** 21.11'de 19 PR hızlı kontrol beklenmeden merge edildi. Sonradan hepsine bakıldı: 16'sı temizdi, 3'ünde doküman ve kanıt eksiği vardı; ikisi tarayıcıda hiç denenmemişti. Ekip hız için kontrolü atlamayı seçti ve çoğu durumda haklı çıktı; ama eksikler yine de ayrı bir iş olarak geri döndü. Kontrolün merge'den önce yapılması, eksikleri PR'ı açanın bağlamı tazeyken düzeltmeyi sağlıyor.
+
+**Coverage tek başına yetmez.** Servis katmanında satır coverage'ı %98,4; buna rağmen kırmızı kontrol 4 test açığı buldu (#56, #44, #145, #137). En çarpıcısı #137: bildirim dinleyicisi geri alınan işlemde de bildirim yazacak şekilde bozulduğunda 1054 testin hepsi yeşil kaldı. Coverage bir satırın çalıştığını gösterir, testin o satırın yanlış davranışını yakalayacağını göstermez. Bu yüzden test issue'larında kodu bilerek bozup testin kırmızıya düştüğünü görmek kalıcı bir alışkanlık oldu; diğer üyeler de kendi PR'larında uyguladı (#303, #315, #322, #326).
+
+**Testle korunan dokümanlar.** Erişim matrisi testi rolleri OpenAPI'den, bileşen diyagramı testi okları diyagram dosyasından okuyor. Böylece "doküman kodla aynı mı?" sorusu bir kerelik kontrol olmaktan çıkıp her CI'da tekrar ediliyor. Elle kontrol edilen diyagramlarda (sınıf, C4) ise kodla aradaki fark ancak #97'de bulundu. Ders: kodla eşitlenmesi gereken her doküman için mümkünse bir test.
+
+**Yapay zekâ desteği.** Bütün üyeler Claude Code kullandı; kod, test ve doküman taslakları hızlı üretildi. Bunun riski, üyenin kendi PR'ını açıklayamamasıydı (risk R9). Önlem iki kuraldı: PR açıklamasındaki her teknik iddia kodla karşılaştırılır ve her üye katkı notunda kararlarını kendi cümleleriyle yazar. Hızlı kontrolde açıklama ile kod arasında fark bulunan PR'lar (ör. eksik doküman, yanlış sayı) bu kuralın gerekli olduğunu gösterdi.
+
+**Ortam eşitsizliği.** Kalite ve Süreç sorumlusunun makinesinde Docker, Java ve Node yoktu; bütün doğrulama CI üzerinden ve geçici PR'larla yapıldı. Bu, CI'ı tek doğruluk kaynağı yaptı (iyi), ama tarayıcı denemelerini ve diyagram görüntülerini diğer üyelere bağımlı bıraktı. Bir sonraki projede herkesin aynı ortamı kurabilmesi baştan sağlanmalı.
