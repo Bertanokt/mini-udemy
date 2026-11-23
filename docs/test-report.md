@@ -1,52 +1,54 @@
 # Test raporu (#99)
 
-> **TASLAK (21.11.2026; ilk sürüm 19.11).** Bug bash (#68) bulguları ve demo provası (#106) eklenince tamamlanacak. Test sayıları aşağıdaki CI çalışmasından alınmıştır; coverage 19.11 ölçümüdür ve 01.12'den önce yeniden ölçülecek.
+> **TASLAK (23.11.2026; ilk sürüm 19.11).** Bug bash (#68) bulguları ve demo provası (#106) eklenince tamamlanacak. Test sayıları ve coverage aşağıdaki CI çalışmasından alınmıştır.
 
 Test planına ([test-plan.md](test-plan.md)) göre gerçekleşen sonuçlar. FR → issue → test izlenebilirliği [traceability.md](traceability.md)'de.
 
-**Kaynak:** `main`, commit `a27bcf7`, CI çalışması [44937251944](https://github.com/Bertanokt/mini-udemy/actions/runs/44937251944) (21.11.2026, başarılı). Coverage: commit `ee2012b`, CI çalışması [44549756895](https://github.com/Bertanokt/mini-udemy/actions/runs/44549756895) (19.11.2026).
+**Kaynak:** `main`, commit `21a94c9`, CI çalışması [45182417280](https://github.com/Bertanokt/mini-udemy/actions/runs/45182417280) (23.11.2026, başarılı) ve aynı çalışmanın `jacoco-report` artifact'ı.
 
 ## 1. Özet
 
 | | Sayı | Sonuç |
 |---|---|---|
-| Birim testleri (surefire, `*Test`) | 993 | 0 hata |
+| Birim testleri (surefire, `*Test`) | 997 | 0 hata |
 | Mimari testler (ArchUnit, `common.architecture`) | 13 | 0 ihlal |
-| Entegrasyon testleri (failsafe, `*IT`, gerçek PostgreSQL 17) | 182 | 0 hata |
-| **Toplam** | **1188** | **CI yeşil** |
+| Entegrasyon testleri (failsafe, `*IT`, gerçek PostgreSQL 17) | 184 | 0 hata |
+| **Toplam** | **1194** | **CI yeşil** |
 | Frontend | lint + build | yeşil (FE test aracı yok, proje kuralı) |
 
-Test sayısının gelişimi: 10.11'de 1, 17.11 sonunda 404, 19.11'de 1053, 21.11'de 1188 (ilerleme raporları). 19.11'den sonraki artışın kaynağı: sertifika görüntüleme ve doğrulama (#130), bildirim API'si (#125), parola yenileme ve profil (#115, #116), yorum moderasyonu (#142), şikâyetler (#144), istemcinin kestiği bağlantı (#259) ve bileşen diyagramı testi (#91).
+Test sayısının gelişimi: 10.11'de 1, 17.11 sonunda 404, 19.11'de 1053, 21.11'de 1188, 23.11'de 1194 (ilerleme raporları). 19.11'den sonraki artışın kaynağı: sertifika görüntüleme ve doğrulama (#130), bildirim API'si (#125), parola yenileme ve profil (#115, #116), yorum moderasyonu (#142), şikâyetler (#144), istemcinin kestiği bağlantı (#259) ve bileşen diyagramı testi (#91).
 
 ### Modül bazında birim + mimari testler
 
 | Modül | Test |
 |---|---|
-| course | 359 |
+| course | 360 |
 | quiz | 167 |
 | content | 86 |
 | common (güvenlik, hata yönetimi, ArchUnit, bileşen diyagramı) | 81 |
 | auth | 71 |
 | admin | 58 |
 | review | 45 |
-| progress | 42 |
+| progress | 45 |
 | notification | 39 |
 | enrollment | 32 |
 | certificate | 26 |
-| **Toplam** | **1006** |
+| **Toplam** | **1010** |
 
 ## 2. Coverage (JaCoCo, #89)
 
-Hedef (test-plan › 7.4): servis katmanında (`com.miniudemy.*.service`) satır coverage'ı en az %70. Aşağıdaki değerler **19.11** ölçümüdür; o günden sonra eklenen servisler (`CertificateQueryService`, `PasswordResetService`, `ReviewModerationService`, `ComplaintService`, bildirim okuma) kendi birim ve entegrasyon testleriyle geldi. ⟨01.12'den önce son CI'ın `jacoco-report`'u ile yeniden ölçülecek.⟩
+Hedef (test-plan › 7.4): servis katmanında (`com.miniudemy.*.service`) satır coverage'ı en az %70.
 
 | Kapsam | Satır coverage | Dal (branch) coverage | Hedef |
 |---|---|---|---|
-| **Servis katmanı** (`*.service`) | **%98,4** (1347 satırın 1326'sı) | %93,9 | ≥ %70 ✓ |
-| Genel | %96,1 (2952 satırın 2836'sı) | %80,7 | bilgi amaçlı |
+| **Servis katmanı** (`*.service`) | **%98,2** (1537 satırın 1510'u) | %93,3 (415 dalın 387'si) | ≥ %70 ✓ |
+| Genel | %96,3 (3379 satırın 3254'ü) | %79,2 | bilgi amaçlı |
 
-Modül bazında servis katmanı: admin, auth, certificate, enrollment, notification, progress, review %100; quiz %99,2; course %98,9; content %93,1. Servis katmanında %90'ın altında kalan tek sınıf `LocalDiskStorageService` (%85,1; kapsanmayan 10 satır çoğunlukla disk G/Ç hata dalları).
+Modül bazında servis katmanı: admin, enrollment, notification, progress, review %100; quiz %99,2; course %98,9; certificate %97,4; auth %97,1; content %93,1. Servis katmanında %90'ın altında kalan sınıflar: `LocalDiskStorageService` %85,1 (kapsanmayan 10 satır çoğunlukla disk G/Ç hata dalları), `StorageProperties` %80 ve `PasswordResetProperties` %71,4 (yapılandırma sınıfları; kapsanmayan sırasıyla 1 ve 2 satır).
 
-Kaynak: aynı CI çalışmasının `jacoco-report` artifact'ı (`jacoco.csv`). JaCoCo ajanı birim ve entegrasyon testlerinde aynı `jacoco.exec`'e yazar; rapor `verify` aşamasında, entegrasyon testlerinden sonra üretilir.
+19.11'deki ölçümle karşılaştırma: servis katmanı %98,4 → %98,2 (satır), %93,9 → %93,3 (dal). Hafif düşüşün nedeni 19.11'den sonra eklenen servisler ve yapılandırma sınıfları (parola yenileme, sertifika görüntüleme, şikâyet, yorum moderasyonu); servis sayısı arttı, oran hedefin çok üstünde kaldı.
+
+Kaynak: `jacoco-report` artifact'ı (`jacoco.csv`). JaCoCo ajanı birim ve entegrasyon testlerinde aynı `jacoco.exec`'e yazar; rapor `verify` aşamasında, entegrasyon testlerinden sonra üretilir.
 
 ## 3. Senaryo 1–5 entegrasyon testleri
 
@@ -56,8 +58,8 @@ Kaynak: aynı CI çalışmasının `jacoco-report` artifact'ı (`jacoco.csv`). J
 | 2. Kayıt ve öğrenme | `EnrollmentScenarioIT` (2) | ✓ | Arama → kayıt → içerik (Range 206) → tamamlama → ilerleme |
 | 3. Kaldığı yerden devam | `ResumeScenarioIT` (2) | ✓ | Son açılan ders, ilk tamamlanmamış ders, eğitmen açınca değişmez |
 | 4. Sınav ve sertifika | `QuizCertificateScenarioIT` (2), `CertificateScenarioIT` (3), `NotificationScenarioIT` (1), `NotificationApiIT` (2) | ✓ | Senaryo testi (#138) kursiyerin akışını sertifikadan sonra da sürdürüyor: Sertifikalarım, girişsiz doğrulama, bildirim listesi ve okunmamış sayısı |
-| 5. Eğitmen analitiği | `InstructorAnalyticsIT` (1), `InstructorAnalyticsScenarioIT` (1), `PlatformReportIT` (2) | ✓ | |
-| Seed verisi | `DemoSeedIT` (7) | ✓ | Demo hesapları README'deki parolayla girer; örnek bildirimler uygulamanın metinleriyle aynı |
+| 5. Eğitmen analitiği | `InstructorAnalyticsIT` (2), `InstructorAnalyticsScenarioIT` (1), `PlatformReportIT` (2) | ✓ | |
+| Seed verisi | `DemoSeedIT` (8) | ✓ | Demo hesapları README'deki parolayla girer; örnek bildirimler uygulamanın metinleriyle aynı |
 | Diğer uçtan uca | `PasswordResetIT` (4), `ProfileApiIT` (1), `ReviewModerationIT` (2), `ComplaintIT` (4), `CourseLearningOutcomesIT` (2) | ✓ | Parola yenileme (tek kullanım, süre, varlık sızmaması), profil, yorum gizleme, şikâyet |
 
 ## 4. Bölüm 6 kritik test durumları
@@ -110,7 +112,7 @@ _Bug bash yapılınca doldurulacak:_ bulunan hata, öncelik (P1/P2), issue, duru
 | 1. `main`'de CI yeşil | ✓ |
 | 2. Tüm P1 FR'lerin otomatik testi ya da yazılı manuel kontrolü | ✓ Matriste (#98) FR 43/44 otomatik testli; tek istisna FR-29 (akreditasyon ibaresi, ön yüzde sabit metin), manuel kontrolü bug bash'te (#68) |
 | 3. Bölüm 6 testleri mevcut ve yeşil, `@Disabled` yok | ✓ |
-| 4. Servis katmanında satır coverage ≥ %70 | ✓ %98,4 (19.11; ⟨01.12'de yeniden⟩) |
+| 4. Servis katmanında satır coverage ≥ %70 | ✓ %98,2 (23.11) |
 | 5. ArchUnit ihlali yok, kurallar gevşetilmemiş | ✓ (13 mimari test; bileşen diyagramı da CI'da kodla karşılaştırılıyor, `ComponentDiagramTest`) |
 | 6. Bug bash'teki P1 hataların hepsi kapalı | _bug bash sonrası_ |
 | 7. Demo provasında senaryo 1–5 hatasız | 21.11'de temiz kurulumda beş senaryo ekranda yüründü (#70, Bertan); o gün eksik çıkan ekranlar aynı gün tamamlandı. ⟨Demo provası #106⟩ |
