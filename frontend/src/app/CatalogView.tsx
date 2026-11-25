@@ -6,6 +6,7 @@ import { CourseCard } from "@/components/course/CourseCard";
 import { ApiError } from "@/lib/api/client";
 import {
   LEVEL_LABELS,
+  MIN_RATING_OPTIONS,
   SORT_LABELS,
   listCategories,
   searchCatalog,
@@ -44,6 +45,7 @@ function readQuery(params: URLSearchParams): CatalogQuery {
     categoryId: toPositiveInt(params.get("categoryId")),
     level: level && level in LEVEL_LABELS ? (level as CourseLevel) : undefined,
     instructorId: toPositiveInt(params.get("instructorId")),
+    minRating: MIN_RATING_OPTIONS.find((r) => String(r) === params.get("minRating")),
     sort: sort && sort in SORT_LABELS ? (sort as CatalogSort) : undefined,
     page: Number.isInteger(page) && page > 0 ? page : 0,
     size: PAGE_SIZE,
@@ -159,6 +161,17 @@ export function CatalogView() {
             {(Object.keys(LEVEL_LABELS) as CourseLevel[]).map((l) => (
               <option key={l} value={l}>
                 {LEVEL_LABELS[l]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          En az puan
+          <select value={query.minRating ?? ""} onChange={(e) => go({ minRating: e.target.value || null })}>
+            <option value="">Tümü</option>
+            {MIN_RATING_OPTIONS.map((r) => (
+              <option key={r} value={r}>
+                {r} ve üzeri
               </option>
             ))}
           </select>
