@@ -218,7 +218,7 @@ Frontend http://localhost:3000, backend http://localhost:8080. Veritabanı boşs
 
 **Kursiyer olarak**
 
-1. Ana sayfada (`/`) kursları arayın; kategori ve seviyeye göre süzün. Yalnız yayımlanmış kurslar görünür.
+1. Ana sayfada (`/`) kursları arayın; kategori, seviye ve en az puana göre süzün (deneyin: "4 ve üzeri" → 5 kurs). Yalnız yayımlanmış kurslar görünür.
 2. Bir kursa tıklayın: açıklama, kazanımlar, bölüm/ders listesi, toplam süre ve değerlendirmeler görünür.
 3. Giriş yapmadıysanız "Kayıt ol" sizi giriş sayfasına götürür; yeni hesap için `/register`. Giriş yaptıysanız "Kursa kayıt ol"; düğme "Derse başla"ya döner.
 4. "Kurslarım"da (`/my-courses`) her kursta "Son ders: … · %… tamamlandı" yazar; "Kaldığın yerden devam et" son açtığınız derse götürür (deneyin: `can.demir@…` → "Fonksiyon Tanımlama"). Aynı düğme kurs sayfasında da var.
@@ -252,7 +252,7 @@ Frontend http://localhost:3000, backend http://localhost:8080. Veritabanı boşs
 5. Şikâyetler (`/admin/complaints`): kurs ve yorum şikâyetleri en yeni önce; her satır "İncelendi" ya da "Reddet" ile sonuçlandırılır. Kurs şikâyeti kurs inceleme ekranına bağlantı verir; gerekirse yorum moderasyonu ya da yayından kaldırma oradan yapılır (deneyin: seed'de Selin'in "Java ile Nesne Yönelimli Programlama" için açık şikâyeti var).
 6. Diğer sayfalar: kullanıcılar (rol ve pasifleştirme, `/admin/users`), kategoriler (`/admin/categories`), platform raporu (`/admin/reports`).
 
-**Ekranı henüz olmayan işlemler** (21.11.2026 akşamı; API ile yapılır, adımlar [`docs/demo.md`](../docs/demo.md)'de): katalogda puan filtresi (#305; API: `minRating`), kullanıcının şikâyet oluşturması (`POST /api/complaints`; düğmesi yok). ⟨01.12'de ekranı gelenler adımlara eklenecek, ekran görüntüleri #72'den.⟩
+**Ekranı henüz olmayan işlem** (25.11.2026; API ile yapılır, adımlar [`docs/demo.md`](../docs/demo.md)'de): kullanıcının şikâyet oluşturması (`POST /api/complaints`; düğmesi yok). Seed'de bir açık şikâyet hazır olduğu için yönetici ekranı yine de gösterilebilir. ⟨01.12'de ekran görüntüleri #72'den.⟩
 
 ### 7.5 Test planı ve test raporu özeti
 
@@ -302,7 +302,7 @@ Plan: [`docs/test-plan.md`](../docs/test-plan.md) (#92). Rapor: `docs/test-repor
 | Hedef | Durum (21.11.2026) |
 |---|---|
 | Üç rollü (kursiyer, eğitmen, yönetici) çevrim içi eğitim platformu | Backend'in 10 modülü çalışıyor; 44 FR'nin 43'ünün otomatik testi var. Frontend'de 30 sayfa; P2 işler (parola yenileme, profil, yorum moderasyonu, şikâyet, platform raporu) "İnce" kapsamla yapıldı. ⟨01.12 durumu⟩ |
-| Beş demo senaryosu (kurs yayımlama, kayıt ve öğrenme, kaldığı yerden devam, sınav ve sertifika, eğitmen analitiği) | Beşi de uçtan uca testli ve 21.11'de temiz kurulumda ekranda yüründü (#70). Bildirimler artık zille ekranda (#136). Ekranı olmayan yalnız puan filtresi (#305) ve şikâyet oluşturma; API ile gösteriliyor (7.4). |
+| Beş demo senaryosu (kurs yayımlama, kayıt ve öğrenme, kaldığı yerden devam, sınav ve sertifika, eğitmen analitiği) | Beşi de uçtan uca testli ve 21.11'de temiz kurulumda ekranda yüründü (#70). Bildirimler artık zille ekranda (#136). Ekranı olmayan yalnız kullanıcının şikâyet oluşturması; API ile gösteriliyor (7.4). |
 | Tasarım desenleri: State, Strategy, Factory Method, Observer, DTO + Mapper | Beşi de kodda; sınıf diyagramlarında (#51) ve SOLID dokümanında (#95) gösterildi. |
 | Modüler monolit, modül sınırları | 10 modül; sınırlar ArchUnit testleriyle CI'da denetleniyor, ihlal yok. |
 | Test hedefleri (test planı › 7) | Servis coverage'ı %98,2 (hedef %70); Bölüm 6 testleri ve erişim matrisi yeşil. ⟨Bug bash ve demo provası sonucu⟩ |
@@ -312,7 +312,7 @@ Plan: [`docs/test-plan.md`](../docs/test-plan.md) (#92). Rapor: `docs/test-repor
 
 - **Geç başlangıç:** Kod PR'ları 11.11'de başladı; dört haftalık geliştirme işi yaklaşık bir haftaya sığdırıldı. Bu yüzden 17.11'de kapsam yeniden belirlendi ve P2 işler "İnce" yapıldı.
 - **Ekip kapasitesi:** Bir üye iki hafta müsait değildi; işleri devredildi.
-- **Ekranı eksik akışlar:** Puan filtresi ve şikâyet oluşturma (7.4) yalnız API ile yapılabiliyor.
+- **Ekranı eksik akış:** Kullanıcının şikâyet oluşturması (7.4) yalnız API ile yapılabiliyor.
 - **Frontend'de otomatik test yok:** Arayüz yalnız lint, derleme ve elle test ile denetlendi.
 - **Güvenlik sınırları:** Giriş ve parola yenileme denemelerine sınır konmadı (R7); parola yenileme bağlantısı e-postayla gönderilmiyor (yalnız `dev`'de log'a yazılıyor); dosyalar yerel diskte tutuluyor.
 - **Performans:** Kurs süresinin hesabında bilinen bir N+1 sorgu sınırı var (#185, kapsamdan çıkarıldı); yük testi yapılmadı.
@@ -324,7 +324,7 @@ Plan: [`docs/test-plan.md`](../docs/test-plan.md) (#92). Rapor: `docs/test-repor
 - Giriş ve parola yenileme isteklerine deneme sınırı (R7); parola yenileme bağlantısının ve bildirimlerin e-postayla gönderilmesi (`PasswordResetNotifier` arayüzüne SMTP uygulaması).
 - Dosyaların bulut depolamaya (S3 uyumlu) taşınması; video için akış biçimi (HLS) ve farklı çözünürlükler.
 - Frontend için uçtan uca otomatik testler (ör. Playwright) ve erişilebilirlik denetimi.
-- ⟨01.12'de hâlâ açık kalan işler: puan filtresi (#305); kullanıcı ekranında "Şikâyet et" düğmesi⟩
+- Kullanıcı ekranında "Şikâyet et" düğmesi (şikâyet şimdilik API ile oluşturuluyor).
 
 ### 8.4 Tartışma
 
