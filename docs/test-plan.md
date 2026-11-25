@@ -144,6 +144,7 @@ Her madde `docker compose down -v && docker compose up --build` ile ayağa kalka
 
 **Ziyaretçi (giriş yapmamış)**
 - [ ] Katalog: arama, kategori ve seviye filtresi; boş sonuçta "Filtreleri temizle"; yalnız yayımlanmış kurslar ("Python 2 (eski)" yok).
+- [ ] En az puan filtresi (#342): "4 ve üzeri" → 5 kurs, "3 ve üzeri" → 6 kurs, "Tümü" → 7 kurs; seçim adreste kalır (`?minRating=`), "Filtreleri temizle" onu da kaldırır.
 - [ ] Kurs detayı: hedefler, bölüm/ders listesi, toplam süre, 3 yorum ve ortalama 4,3; "Kayıt ol" giriş sayfasına götürür.
 - [ ] Kayıt ol (`/register`): boş ve hatalı alanlarda alan altı Türkçe hata; başarıdan sonra parola alanı DOM'da boş (#306).
 - [ ] Sertifika doğrulama (`/verify/K7Q2-M9XA-4T`): "✓ Geçerli sertifika", yalnız ad, kurs ve tarih; bozuk kodda "bulunamadı".
