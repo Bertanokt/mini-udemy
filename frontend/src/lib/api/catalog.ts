@@ -19,6 +19,9 @@ export const SORT_LABELS: Record<CatalogSort, string> = {
   popular: "En popüler",
 };
 
+// Katalogdaki "en az puan" seçenekleri; değer minRating parametresidir (sözleşmede 1–5).
+export const MIN_RATING_OPTIONS = [4, 3] as const;
+
 export interface CategoryResponse {
   id: number;
   name: string;
@@ -60,6 +63,7 @@ export interface CatalogQuery {
   categoryId?: number;
   level?: CourseLevel;
   instructorId?: number;
+  minRating?: number;
   sort?: CatalogSort;
   page?: number;
   size?: number;
