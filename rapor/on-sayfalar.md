@@ -6,7 +6,7 @@ Raporun ön sayfaları (#69). Word dosyası scripts/rapor/rapor.py ile bu dosyad
 -->
 
 ::: {custom-style="Kapak Kurum"}
-⟨Üniversite adı⟩
+Doğuş Üniversitesi
 
 ⟨Fakülte adı⟩
 
@@ -26,7 +26,7 @@ Yazılım Tasarımı ve Mimarisi dersi dönem projesi · Grup 12
 :::
 
 ::: {custom-style="Kapak Metin"}
-Bertan ⟨soyadı, öğrenci no⟩ — Yazılım Mimarı (grup lideri)
+Baran Bertan Öktem (202403011018) — Yazılım Mimarı (grup lideri)
 
 Sedat ⟨soyadı, öğrenci no⟩ — Alan Tasarımcısı
 

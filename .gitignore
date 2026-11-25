@@ -8,3 +8,7 @@ scripts/.issue-map.tsv
 # Yerelde yüklenen dosyalar (app.storage.root varsayılanı)
 data/
 backend/data/
+# Rapor çıktıları (scripts/rapor/rapor.py üretir). Ara sürümler commit'lenmez; yalnız 01.12'deki son sürüm
+# "teslim" etiketli tek commit'le eklenir: git add -f rapor/Mini_Udemy_Proje_Raporu.docx rapor/Mini_Udemy_Proje_Raporu.pdf
+rapor/*.docx
+rapor/*.pdf
