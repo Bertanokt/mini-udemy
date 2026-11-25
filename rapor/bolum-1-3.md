@@ -263,30 +263,30 @@ Veritabanı şeması yalnız Flyway migration'larıyla değişir (ADR-003). ER d
 
 #### 3.4.7 Kullanıcı arayüzü
 
-UI taslakları (#88) kapsam dışı bırakıldı; bu bölümde wireframe yerine **gerçek ekran görüntüleri** kullanılır: her ekran için mobil (≈360 px) ve masaüstü. Ekranlar seed verisiyle çekilecek (kod dondurmasından, 24.11, sonra).
+UI taslakları (#88) kapsam dışı bırakıldı; bu bölümde wireframe yerine **gerçek ekran görüntüleri** kullanılır. Görüntüler kod dondurmasından sonra (25.11.2026, `main`) seed verisiyle çekildi: her ekran masaüstünde (1280 px) ve mobilde (360 px), açık temada; altı ekranın karanlık tema örneği de var (koyu). Dosyalar [`docs/screenshots/`](../docs/screenshots/) altında; sayfa uzunsa görüntü masaüstünde 2400, mobilde 3200 piksel yükseklikte kesilir.
 
 | Rol | Ekran | Adres | Görüntü |
 |---|---|---|---|
-| Ziyaretçi | Katalog ve arama | `/` | ⟨mobil, masaüstü⟩ |
-| Ziyaretçi | Kurs ayrıntısı | `/courses/[id]` | ⟨mobil, masaüstü⟩ |
-| Ziyaretçi | Kayıt ol, giriş yap | `/register`, `/login` | ⟨mobil, masaüstü⟩ |
-| Ziyaretçi | Parolamı unuttum, yeni parola | `/forgot-password`, `/reset-password` | ⟨mobil, masaüstü⟩ |
-| Ziyaretçi | Sertifika doğrulama (girişsiz) | `/verify/[code]` | ⟨mobil, masaüstü⟩ |
-| Kayıtlı kullanıcı | Profilim (ad soyad, kısa biyografi) | `/profile` | ⟨mobil, masaüstü⟩ |
-| Kayıtlı kullanıcı | Bildirim zili: okunmamış sayısı, liste, okundu işaretleme | üst menü (her sayfada) | ⟨mobil, masaüstü⟩ |
-| Kursiyer | Kayıtlı kurslarım | `/my-courses` | ⟨mobil, masaüstü⟩ |
-| Kursiyer | Kurs oynatıcısı | `/learn/[courseId]/[lessonId]` | ⟨mobil, masaüstü⟩ |
-| Kursiyer | Sınav ve denemeler | `/quizzes/[id]`, `/quizzes/[id]/attempts` | ⟨mobil, masaüstü⟩ |
-| Kursiyer | Sertifikalarım, sertifika (yazdırılabilir) | `/certificates`, `/certificates/[id]` | ⟨mobil, masaüstü⟩ |
-| Eğitmen | Eğitmen paneli | `/instructor` | ⟨mobil, masaüstü⟩ |
-| Eğitmen | Kurs formu | `/instructor/courses/new`, `…/[id]/edit` | ⟨mobil, masaüstü⟩ |
-| Eğitmen | Bölüm ve dersler, içerik yükleme ve önizleme | `…/[id]/sections` | ⟨mobil, masaüstü⟩ |
-| Eğitmen | Soru bankası, bölüm sınavı | `…/[id]/questions`, `…/[id]/quizzes` | ⟨mobil, masaüstü⟩ |
-| Eğitmen | Kurs istatistikleri | `…/[id]/analytics` | ⟨mobil, masaüstü⟩ |
-| Yönetici | Yönetici paneli (menü) | `/admin` | ⟨mobil, masaüstü⟩ |
-| Yönetici | Kurs onay / red | `/admin/courses`, `/admin/courses/[id]` | ⟨mobil, masaüstü⟩ |
-| Yönetici | Kullanıcılar, kategoriler | `/admin/users`, `/admin/categories` | ⟨mobil, masaüstü⟩ |
-| Yönetici | Yorumlar, şikâyetler | `/admin/reviews`, `/admin/complaints` | ⟨mobil, masaüstü⟩ |
-| Yönetici | Raporlar | `/admin/reports` | ⟨mobil, masaüstü⟩ |
+| Ziyaretçi | Katalog ve arama | `/` | [masaüstü](../docs/screenshots/katalog-masaustu.png) · [360 px](../docs/screenshots/katalog-mobil.png) · [koyu](../docs/screenshots/katalog-masaustu-koyu.png) |
+| Ziyaretçi | Kurs ayrıntısı | `/courses/[id]` | [masaüstü](../docs/screenshots/kurs-detay-masaustu.png) · [360 px](../docs/screenshots/kurs-detay-mobil.png) |
+| Ziyaretçi | Kayıt ol, giriş yap | `/register`, `/login` | kayıt: [masaüstü](../docs/screenshots/kayit-masaustu.png) · [360 px](../docs/screenshots/kayit-mobil.png)<br>giriş: [masaüstü](../docs/screenshots/giris-masaustu.png) · [360 px](../docs/screenshots/giris-mobil.png) |
+| Ziyaretçi | Parolamı unuttum, yeni parola | `/forgot-password`, `/reset-password` | unuttum: [masaüstü](../docs/screenshots/parola-unuttum-masaustu.png) · [360 px](../docs/screenshots/parola-unuttum-mobil.png)<br>yeni parola: [masaüstü](../docs/screenshots/parola-yeni-masaustu.png) · [360 px](../docs/screenshots/parola-yeni-mobil.png) |
+| Ziyaretçi | Sertifika doğrulama (girişsiz) | `/verify/[code]` | [masaüstü](../docs/screenshots/sertifika-dogrulama-masaustu.png) · [360 px](../docs/screenshots/sertifika-dogrulama-mobil.png) |
+| Kayıtlı kullanıcı | Profilim (ad soyad, kısa biyografi) | `/profile` | [masaüstü](../docs/screenshots/profil-masaustu.png) · [360 px](../docs/screenshots/profil-mobil.png) |
+| Kayıtlı kullanıcı | Bildirim zili: okunmamış sayısı, liste, okundu işaretleme | üst menü (her sayfada) | açık panel: [masaüstü](../docs/screenshots/bildirim-zili-masaustu.png) · [360 px](../docs/screenshots/bildirim-zili-mobil.png) |
+| Kursiyer | Kayıtlı kurslarım | `/my-courses` | [masaüstü](../docs/screenshots/kurslarim-masaustu.png) · [360 px](../docs/screenshots/kurslarim-mobil.png) |
+| Kursiyer | Kurs oynatıcısı | `/learn/[courseId]/[lessonId]` | [masaüstü](../docs/screenshots/oynatici-masaustu.png) · [360 px](../docs/screenshots/oynatici-mobil.png) · [koyu](../docs/screenshots/oynatici-masaustu-koyu.png) |
+| Kursiyer | Sınav ve denemeler | `/quizzes/[id]`, `/quizzes/[id]/attempts` | sınav: [masaüstü](../docs/screenshots/sinav-masaustu.png) · [360 px](../docs/screenshots/sinav-mobil.png)<br>sonuç: kaldın: [masaüstü](../docs/screenshots/sinav-sonucu-kaldin-masaustu.png) · [360 px](../docs/screenshots/sinav-sonucu-kaldin-mobil.png)<br>sonuç: geçtin: [masaüstü](../docs/screenshots/sinav-sonucu-gectin-masaustu.png) · [360 px](../docs/screenshots/sinav-sonucu-gectin-mobil.png) · [koyu](../docs/screenshots/sinav-sonucu-gectin-masaustu-koyu.png)<br>denemeler: [masaüstü](../docs/screenshots/sinav-denemelerim-masaustu.png) · [360 px](../docs/screenshots/sinav-denemelerim-mobil.png) |
+| Kursiyer | Sertifikalarım, sertifika (yazdırılabilir) | `/certificates`, `/certificates/[id]` | sertifikalarım: [masaüstü](../docs/screenshots/sertifikalarim-masaustu.png) · [360 px](../docs/screenshots/sertifikalarim-mobil.png)<br>sertifika: [masaüstü](../docs/screenshots/sertifika-masaustu.png) · [360 px](../docs/screenshots/sertifika-mobil.png) · [koyu](../docs/screenshots/sertifika-masaustu-koyu.png) |
+| Eğitmen | Eğitmen paneli | `/instructor` | [masaüstü](../docs/screenshots/egitmen-paneli-masaustu.png) · [360 px](../docs/screenshots/egitmen-paneli-mobil.png) |
+| Eğitmen | Kurs formu | `/instructor/courses/new`, `…/[id]/edit` | yeni: [masaüstü](../docs/screenshots/kurs-formu-yeni-masaustu.png) · [360 px](../docs/screenshots/kurs-formu-yeni-mobil.png)<br>düzenle: [masaüstü](../docs/screenshots/kurs-formu-duzenle-masaustu.png) · [360 px](../docs/screenshots/kurs-formu-duzenle-mobil.png) |
+| Eğitmen | Bölüm ve dersler, içerik yükleme ve önizleme | `…/[id]/sections` | [masaüstü](../docs/screenshots/bolumler-ve-dersler-masaustu.png) · [360 px](../docs/screenshots/bolumler-ve-dersler-mobil.png) |
+| Eğitmen | Soru bankası, bölüm sınavı | `…/[id]/questions`, `…/[id]/quizzes` | soru bankası: [masaüstü](../docs/screenshots/soru-bankasi-masaustu.png) · [360 px](../docs/screenshots/soru-bankasi-mobil.png)<br>bölüm sınavları: [masaüstü](../docs/screenshots/bolum-sinavlari-masaustu.png) · [360 px](../docs/screenshots/bolum-sinavlari-mobil.png) |
+| Eğitmen | Kurs istatistikleri | `…/[id]/analytics` | [masaüstü](../docs/screenshots/egitmen-analitigi-masaustu.png) · [360 px](../docs/screenshots/egitmen-analitigi-mobil.png) · [koyu](../docs/screenshots/egitmen-analitigi-masaustu-koyu.png) |
+| Yönetici | Yönetici paneli (menü) | `/admin` | [masaüstü](../docs/screenshots/yonetici-paneli-masaustu.png) · [360 px](../docs/screenshots/yonetici-paneli-mobil.png) |
+| Yönetici | Kurs onay / red | `/admin/courses`, `/admin/courses/[id]` | liste: [masaüstü](../docs/screenshots/yonetici-kurs-onay-masaustu.png) · [360 px](../docs/screenshots/yonetici-kurs-onay-mobil.png)<br>inceleme: [masaüstü](../docs/screenshots/yonetici-kurs-onay-detay-masaustu.png) · [360 px](../docs/screenshots/yonetici-kurs-onay-detay-mobil.png) · [koyu](../docs/screenshots/yonetici-kurs-onay-detay-masaustu-koyu.png) |
+| Yönetici | Kullanıcılar, kategoriler | `/admin/users`, `/admin/categories` | kullanıcılar: [masaüstü](../docs/screenshots/yonetici-kullanicilar-masaustu.png) · [360 px](../docs/screenshots/yonetici-kullanicilar-mobil.png)<br>kategoriler: [masaüstü](../docs/screenshots/yonetici-kategoriler-masaustu.png) · [360 px](../docs/screenshots/yonetici-kategoriler-mobil.png) |
+| Yönetici | Yorumlar, şikâyetler | `/admin/reviews`, `/admin/complaints` | yorumlar: [masaüstü](../docs/screenshots/yonetici-yorumlar-masaustu.png) · [360 px](../docs/screenshots/yonetici-yorumlar-mobil.png)<br>şikâyetler: [masaüstü](../docs/screenshots/yonetici-sikayetler-masaustu.png) · [360 px](../docs/screenshots/yonetici-sikayetler-mobil.png) |
+| Yönetici | Raporlar | `/admin/reports` | [masaüstü](../docs/screenshots/yonetici-raporlar-masaustu.png) · [360 px](../docs/screenshots/yonetici-raporlar-mobil.png) |
 
 Ekran geçişleri rol bazında 7.4'teki kullanım kılavuzunda adım adım anlatılır. `/learn/[courseId]` ayrı bir ekran değildir, kursun ilk dersine yönlendirir. Bölüm/ders yönetimi (#34) PR #300 ile 20.11'de; tamamlandı düğmesi ve ilerleme çubukları (#46, PR #299), sertifika görüntüleme ve doğrulama (#130, PR #297; #131, PR #309), profil ve parola yenileme (#117, PR #324) ve bildirim zili (#136, PR #323) 21.11'de eklendi. 21.11 itibarıyla ekranı olmayan iş kalmadı. Liste ⟨24.11 sonrası ekranlara göre⟩ güncellenecek.
