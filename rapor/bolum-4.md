@@ -286,6 +286,6 @@ Service katmanı `common/exception`'daki istisnalardan birini fırlatır: `BadRe
 | 012 | Derse özel, 5 dakikalık içerik token'ı | Blob adresi; ana JWT'yi adreste taşımak | Tuttu. 160 MB videoda ileri sarma çalıştı (206); süre dolunca oynatıcı yeni token alıp kaldığı saniyeden devam ediyor (#45). |
 
 **Kalite kanıtı.**
-- **Test sayıları:** son ölçümde 1188 test, 0 hata: 993 birim, 13 mimari, 182 entegrasyon (gerçek PostgreSQL 17, Testcontainers). Ayrıntı [`docs/test-report.md`](../docs/test-report.md)'de.
-- **Coverage:** servis katmanında satır coverage'ı %98,4 (19.11 ölçümü).
+- **Test sayıları:** son ölçümde (23.11) 1194 test, 0 hata: 997 birim, 13 mimari, 184 entegrasyon (gerçek PostgreSQL 17, Testcontainers). Ayrıntı [`docs/test-report.md`](../docs/test-report.md)'de.
+- **Coverage:** servis katmanında satır coverage'ı %98,2, dal coverage'ı %93,3 (23.11 ölçümü).
 - **CI:** her PR'da backend derleme ve bütün testler, frontend lint ve build çalışır; kırmızı CI ile merge yapılmaz.

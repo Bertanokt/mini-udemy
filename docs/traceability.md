@@ -189,4 +189,4 @@ Dört durumun hepsi testli: uçtan uca `Bolum6CriticalCasesIT` (case1–case4) v
 | Bugün `main`'de en az bir otomatik testi olan | **43** | **16** |
 | Otomatik testi olmayan | 1: FR-29 (ön yüzde sabit metin; manuel kontrol, #68) | 3: NFR-07, NFR-17 (görsel/tarayıcı, #68), NFR-14 (süreç, her PR'da CI) |
 
-16.11'de otomatik testi olan FR sayısı 6, NFR sayısı 4'tü. `main`'de 1154 test var (964 birim, 13 mimari, 177 entegrasyon; 21.11.2026); servis katmanı satır coverage'ı %98,4 (test raporu, #99). **P1 gereksinimlerden otomatik testi olmayan** yalnız FR-29: akreditasyon ibaresi ön yüzde sabit metin ve ön yüz için otomatik test aracı yok (proje kuralı); bug bash'te (#68) kontrol edilir.
+16.11'de otomatik testi olan FR sayısı 6, NFR sayısı 4'tü. `main`'de 1194 test var (997 birim, 13 mimari, 184 entegrasyon; 23.11.2026); servis katmanı satır coverage'ı %98,2, dal coverage'ı %93,3 (test raporu, #99). **P1 gereksinimlerden otomatik testi olmayan** yalnız FR-29: akreditasyon ibaresi ön yüzde sabit metin ve ön yüz için otomatik test aracı yok (proje kuralı); bug bash'te (#68) kontrol edilir.
