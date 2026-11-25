@@ -26,7 +26,14 @@ Mimari: modüler monolit (10 modül, sınırlar ArchUnit testleriyle CI'da); Sta
 
 ### Ekran görüntüleri
 
-⟨24.11 kod dondurmasından sonra `docs/screenshots/` altına eklenecek (#72): katalog, kurs detayı, oynatıcı, sınav sonucu, sertifika, eğitmen analitiği, yönetici kurs onayı, bildirim zili.⟩
+Seed verisiyle, 25.11.2026'da çekildi. Bütün ekranlar (masaüstü 1280 px, mobil 360 px, açık tema; bazılarının koyu teması): [`docs/screenshots/`](docs/screenshots/); ekran listesi rapor › 3.4.7 ([`rapor/bolum-1-3.md`](rapor/bolum-1-3.md)).
+
+| | |
+|---|---|
+| ![Katalog](docs/screenshots/katalog-masaustu.png) Katalog ve en az puan filtresi | ![Kurs oynatıcısı](docs/screenshots/oynatici-masaustu.png) Kurs oynatıcısı ve ilerleme |
+| ![Sınav sonucu](docs/screenshots/sinav-sonucu-gectin-masaustu.png) Sınav sonucu | ![Sertifika](docs/screenshots/sertifika-masaustu.png) Sertifika |
+| ![Eğitmen analitiği](docs/screenshots/egitmen-analitigi-masaustu.png) Eğitmen analitiği | ![Yönetici kurs onayı](docs/screenshots/yonetici-kurs-onay-detay-masaustu.png) Yönetici kurs onayı |
+| ![Bildirim zili](docs/screenshots/bildirim-zili-masaustu.png) Bildirim zili | ![Mobil oynatıcı](docs/screenshots/oynatici-mobil.png) Mobil (360 px) |
 
 ## Klasör yapısı
 
