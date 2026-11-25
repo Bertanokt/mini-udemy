@@ -135,12 +135,21 @@ export interface QuizStat {
   passRate: number;
 }
 
+/** İlerleme kovası: yüzdesi minPercent–maxPercent (dahil) aralığındaki kayıt sayısı. */
+export interface ProgressBucket {
+  minPercent: number;
+  maxPercent: number;
+  count: number;
+}
+
 export interface CourseStats {
   courseId: number;
   enrollmentCount: number;
   averageProgressPercent: number;
   /** %100 ilerlemeye ulaşan kursiyerlerin oranı (yüzde). */
   completionRate: number;
+  /** Bütün kursun kayıtlarından, sırayla 0–24, 25–49, 50–74, 75–99, 100; toplamı enrollmentCount. */
+  progressDistribution: ProgressBucket[];
   quizzes: QuizStat[];
   rating: RatingSummary;
 }

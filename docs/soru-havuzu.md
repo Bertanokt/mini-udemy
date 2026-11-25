@@ -364,7 +364,7 @@ Hayır, 409 arayüzün kendi sözleşmesi (varsayılan gövde); alt sınıf söz
 
 **ISP-1. ISP örneği ver.**
 
-`course`, istatistik için tek büyük servis yerine beş dar port tanımlar: `CourseRoster`, `EnrollmentCounts`, `CourseProgressStats`, `CourseQuizStats`, `CourseRatings`. Katalog yalnız sayı ve puan portunu, `CourseVisibility` yalnız `isEnrolled`'ı kullanır; `progress` yalnız `totals`'ı uygular, boş metot yazmaz.
+`course`, istatistik için tek büyük servis yerine beş dar port tanımlar: `CourseRoster`, `EnrollmentCounts`, `CourseProgressStats`, `CourseQuizStats`, `CourseRatings`. Katalog yalnız sayı ve puan portunu, `CourseVisibility` yalnız `isEnrolled`'ı kullanır; `progress` yalnız `totals` ve `distribution`'ı uygular, boş metot yazmaz.
 
 Kodu göster: `docs/solid.md` › I.
 

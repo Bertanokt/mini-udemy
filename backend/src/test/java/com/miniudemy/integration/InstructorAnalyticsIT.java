@@ -2,6 +2,7 @@ package com.miniudemy.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -121,6 +122,60 @@ class InstructorAnalyticsIT extends IntegrationTestBase {
             assertThat(get("/api/instructor/courses/9999/" + path, instructor).getStatusCode())
                     .isEqualTo(HttpStatus.NOT_FOUND);
         }
+    }
+
+    /**
+     * İlerleme dağılımı (#257): bir sayfadan (20) fazla kayıt bütün kurstan sayılır; kova sınırları (24/25, 49/50,
+     * 74/75, 99/100) doğru kovaya düşer; ilerleme satırı olmayan kayıt 0 kovasındadır.
+     */
+    @Test
+    void stats_progressDistribution_countsWholeCourseAndBucketBoundaries() {
+        String instructor = registerAndLogin("Mehmet Kaya", "mehmet@example.com", "INSTRUCTOR");
+        long courseId = draftCourse(instructor);
+        long instructorId = jdbc.queryForObject("SELECT id FROM users WHERE email = 'mehmet@example.com'", Long.class);
+        long sectionId = jdbc.queryForObject(
+                "INSERT INTO sections (course_id, title, position) VALUES (?, 'Giriş', 0) RETURNING id",
+                Long.class, courseId);
+        lesson(sectionId, "Kurulum", 0, storeFile(instructorId, "a.mp4", "video/mp4", new byte[64]));
+        assertThat(post("/api/courses/" + courseId + "/submit", instructor, null).getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+        String admin = createAdminAndLogin("admin@example.com");
+        assertThat(post("/api/admin/courses/" + courseId + "/approve", admin, null).getStatusCode())
+                .isEqualTo(HttpStatus.OK);
+
+        // null: ilerleme satırı yok. 22 kayıt, sayfa boyutu 20'den fazla.
+        List<String> percents = Arrays.asList(null, null, "24.99", "24.99", "24", "25", "25", "49.99", "49.99",
+                "49", "50", "50", "74.99", "74.99", "74", "75", "75", "99.99", "99.99", "99", "100", "100");
+        for (int i = 0; i < percents.size(); i++) {
+            String email = "kursiyer" + i + "@example.com";
+            enroll("Kursiyer " + i, email, courseId);
+            if (percents.get(i) != null) {
+                jdbc.update("""
+                        INSERT INTO course_progress (enrollment_id, progress_percent, updated_at)
+                        SELECT e.id, CAST(? AS numeric), now() FROM enrollments e JOIN users u ON u.id = e.student_id
+                        WHERE u.email = ? AND e.course_id = ?
+                        """, percents.get(i), email, courseId);
+            }
+        }
+
+        JsonNode stats = get("/api/instructor/courses/" + courseId + "/stats", instructor).getBody();
+
+        assertThat(stats.get("enrollmentCount").asLong()).isEqualTo(22);
+        JsonNode buckets = stats.get("progressDistribution");
+        assertThat(buckets).hasSize(5);
+        int[] min = {0, 25, 50, 75, 100};
+        int[] max = {24, 49, 74, 99, 100};
+        long[] count = {5, 5, 5, 5, 2};
+        long total = 0;
+        for (int i = 0; i < 5; i++) {
+            assertThat(buckets.get(i).get("minPercent").asInt()).isEqualTo(min[i]);
+            assertThat(buckets.get(i).get("maxPercent").asInt()).isEqualTo(max[i]);
+            assertThat(buckets.get(i).get("count").asLong()).as("kova %d-%d", min[i], max[i]).isEqualTo(count[i]);
+            total += buckets.get(i).get("count").asLong();
+        }
+        assertThat(total).isEqualTo(stats.get("enrollmentCount").asLong());
+        // Kartlardaki tamamlama oranı ile 100 kovası tutarlı: 2 / 22.
+        assertThat(stats.get("completionRate").asDouble()).isEqualTo(9.09);
     }
 
     private String enroll(String name, String email, long courseId) {
