@@ -2,7 +2,7 @@
 
 Proje dokümanındaki beş senaryonun ([use-cases.md](use-cases.md) › 1) sunumda adım adım gösterimi. Her adımda **ne gösterilir** ve **hangi mimari nokta devreye girer** yazılıdır. Veriler seed verisinden gelir (#67, README › Demo hesapları); bütün hesapların parolası `Demo1234!`.
 
-> **Ekranı henüz olmayan adımlar** (21.11.2026): katalogda puan filtresi (#305; API'de `minRating` var), kullanıcının şikâyet oluşturması (düğme yok; `POST /api/complaints`). Bu adımlar aşağıda **API ile** verildi. Uçtan uca testleri olduğu için davranışları doğrulanmış durumda (her senaryonun sonunda test adı).
+> **Ekranı henüz olmayan adım** (25.11.2026): kullanıcının şikâyet oluşturması (düğme yok; `POST /api/complaints`). Bu adım aşağıda **API ile** verildi. Uçtan uca testleri olduğu için davranışları doğrulanmış durumda (her senaryonun sonunda test adı).
 >
 > **Sıra önerisi:** Senaryo 5'in sayıları seed'e göredir. Senaryo 2'de yeni bir kursiyer kaydolunca "Sıfırdan Python"da 6 kayıt ve %16,7 tamamlanma görünür. Ya Senaryo 5 Senaryo 2'den önce gösterilir ya da sayılar "seed'e göre" diye söylenir.
 
@@ -57,7 +57,7 @@ Test: `CoursePublishingScenarioIT`, `ContentUploadIT`, `ComplaintIT` (6d).
 
 | # | Adım | Gösterilen | Mimari nokta |
 |---|---|---|---|
-| 1 | Ziyaretçi: ana sayfa → katalogda "python" ara, kategori ve seviye filtresi | Yalnız yayımlanmış kurslar; "Python 2 (eski)" yok. Puan filtresi ekranda yok (#305); API ile: `GET /api/courses?minRating=4` | Tek JPQL sorgusu, sayfalı (N+1 yok); katalog kartı DTO'su |
+| 1 | Ziyaretçi: ana sayfa → katalogda "python" ara, kategori, seviye ve en az puan filtresi | Yalnız yayımlanmış kurslar; "Python 2 (eski)" yok. En az puan "4 ve üzeri" → 5 kurs, "3 ve üzeri" → 6 kurs (Java 3,5 eklenir); seçim adrese yazılır (`?minRating=4`) | Tek JPQL sorgusu, sayfalı (N+1 yok); katalog kartı DTO'su |
 | 2 | "Sıfırdan Python" detay sayfası | Hedefler, bölüm/ders listesi, süre, 3 yorum (ortalama 4,3) | Herkese açık uç; yayımlanmamış kurs başkasına 404 |
 | 2b | (ek) Yönetici: `/admin` → "Yorum moderasyonu" (`/admin/reviews`) → Ayşe'nin 5 puanlı yorumunda "Gizle" → gerekçe → detay sayfasını yenile; sonra "Gizli" filtresinden "Geri aç" | Yorum listeden kalkar, ortalama 4,3 → 4,0 (2 yorum); gerekçe yalnız yönetici listesinde. Geri açınca 4,3'e döner, gerekçe silinir. Gerekçesiz gizleme alan hatası verir | Gizli yorum sorgu düzeyinde süzülür (liste, özet, katalog kartı, `minRating`); `admin` → `review`'un servis arayüzü (`ReviewModerationService`); yalnız ADMIN (`/api/admin/**`) |
 | 3 | Yeni bir kursiyerle kayıt ol (`/register`), kurs sayfasında "Kursa kayıt ol" | Kayıt; düğme "Derse başla"ya döner. Mükerrer kayıt ekranda denenemez; API'de ikinci istek 409 "Bu kursa zaten kayıtlısınız." | **Observer**: `EnrollmentCreated` → eğitmene "yeni kayıt" bildirimi; tekillik veritabanı kısıtıyla |
