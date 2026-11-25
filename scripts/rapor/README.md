@@ -8,7 +8,7 @@ python3 scripts/rapor/rapor.py --sablon ~/Downloads/Proje_Yazim_Sablonu.docx   #
 python3 scripts/rapor/rapor.py --pdf-yok                # yalnız .docx (hızlı deneme)
 ```
 
-Çıktı: `rapor/Mini_Udemy_Proje_Raporu.docx` ve `.pdf`. Betik sonunda sayfa sayısını, içindekilerdeki başlık sayısını ve **⟨…⟩ yer tutucularının listesini** yazar; bunlar Word'de sarıyla işaretlidir. Teslimden önce liste boş olmalı.
+Çıktı: `rapor/Mini_Udemy_Proje_Raporu.docx` ve `.pdf`. Bu iki dosya `.gitignore`'dadır: ara sürümler commit'lenmez, herkes kendi makinesinde üretir. Betik sonunda sayfa sayısını, içindekilerdeki başlık sayısını ve **⟨…⟩ yer tutucularının listesini** yazar; bunlar Word'de sarıyla işaretlidir. Teslimden önce liste boş olmalı.
 
 ## Girdi ve sıra
 
@@ -39,3 +39,16 @@ Python 3.11+ (yalnız standart kütüphane), [pandoc](https://pandoc.org/) 3, Li
 1. Bölüm dosyalarındaki ⟨…⟩ yerlerini doldurun (bug bash, demo provası, son sayılar); kapak bilgilerini `on-sayfalar.md`'de tamamlayın.
 2. Hocanın şablonu elinizdeyse `--sablon` ile çalıştırın. Şablondaki başlık sırası bölüm dosyalarındakinden farklıysa sıra Markdown'da düzeltilir.
 3. Betiğin yazdığı yer tutucu listesi boşalana kadar 1–2'yi tekrarlayın; çıktıyı PDF'ten bir kez gözle kontrol edin.
+
+## Teslim sürümü (01.12)
+
+Repoya yalnız son sürüm, **tek commit'le** girer. Dosyalar `.gitignore`'da olduğu için `-f` gerekir:
+
+```bash
+python3 scripts/rapor/rapor.py --sablon <şablon.docx>
+git add -f rapor/Mini_Udemy_Proje_Raporu.docx rapor/Mini_Udemy_Proje_Raporu.pdf
+git commit -m "docs(#69): proje raporu — teslim sürümü"
+git tag -a teslim -m "Proje raporu teslim sürümü (01.12.2026)"
+```
+
+Commit PR ile `main`'e girer; `teslim` etiketi merge commit'ine konur ve `git push origin teslim` ile gönderilir. Teslimden sonra dosya değişirse yeni sürüm yine tek commit'le eklenir, etiket taşınmaz (`teslim-2` gibi yeni etiket).
