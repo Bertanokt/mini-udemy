@@ -49,14 +49,14 @@ Kullanıcılar üç role ayrılır: **kursiyer**, **eğitmen** ve **yönetici**;
 | H4 | Sistem tek komutla kurulur ve mobil ekranda kullanılabilir. | NFR-07, NFR-16, NFR-17 |
 | H5 | Her değişiklik otomatik testlerle doğrulanır ve gereksinimden teste izlenebilir. | NFR-14; test planı (7.5) |
 
-**Başarı kriterleri.** Ölçütler test planındaki başarı ölçütleriyle ([`docs/test-plan.md`](../docs/test-plan.md) › 7) birebir aynıdır; gerçekleşen değerler test raporundan ([`docs/test-report.md`](../docs/test-report.md) › 7, #99) alınır. Aşağıdaki değerler raporun 21.11 ara sürümündendir (PR #279; `main` @ `a27bcf7`, 1188 test); coverage 19.11 ölçümüdür ve 01.12'den önce yeniden ölçülecek.
+**Başarı kriterleri.** Ölçütler test planındaki başarı ölçütleriyle ([`docs/test-plan.md`](../docs/test-plan.md) › 7) birebir aynıdır; gerçekleşen değerler test raporundan ([`docs/test-report.md`](../docs/test-report.md) › 7, #99) alınır. Aşağıdaki değerler raporun 23.11 sürümündendir (PR #345; `main` @ `21a94c9`, 1194 test); coverage aynı CI çalışmasının JaCoCo ölçümüdür.
 
 | # | Kriter | Ölçüt (hedef) | Hedef | Kanıt | Gerçekleşen |
 |---|---|---|---|---|---|
-| 1 | CI yeşil | `main`'de backend build + tüm testler ve frontend lint + build başarılı | H5 | GitHub Actions, test raporu § 1 | ✓ 993 birim, 13 mimari, 182 entegrasyon testi, 0 hata; frontend lint + build yeşil |
+| 1 | CI yeşil | `main`'de backend build + tüm testler ve frontend lint + build başarılı | H5 | GitHub Actions, test raporu § 1 | ✓ 997 birim, 13 mimari, 184 entegrasyon testi (toplam 1194), 0 hata; frontend lint + build yeşil |
 | 2 | P1 gereksinimler doğrulanmış | 44 FR'nin P1 olan 31'inin her biri için en az bir otomatik test ya da yazılı manuel kontrol; izlenebilirlik matrisinde gösterilmiş | H1, H5 | [`docs/traceability.md`](../docs/traceability.md) (#98) | ✓ 44 FR'nin 43'ü otomatik testli; FR-29 (akreditasyon ibaresi, ön yüzde sabit metin) manuel, bug bash'te ⟨#68⟩ |
 | 3 | Bölüm 6 ve dosya denetimi testleri | Dört durumun ve dosya türü/boyutu testlerinin hepsi var, yeşil, hiçbiri `@Disabled` değil | H2 | Test raporu § 4 | ✓ Dört durum ve dosya türü/boyutu `Bolum6CriticalCasesIT` ve birim testlerde; rol × uç matrisi `AccessMatrixIT` (122 kontrol) |
-| 4 | Servis katmanı coverage'ı | `com.miniudemy.*.service` satır coverage'ı ≥ %70 (JaCoCo) | H5 | Test raporu § 2 (#89) | ✓ %98,4 satır, %93,9 dal (19.11) ⟨01.12'de yeniden⟩ |
+| 4 | Servis katmanı coverage'ı | `com.miniudemy.*.service` satır coverage'ı ≥ %70 (JaCoCo) | H5 | Test raporu § 2 (#89) | ✓ %98,2 satır, %93,3 dal (23.11) |
 | 5 | Mimari kurallar | ArchUnit kurallarında ihlal yok; kurallar gevşetilmemiş | H3 | Test raporu § 1 (mimari testler) | ✓ 13 mimari test, 0 ihlal; bileşen diyagramı da CI'da kodla karşılaştırılıyor (`ComponentDiagramTest`) |
 | 6 | Bug bash | Bug bash'te açılan P1 hataların hepsi demo öncesi kapalı | H1 | Test raporu § 6 (#68) | ⟨#68⟩ |
 | 7 | Demo provası | Senaryo 1–5 provada hatasız tamamlanıyor | H1, H4 | Demo provası (#106), [`docs/demo.md`](../docs/demo.md) | ⟨#106⟩ |
