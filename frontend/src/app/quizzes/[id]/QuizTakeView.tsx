@@ -290,7 +290,11 @@ function Result({
           </button>
         )}
         <Link className="touch-link" href={`/quizzes/${quizId}/attempts`}>Deneme geçmişim</Link>
-        {!result.passed && <Link href={courseId !== null ? learnHref(courseId) : "/my-courses"}>Kursa dön</Link>}
+        {!result.passed && (
+          <Link className="touch-link" href={courseId !== null ? learnHref(courseId) : "/my-courses"}>
+            Kursa dön
+          </Link>
+        )}
       </div>
     </section>
   );
