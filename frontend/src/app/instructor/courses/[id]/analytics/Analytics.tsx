@@ -10,6 +10,7 @@ import {
   type CourseStats,
   type CourseStudent,
   type CourseStudentPage,
+  type ProgressBucket,
 } from "@/lib/api/instructor";
 import { Loading } from "@/components/common/Loading";
 import { ErrorMessage } from "@/components/common/ErrorMessage";
@@ -35,13 +36,7 @@ const fmtDate = (iso?: string | null) => (iso ? dateFmt.format(new Date(iso)) : 
 type SortKey = "name" | "enrolledAt" | "progress" | "lastAccessedAt";
 type SortDir = "asc" | "desc";
 
-const BUCKETS = [
-  { label: "%0–24", min: 0, max: 25 },
-  { label: "%25–49", min: 25, max: 50 },
-  { label: "%50–74", min: 50, max: 75 },
-  { label: "%75–99", min: 75, max: 100 },
-  { label: "%100", min: 100, max: Infinity },
-];
+const bucketLabel = (b: ProgressBucket) => (b.minPercent === b.maxPercent ? `%${b.minPercent}` : `%${b.minPercent}–${b.maxPercent}`);
 
 /** Yatay çubuk grafik: görsel çubuk aria-hidden; anlam, satırdaki metin değerinde ve alt tablodadır. */
 function BarRow({ label, value, text, max = 100 }: { label: string; value: number; text: string; max?: number }) {
@@ -123,15 +118,6 @@ export function Analytics() {
     });
     return rows;
   }, [pageData, sort]);
-
-  const buckets = useMemo(
-    () =>
-      BUCKETS.map((b) => ({
-        ...b,
-        count: pageData ? pageData.content.filter((s) => s.progressPercent >= b.min && s.progressPercent < b.max).length : 0,
-      })),
-    [pageData],
-  );
 
   function toggleSort(key: SortKey) {
     setSort((s) => (s.key === key ? { key, dir: s.dir === "asc" ? "desc" : "asc" } : { key, dir: key === "name" ? "asc" : "desc" }));
@@ -287,25 +273,20 @@ export function Analytics() {
 
                   <figure className="an-chart">
                     <figcaption>İlerleme dağılımı</figcaption>
-                    {!pageData ? (
-                      <p>Kursiyer listesi yüklenince görünür.</p>
-                    ) : pageData.content.length === 0 ? (
+                    {statsOk.enrollmentCount === 0 ? (
                       <p>Gösterilecek kursiyer yok.</p>
                     ) : (
-                      <>
-                        <ul className="an-bars" aria-label="İlerleme aralığına göre kursiyer sayısı">
-                          {buckets.map((b) => (
-                            <BarRow
-                              key={b.label}
-                              label={b.label}
-                              value={b.count}
-                              max={pageData.content.length}
-                              text={`${b.count} kursiyer`}
-                            />
-                          ))}
-                        </ul>
-                        <p className="an-note">Aşağıdaki tabloda görünen sayfadaki {pageData.content.length} kursiyere göre.</p>
-                      </>
+                      <ul className="an-bars" aria-label="İlerleme aralığına göre kursiyer sayısı">
+                        {statsOk.progressDistribution.map((b) => (
+                          <BarRow
+                            key={b.minPercent}
+                            label={bucketLabel(b)}
+                            value={b.count}
+                            max={statsOk.enrollmentCount}
+                            text={`${b.count} kursiyer`}
+                          />
+                        ))}
+                      </ul>
                     )}
                   </figure>
                 </div>

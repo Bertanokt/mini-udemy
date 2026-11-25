@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.miniudemy.course.service.CourseProgressStats;
 import com.miniudemy.enrollment.service.EnrollmentService;
 import com.miniudemy.progress.repository.CourseProgressRepository;
+import com.miniudemy.progress.repository.CourseProgressRepository.ProgressBucketsRow;
 import com.miniudemy.progress.repository.CourseProgressRepository.ProgressTotalsRow;
 
 /**
@@ -36,6 +37,19 @@ public class CourseProgressStatsService implements CourseProgressStats {
         }
         ProgressTotalsRow row = courseProgress.totalsByEnrollmentIds(enrollmentIds);
         return new ProgressTotals(row.getPercentSum(), row.getCompletedCount());
+    }
+
+    @Override
+    public ProgressDistribution distribution(Long courseId) {
+        List<Long> enrollmentIds = enrollments.findEnrollmentIdsByCourse(courseId);
+        if (enrollmentIds.isEmpty()) {
+            return new ProgressDistribution(0, 0, 0, 0, 0);
+        }
+        ProgressBucketsRow row = courseProgress.bucketsByEnrollmentIds(enrollmentIds);
+        long withoutRow = enrollmentIds.size() - (row.getBelow25() + row.getFrom25() + row.getFrom50()
+                + row.getFrom75() + row.getCompleted());
+        return new ProgressDistribution(row.getBelow25() + withoutRow, row.getFrom25(), row.getFrom50(),
+                row.getFrom75(), row.getCompleted());
     }
 
     /** Kursu tamamlamış (%100) kayıt sayısı, bütün kurslarda (platform raporu, #145). */

@@ -10,6 +10,7 @@ import org.mapstruct.Mapping;
 import com.miniudemy.auth.dto.UserSummary;
 import com.miniudemy.common.mapper.MapStructConfig;
 import com.miniudemy.course.dto.CourseStatsResponse;
+import com.miniudemy.course.dto.CourseStatsResponse.ProgressBucket;
 import com.miniudemy.course.dto.CourseStatsResponse.QuizStats;
 import com.miniudemy.course.dto.CourseStatsResponse.RatingStats;
 import com.miniudemy.course.dto.CourseStudentResponse;
@@ -29,10 +30,12 @@ public interface CourseAnalyticsMapper {
     @Mapping(target = "enrollmentCount", source = "enrollmentCount")
     @Mapping(target = "averageProgressPercent", source = "averageProgressPercent")
     @Mapping(target = "completionRate", source = "completionRate")
+    @Mapping(target = "progressDistribution", source = "progressDistribution")
     @Mapping(target = "quizzes", source = "quizzes")
     @Mapping(target = "rating", source = "rating")
     CourseStatsResponse toStats(Long courseId, long enrollmentCount, double averageProgressPercent,
-            double completionRate, List<QuizStats> quizzes, RatingStats rating);
+            double completionRate, List<ProgressBucket> progressDistribution, List<QuizStats> quizzes,
+            RatingStats rating);
 
     @Mapping(target = "quizId", source = "stats.quizId")
     @Mapping(target = "title", source = "stats.title")

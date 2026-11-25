@@ -19,6 +19,7 @@ import com.miniudemy.auth.service.UserDirectoryService;
 import com.miniudemy.common.exception.ForbiddenException;
 import com.miniudemy.common.exception.NotFoundException;
 import com.miniudemy.course.dto.CourseStatsResponse;
+import com.miniudemy.course.dto.CourseStatsResponse.ProgressBucket;
 import com.miniudemy.course.dto.CourseStatsResponse.QuizStats;
 import com.miniudemy.course.dto.CourseStudentPage;
 import com.miniudemy.course.dto.CourseStudentResponse.QuizResult;
@@ -27,6 +28,7 @@ import com.miniudemy.course.dto.QuizBestResult;
 import com.miniudemy.course.dto.RosterEntry;
 import com.miniudemy.course.mapper.CourseAnalyticsMapper;
 import com.miniudemy.course.mapper.CourseAnalyticsMapperImpl;
+import com.miniudemy.course.service.CourseProgressStats.ProgressDistribution;
 import com.miniudemy.course.service.CourseProgressStats.ProgressTotals;
 import com.miniudemy.course.service.CourseRoster.RosterPage;
 
@@ -50,6 +52,7 @@ class CourseAnalyticsServiceTest {
     void getStats_computesAverageCompletionAndQuizRates() {
         given(enrollmentCounts.countByCourse(5L)).willReturn(3L);
         given(progressStats.totals(5L)).willReturn(new ProgressTotals(new BigDecimal("150.00"), 1));
+        given(progressStats.distribution(5L)).willReturn(new ProgressDistribution(1, 0, 1, 0, 1));
         given(quizStats.attemptStats(5L)).willReturn(List.of(new QuizAttemptStats(1L, "Giriş sınavı", 3, 1),
                 new QuizAttemptStats(2L, "Final", 0, 0)));
         given(ratings.ratingOf(5L)).willReturn(new CourseRating(4.3, 12));
@@ -61,6 +64,9 @@ class CourseAnalyticsServiceTest {
         assertThat(stats.enrollmentCount()).isEqualTo(3);
         assertThat(stats.averageProgressPercent()).isEqualTo(50.0);
         assertThat(stats.completionRate()).isEqualTo(33.33);
+        assertThat(stats.progressDistribution()).containsExactly(new ProgressBucket(0, 24, 1),
+                new ProgressBucket(25, 49, 0), new ProgressBucket(50, 74, 1), new ProgressBucket(75, 99, 0),
+                new ProgressBucket(100, 100, 1));
         assertThat(stats.quizzes()).containsExactly(new QuizStats(1L, "Giriş sınavı", 3, 33.33),
                 new QuizStats(2L, "Final", 0, 0.0));
         assertThat(stats.rating().averageRating()).isEqualTo(4.3);
@@ -72,6 +78,7 @@ class CourseAnalyticsServiceTest {
     void getStats_courseWithoutEnrollmentsOrQuizzes_isAllZeroWithoutDividingByZero() {
         given(enrollmentCounts.countByCourse(5L)).willReturn(0L);
         given(progressStats.totals(5L)).willReturn(new ProgressTotals(BigDecimal.ZERO, 0));
+        given(progressStats.distribution(5L)).willReturn(new ProgressDistribution(0, 0, 0, 0, 0));
         given(quizStats.attemptStats(5L)).willReturn(List.of());
         given(ratings.ratingOf(5L)).willReturn(new CourseRating(null, 0));
         given(ratings.distributionOf(5L)).willReturn(Map.of());
@@ -83,12 +90,34 @@ class CourseAnalyticsServiceTest {
         assertThat(stats.completionRate()).isZero();
         assertThat(stats.quizzes()).isEmpty();
         assertThat(stats.rating().averageRating()).isNull();
+        assertThat(stats.progressDistribution()).hasSize(5).allSatisfy(b -> assertThat(b.count()).isZero());
+    }
+
+    @Test
+    void getStats_moreThanOnePageOfEnrollments_bucketsSumToEnrollmentCount() {
+        given(enrollmentCounts.countByCourse(5L)).willReturn(57L);
+        given(progressStats.totals(5L)).willReturn(new ProgressTotals(new BigDecimal("2000.00"), 9));
+        given(progressStats.distribution(5L)).willReturn(new ProgressDistribution(20, 11, 9, 8, 9));
+        given(quizStats.attemptStats(5L)).willReturn(List.of());
+        given(ratings.ratingOf(5L)).willReturn(new CourseRating(null, 0));
+        given(ratings.distributionOf(5L)).willReturn(Map.of());
+
+        CourseStatsResponse stats = service.getStats(5L, 7L);
+
+        assertThat(stats.progressDistribution()).extracting(ProgressBucket::count).containsExactly(20L, 11L, 9L, 8L, 9L);
+        assertThat(stats.progressDistribution().stream().mapToLong(ProgressBucket::count).sum())
+                .isEqualTo(stats.enrollmentCount());
+        assertThat(stats.progressDistribution()).extracting(ProgressBucket::minPercent)
+                .containsExactly(0, 25, 50, 75, 100);
+        assertThat(stats.progressDistribution()).extracting(ProgressBucket::maxPercent)
+                .containsExactly(24, 49, 74, 99, 100);
     }
 
     @Test
     void getStats_enrolledButNoProgressRows_countsThemAsZeroPercent() {
         given(enrollmentCounts.countByCourse(5L)).willReturn(4L);
         given(progressStats.totals(5L)).willReturn(new ProgressTotals(BigDecimal.ZERO, 0));
+        given(progressStats.distribution(5L)).willReturn(new ProgressDistribution(4, 0, 0, 0, 0));
         given(quizStats.attemptStats(5L)).willReturn(List.of());
         given(ratings.ratingOf(5L)).willReturn(new CourseRating(null, 0));
         given(ratings.distributionOf(5L)).willReturn(Map.of());
@@ -104,6 +133,7 @@ class CourseAnalyticsServiceTest {
     void getStats_everyoneCompleted_isHundredPercent() {
         given(enrollmentCounts.countByCourse(5L)).willReturn(2L);
         given(progressStats.totals(5L)).willReturn(new ProgressTotals(new BigDecimal("200.00"), 2));
+        given(progressStats.distribution(5L)).willReturn(new ProgressDistribution(0, 0, 0, 0, 2));
         given(quizStats.attemptStats(5L)).willReturn(List.of(new QuizAttemptStats(1L, "Sınav", 5, 5)));
         given(ratings.ratingOf(5L)).willReturn(new CourseRating(null, 0));
         given(ratings.distributionOf(5L)).willReturn(Map.of());
