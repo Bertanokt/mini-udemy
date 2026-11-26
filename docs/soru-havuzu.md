@@ -8,7 +8,7 @@ Hoca sunumda her üyeye bireysel teknik soru soracak ve katkı katsayısını bu
 
 **Kaynaklar:** [`architecture.md`](architecture.md), [`solid.md`](solid.md), [`adr/`](adr/README.md), [`test-plan.md`](test-plan.md), `CLAUDE.md`. Cevap bu dokümanlarla çelişirse doğru olan kod ve o dokümanlardır; bu dosya düzeltilir.
 
-Veri tarihi: 21.11.2026, `main` @ `2c0996e`.
+Veri tarihi: 26.11.2026, `main` @ `6e1a398`.
 
 ---
 
@@ -85,6 +85,18 @@ Kodu göster: `course/service/CourseAnalyticsService.java`, `progress/service/Co
 Kurs katalogda görünmez ve yeni kayıt almaz (404), ama önceden kaydolan kursiyer detayı, bölümleri ve içeriği görmeye devam eder; ilerlemesi, sınavları ve sertifikası etkilenmez. Görünürlük kuralı tek yerde: `CourseVisibility` (sahip, yönetici ve kayıtlı kursiyer görür, diğerlerine 404).
 
 Kodu göster: `course/service/CourseVisibility.java`, test `integration/CourseUnpublishIT.java`.
+
+**M-course-4. ★ Eğitmen istatistiklerindeki ilerleme dağılımı nerede hesaplanıyor? Ekranda hesaplasanız olmaz mıydı?**
+
+Backend'de, bütün kursun kayıtlarından (#257). Yanıtta her zaman beş kova var (0–24, 25–49, 50–74, 75–99, 100); ilerleme satırı olmayan kayıt %0 sayılır, bu yüzden kovaların toplamı kayıt sayısına eşit. `course`, `CourseProgressStats` portuna `distribution` ekledi; `progress` bunu `course_progress` üzerinde tek bir sorguyla (kova başına koşullu toplam) uygular. Ekranda hesaplamak kursiyerleri 20'şer sayfa sayfa çekmek demekti: çok istek, kurs büyüdükçe yavaş ve yalnız görünen sayfaya göre yanlış bir dağılım.
+
+Kodu göster: `course/service/CourseProgressStats.java`, `progress/service/CourseProgressStatsService.java`.
+
+**M-course-5. Katalogdaki "en az puan" filtresi nasıl çalışıyor?**
+
+`GET /api/courses?minRating=` (1–5). `CourseCatalogService`, puan verisi `review`'da olduğu için `CourseRatings.courseIdsWithAverageAtLeast` portuna sorar; karşılaştırma kartta görünen, bir ondalığa yuvarlanmış ortalamayla yapılır, hiç değerlendirmesi olmayan kurs elenir. Ekranda (#305) "Tümü / 4 ve üzeri / 3 ve üzeri" seçimi adres çubuğunda `minRating` olarak durur; listede olmayan bir değer yok sayılır.
+
+Kodu göster: `course/service/CourseCatalogService.java`, `course/service/CourseRatings.java`.
 
 ### content
 
@@ -422,9 +434,27 @@ Evet: `page`/`size` parametreleri, varsayılan 20, en fazla 100; daha büyüğü
 
 ---
 
-## 7. Prova takibi
+## 7. Prova planı ve takibi
 
-#107'nin diğer iki kabul kriteri için. Her üye kendi yazmadığı en az iki modülü ve tüm desenleri kodu göstererek anlatır.
+#107'nin diğer iki kabul kriteri için. Her üye kendi modüllerini ve kendi yazmadığı en az iki modülü, ayrıca beş deseni kodu göstererek anlatır.
+
+**Ne zaman:** 29–30.11 (öneri), 60–75 dk, herkes bilgisayarında repoyu açık tutar.
+
+**Akış:**
+1. Her üyeye sırayla 5–6 soru: önce kendi modülünden, sonra aşağıdaki iki modülünden, sonra bir desen ve bir ADR. Soruyu başka bir üye sorar; cevaplayan bu dosyaya bakmaz, cevabın sonunda "Kodu göster" satırındaki dosyayı açar.
+2. Bir tur ★ sorular: her üye bir tane.
+3. Cevaplanamayan sorular aşağıdaki tabloya yazılır; o modülü yazan üye 2–3 dakikada anlatır.
+
+**Çalışılacak modüller (öneri).** "Kendi modülleri" `main`'deki PR'ların yazarına göre; başka modüller, her modülü en az bir kez yazmayan birinin anlatacağı şekilde dağıtıldı. Hoca soruyu herkese her modülden sorabilir; bu yalnız hazırlık sırası.
+
+| Üye | Kendi modülleri (çoğunlukla yazdığı) | Çalışacağı iki başka modül |
+|---|---|---|
+| Bertan | `auth`, `content`, `certificate`, `progress`, `common` | `quiz`, `review` |
+| Eray | `course`, `quiz`, `enrollment` | `content`, `notification` |
+| Sedat | `review`, `notification`, `admin`; diyagramlar | `certificate`, `progress` |
+| Veronika | testler (Bölüm 6, Senaryo 1–5 IT), platform raporu, seed | `enrollment`, `auth` |
+
+**Takip:**
 
 | Üye | Anlattığı modüller (kendi yazmadığı) | Desenler (5/5) | Tarih | Not |
 |---|---|---|---|---|
