@@ -1,9 +1,9 @@
 <!--
-Raporun "Kaynaklar" bölümü (#69). Kaynak: docs/dependencies.md (§1–4) ve docs/adr/. Erişim tarihi web kaynakları içindir.
+Raporun "Referanslar" bölümü (#69; şablondaki adıyla). Kaynak: docs/dependencies.md (§1–4) ve docs/adr/. Erişim tarihi web kaynakları içindir.
 Yeni bir kütüphane ya da ADR eklenirse burada da bir satır eklenir; scripts/rapor/rapor.py bu dosyayı raporun sonuna koyar.
 -->
 
-# Kaynaklar
+# REFERANSLAR
 
 Web kaynaklarına son erişim tarihi: 25.11.2026.
 
